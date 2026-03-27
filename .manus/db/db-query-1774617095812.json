@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE `expenses` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`userId` int NOT NULL,\n\t`rodeoId` int NOT NULL,\n\t`category` enum('entry_fee','fuel','lodging','food','equipment','vet','other') NOT NULL,\n\t`description` varchar(255),\n\t`amountCents` int NOT NULL,\n\t`date` timestamp NOT NULL,\n\t`notes` text,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\t`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n\tCONSTRAINT `expenses_id` PRIMARY KEY(`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2PYvEfQ4DSv7tRb.2d2e5dd58f47 --database C9GZTdmmkAQAM2QeyCH5WD --execute CREATE TABLE `expenses` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`userId` int NOT NULL,\n\t`rodeoId` int NOT NULL,\n\t`category` enum('entry_fee','fuel','lodging','food','equipment','vet','other') NOT NULL,\n\t`description` varchar(255),\n\t`amountCents` int NOT NULL,\n\t`date` timestamp NOT NULL,\n\t`notes` text,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\t`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n\tCONSTRAINT `expenses_id` PRIMARY KEY(`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 323
+}
