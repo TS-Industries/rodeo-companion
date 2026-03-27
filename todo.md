@@ -97,3 +97,23 @@
 - [ ] Fix fuel stations: find stations along full route path, not just endpoints
 - [ ] Show fuel price data from Google Places where available
 - [ ] Improve expense entry discoverability (quick-add shortcut on Schedule/Runs pages)
+
+## Enhancement Round 6 (User Request)
+- [ ] Flashier page designs: hero banners, animated stats, glowing cards, decorative elements
+- [ ] Schedule page: hero banner with stats, animated deadline alerts, star decorations
+- [ ] RodeoDetail page: glowing discipline header, animated run/expense cards
+- [ ] Performance page: flashy stats header, discipline color accents per run
+- [ ] Analytics page: glowing stat cards, animated chart section headers
+- [ ] Home/landing page: more dramatic Western hero with animated elements
+- [ ] Fix: mobile navigation after saving a rodeo — redirect to schedule list
+- [ ] Fix: budget calculator Canada units (litres, L/100km) not applying correctly
+
+## Enhancement Round 7 (User Request)
+- [ ] New authenticated homepage: dashboard hub with quick-access cards to all sections
+- [ ] Homepage: upcoming rodeo countdown card
+- [ ] Homepage: recent stats summary (total runs, total winnings, next deadline)
+- [ ] Homepage: quick-add buttons for common actions
+- [ ] Fix: expense form fields (description, amount, notes) reset when switching category
+- [ ] Fix: mobile navigation after saving a rodeo redirects to schedule list
+- [ ] Fix: budget calculator uses global UnitContext (CA = L/100km + CAD/L, US = MPG + USD/gal)
+- [ ] Flashier pages: hero banners, animated stat cards, glowing discipline headers

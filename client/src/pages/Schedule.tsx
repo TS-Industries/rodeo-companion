@@ -120,37 +120,68 @@ function RodeoCard({ rodeo, onClick }: { rodeo: any; onClick: () => void }) {
     disciplineList = [rodeo.discipline];
   }
 
+  const accentColor = isPast ? "oklch(0.45 0.04 55)" : isDeadlineSoon ? "oklch(0.78 0.18 80)" : "oklch(0.72 0.16 75)";
+
   return (
     <button
       onClick={onClick}
-      className="w-full text-left card-western card-hover rounded-xl overflow-hidden"
+      className="w-full text-left card-shimmer card-hover rounded-2xl overflow-hidden"
+      style={{ borderColor: `${accentColor}40` }}
     >
-      <div className="h-0.5 w-full" style={{ background: "linear-gradient(90deg, oklch(0.72 0.16 75), oklch(0.55 0.20 25))" }} />
+      {/* Top accent bar */}
+      <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, transparent, ${accentColor}, oklch(0.55 0.20 25), ${accentColor}, transparent)` }} />
       <div className="p-4">
-        <div className="flex items-start justify-between gap-2 mb-2">
+        {/* Header row with countdown */}
+        <div className="flex items-start justify-between gap-3 mb-2.5">
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-sm truncate" style={{ color: "oklch(0.93 0.03 75)" }}>{rodeo.name}</h3>
-            <p className="text-xs mt-0.5" style={{ color: "oklch(0.62 0.05 65)" }}>
+            <h3 className="font-black text-base truncate leading-tight"
+              style={{ color: "oklch(0.93 0.03 75)", fontFamily: "'Playfair Display', serif", textShadow: `0 0 20px ${accentColor}30` }}>
+              {rodeo.name}
+            </h3>
+            <p className="text-xs mt-0.5 font-semibold uppercase tracking-wide" style={{ color: "oklch(0.62 0.05 65)" }}>
               {RODEO_TYPE_LABELS[rodeo.rodeotype as RodeoType]}
             </p>
           </div>
-          {rodeo.isEntered ? (
-            <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0" style={{ background: "oklch(0.65 0.14 145 / 20%)", color: "oklch(0.65 0.14 145)" }}>
+          {/* Countdown badge */}
+          {!isPast && (
+            <div className="flex-shrink-0 text-center">
+              <p className="text-3xl font-black leading-none"
+                style={{ color: accentColor, fontFamily: "'Playfair Display', serif", textShadow: `0 0 16px ${accentColor}60` }}>
+                {rodeoDays === 0 ? "🎯" : rodeoDays}
+              </p>
+              <p className="text-[9px] font-bold uppercase tracking-wide" style={{ color: "oklch(0.52 0.05 60)" }}>
+                {rodeoDays === 0 ? "today" : "days"}
+              </p>
+            </div>
+          )}
+          {isPast && (
+            <span className="text-xs px-2 py-0.5 rounded-full font-bold flex-shrink-0"
+              style={{ background: "oklch(0.28 0.04 50)", color: "oklch(0.52 0.05 60)" }}>Past</span>
+          )}
+        </div>
+
+        {/* Status badge row */}
+        <div className="flex items-center gap-2 mb-2.5">
+          {rodeo.isEntered && (
+            <span className="flex items-center gap-1 text-xs px-2.5 py-0.5 rounded-full font-bold"
+              style={{ background: "oklch(0.65 0.14 145 / 20%)", color: "oklch(0.65 0.14 145)", border: "1px solid oklch(0.65 0.14 145 / 30%)" }}>
               <CheckCircle2 className="w-3 h-3" /> Entered
             </span>
-          ) : isDeadlineSoon ? (
-            <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0" style={{ background: "oklch(0.72 0.16 75 / 20%)", color: "oklch(0.78 0.18 80)" }}>
+          )}
+          {isDeadlineSoon && !rodeo.isEntered && (
+            <span className="flex items-center gap-1 text-xs px-2.5 py-0.5 rounded-full font-bold countdown-urgent"
+              style={{ background: "oklch(0.72 0.16 75 / 20%)", color: "oklch(0.78 0.18 80)", border: "1px solid oklch(0.72 0.16 75 / 40%)" }}>
               <AlertCircle className="w-3 h-3" /> Deadline Soon
             </span>
-          ) : null}
+          )}
         </div>
 
         {/* Discipline chips */}
-        <div className="flex flex-wrap gap-1 mb-3">
+        <div className="flex flex-wrap gap-1.5 mb-3">
           {disciplineList.map((d) => {
             const c = DISCIPLINE_COLORS[d];
             return (
-              <span key={d} className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold", c.bg, c.text)}>
+              <span key={d} className={cn("inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold", c.bg, c.text)}>
                 {DISCIPLINE_ICONS[d]} {DISCIPLINE_LABELS[d]}
               </span>
             );
@@ -160,10 +191,9 @@ function RodeoCard({ rodeo, onClick }: { rodeo: any; onClick: () => void }) {
         <div className="space-y-1.5">
           <div className="flex items-center gap-2 text-xs" style={{ color: "oklch(0.72 0.06 65)" }}>
             <CalendarDays className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "oklch(0.72 0.16 75)" }} />
-            <span>
+            <span className="font-medium">
               {isPast ? "Was " : ""}
               {format(new Date(rodeo.rodeoDate), "EEE, MMM d, yyyy")}
-              {!isPast && ` · ${rodeoDays === 0 ? "Today!" : `${rodeoDays}d away`}`}
             </span>
           </div>
           {rodeo.locationName && (
@@ -173,7 +203,8 @@ function RodeoCard({ rodeo, onClick }: { rodeo: any; onClick: () => void }) {
             </div>
           )}
           {!isDeadlinePassed && (
-            <div className={cn("flex items-center gap-2 text-xs", isDeadlineSoon ? "font-medium" : "")} style={{ color: isDeadlineSoon ? "oklch(0.78 0.18 80)" : "oklch(0.52 0.05 60)" }}>
+            <div className={cn("flex items-center gap-2 text-xs font-medium")}
+              style={{ color: isDeadlineSoon ? "oklch(0.78 0.18 80)" : "oklch(0.52 0.05 60)" }}>
               <Bell className="w-3.5 h-3.5 flex-shrink-0" />
               <span>
                 Entry deadline: {format(new Date(rodeo.entryDeadline), "MMM d")}
@@ -185,7 +216,7 @@ function RodeoCard({ rodeo, onClick }: { rodeo: any; onClick: () => void }) {
         {/* Quick-action hint */}
         <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: "1px solid oklch(0.28 0.06 50)" }}>
           <span className="text-xs" style={{ color: "oklch(0.42 0.04 55)" }}>Tap to view runs, expenses &amp; map</span>
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "oklch(0.72 0.16 75 / 12%)", color: "oklch(0.72 0.16 75)" }}>💰 Log Expenses →</span>
+          <span className="text-xs font-bold px-2.5 py-0.5 rounded-full btn-action">💰 Expenses →</span>
         </div>
       </div>
     </button>
@@ -193,17 +224,18 @@ function RodeoCard({ rodeo, onClick }: { rodeo: any; onClick: () => void }) {
 }
 
 // ─── Add Rodeo Dialog ─────────────────────────────────────────────────────────
-function AddRodeoDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+function AddRodeoDialog({ open, onClose, onSaved }: { open: boolean; onClose: () => void; onSaved?: (id: number) => void }) {
   const utils = trpc.useUtils();
   const [mapReady, setMapReady] = useState(false);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const hiddenMapRef = useRef<google.maps.Map | null>(null);
 
   const createMutation = trpc.rodeos.create.useMutation({
-    onSuccess: () => {
+    onSuccess: (data) => {
       utils.rodeos.list.invalidate();
       toast.success("🤠 Rodeo added!");
       onClose();
+      if (onSaved && data?.id) onSaved(data.id);
     },
     onError: (e) => toast.error(e.message),
   });
@@ -470,29 +502,27 @@ export default function Schedule() {
 
   return (
     <div className="min-h-screen bg-background page-enter">
-      {/* Header */}
-      <div className="page-header sticky top-0 z-40">
-        <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
+      {/* ── Flashy Hero Header ── */}
+      <div className="hero-western relative px-4 pt-10 pb-5">
+        <div className="absolute top-4 right-6 text-2xl opacity-15 select-none pointer-events-none">🤠</div>
+        <div className="absolute top-8 right-14 text-sm opacity-10 select-none pointer-events-none">✦</div>
+        <div className="absolute top-5 left-6 text-xs opacity-10 select-none pointer-events-none">★</div>
+        <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: "linear-gradient(90deg, transparent, oklch(0.72 0.16 75 / 50%), transparent)" }} />
+        <div className="max-w-lg mx-auto relative flex items-end justify-between">
           <div>
-            <h1
-              className="text-xl font-bold leading-none"
-              style={{ fontFamily: "'Playfair Display', serif", color: "oklch(0.78 0.18 80)", textShadow: "0 0 20px oklch(0.72 0.16 75 / 40%)" }}
-            >
-              🤠 My Schedule
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] mb-1" style={{ color: "oklch(0.72 0.16 75 / 60%)" }}>✦ Rodeo Schedule ✦</p>
+            <h1 className="text-3xl font-black leading-none mb-1"
+              style={{ fontFamily: "'Playfair Display', serif", color: "oklch(0.93 0.03 75)", textShadow: "0 0 30px oklch(0.72 0.16 75 / 50%)" }}>
+              My Schedule
             </h1>
-            <p className="text-xs mt-0.5" style={{ color: "oklch(0.52 0.05 60)" }}>
+            <p className="text-sm" style={{ color: "oklch(0.62 0.05 65)" }}>
               {upcoming.length} upcoming rodeo{upcoming.length !== 1 ? "s" : ""}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-9 h-9 p-0 rounded-full"
+          <div className="flex items-center gap-2 mb-1">
+            <Button variant="ghost" size="sm" className="w-9 h-9 p-0 rounded-full"
               style={{ border: "1px solid oklch(0.72 0.16 75 / 30%)", color: "oklch(0.72 0.16 75)" }}
-              onClick={() => checkDeadlines.mutate()}
-              disabled={checkDeadlines.isPending}
-            >
+              onClick={() => checkDeadlines.mutate()} disabled={checkDeadlines.isPending}>
               <Bell className="w-4 h-4" />
             </Button>
             <Button size="sm" onClick={() => setShowAdd(true)} className="btn-gold gap-1.5 rounded-full px-4">
@@ -554,7 +584,7 @@ export default function Schedule() {
         )}
       </div>
 
-      <AddRodeoDialog open={showAdd} onClose={() => setShowAdd(false)} />
+      <AddRodeoDialog open={showAdd} onClose={() => setShowAdd(false)} onSaved={(id) => navigate(`/schedule/${id}`)} />
     </div>
   );
 }

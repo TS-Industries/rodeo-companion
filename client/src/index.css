@@ -294,4 +294,190 @@
     border-color: oklch(0.72 0.16 75) !important;
     box-shadow: 0 0 0 2px oklch(0.72 0.16 75 / 25%) !important;
   }
+
+  /* ── Hero banner with animated gradient ── */
+  .hero-western {
+    background: linear-gradient(135deg,
+      oklch(0.12 0.04 45) 0%,
+      oklch(0.18 0.08 55) 30%,
+      oklch(0.22 0.10 65) 60%,
+      oklch(0.16 0.06 48) 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-western::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, oklch(0.72 0.16 75 / 15%), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-western::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, oklch(0.72 0.16 75 / 80%), oklch(0.78 0.18 80), oklch(0.72 0.16 75 / 80%), transparent);
+  }
+
+  /* ── Shimmer card ── */
+  .card-shimmer {
+    background: linear-gradient(145deg, oklch(0.22 0.06 50), oklch(0.18 0.04 46));
+    border: 1px solid oklch(0.38 0.10 65 / 60%);
+    box-shadow: 0 4px 24px oklch(0 0 0 / 50%), inset 0 1px 0 oklch(0.72 0.16 75 / 15%);
+    border-radius: var(--radius);
+    position: relative;
+    overflow: hidden;
+  }
+  .card-shimmer::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, oklch(0.72 0.16 75 / 8%), transparent);
+    animation: shimmerSlide 3s ease-in-out infinite;
+  }
+  @keyframes shimmerSlide {
+    0% { left: -100%; }
+    50% { left: 150%; }
+    100% { left: 150%; }
+  }
+
+  /* ── Stat card ── */
+  .stat-card {
+    background: linear-gradient(145deg, oklch(0.20 0.06 52), oklch(0.16 0.04 46));
+    border: 1px solid oklch(0.35 0.09 62 / 50%);
+    border-radius: var(--radius);
+    padding: 1rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 12px oklch(0 0 0 / 40%);
+  }
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, oklch(0.72 0.16 75 / 60%), oklch(0.78 0.18 80), oklch(0.72 0.16 75 / 60%));
+  }
+
+  /* ── Gold number pulse ── */
+  .num-gold {
+    color: oklch(0.78 0.18 80);
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    text-shadow: 0 0 16px oklch(0.72 0.16 75 / 50%);
+  }
+
+  /* ── Crimson stat ── */
+  .num-crimson {
+    color: oklch(0.72 0.22 28);
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    text-shadow: 0 0 16px oklch(0.60 0.20 25 / 50%);
+  }
+
+  /* ── Green profit ── */
+  .num-green {
+    color: oklch(0.75 0.18 150);
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    text-shadow: 0 0 16px oklch(0.70 0.16 150 / 40%);
+  }
+
+  /* ── Section divider with spurs ── */
+  .spur-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1.5rem 0 1rem;
+  }
+  .spur-divider span {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: oklch(0.72 0.16 75);
+    white-space: nowrap;
+  }
+  .spur-divider::before,
+  .spur-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, oklch(0.72 0.16 75 / 40%), transparent);
+  }
+
+  /* ── Quick-action button ── */
+  .btn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 1rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border: 1px solid oklch(0.72 0.16 75 / 40%);
+    color: oklch(0.78 0.18 80);
+    background: oklch(0.72 0.16 75 / 10%);
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  }
+  .btn-action:hover {
+    background: oklch(0.72 0.16 75 / 20%);
+    border-color: oklch(0.72 0.16 75 / 70%);
+    box-shadow: 0 0 12px oklch(0.72 0.16 75 / 30%);
+  }
+
+  /* ── Discipline icon badge ── */
+  .icon-badge {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    background: linear-gradient(135deg, oklch(0.25 0.07 55), oklch(0.20 0.05 48));
+    border: 1px solid oklch(0.38 0.09 62 / 50%);
+    box-shadow: 0 2px 8px oklch(0 0 0 / 40%);
+    flex-shrink: 0;
+  }
+
+  /* ── Countdown ring ── */
+  .countdown-urgent {
+    color: oklch(0.72 0.22 28);
+    text-shadow: 0 0 12px oklch(0.60 0.20 25 / 60%);
+    animation: urgentPulse 1.5s ease-in-out infinite;
+  }
+  @keyframes urgentPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.65; }
+  }
+
+  /* ── Floating banner ── */
+  .banner-western {
+    background: linear-gradient(90deg,
+      oklch(0.55 0.20 25 / 20%),
+      oklch(0.72 0.16 75 / 15%),
+      oklch(0.55 0.20 25 / 20%));
+    border-top: 1px solid oklch(0.72 0.16 75 / 30%);
+    border-bottom: 1px solid oklch(0.72 0.16 75 / 30%);
+    padding: 0.5rem 1rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: oklch(0.78 0.18 80);
+    text-align: center;
+  }
+
+  /* ── Tab active glow ── */
+  [data-state='active'].tab-gold {
+    background: linear-gradient(135deg, oklch(0.72 0.16 75 / 20%), oklch(0.65 0.14 70 / 15%));
+    color: oklch(0.78 0.18 80);
+    box-shadow: 0 0 12px oklch(0.72 0.16 75 / 25%), inset 0 1px 0 oklch(0.72 0.16 75 / 30%);
+    border-bottom: 2px solid oklch(0.72 0.16 75);
+  }
 }

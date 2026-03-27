@@ -13,21 +13,23 @@ import Locations from "./pages/Locations";
 import Settings from "./pages/Settings";
 import Help from "./pages/Help";
 import Home from "./pages/Home";
+import Dashboard from "./pages/Dashboard";
 import {
   CalendarDays,
   Trophy,
   BarChart3,
   MapPin,
   BookOpen,
+  Home as HomeIcon,
 } from "lucide-react";
 import { cn } from "./lib/utils";
 
 const NAV_ITEMS = [
+  { path: "/", label: "Home", icon: HomeIcon, exact: true },
   { path: "/schedule", label: "Schedule", icon: CalendarDays },
   { path: "/performance", label: "Runs", icon: Trophy },
   { path: "/analytics", label: "Progress", icon: BarChart3 },
   { path: "/locations", label: "Map", icon: MapPin },
-  { path: "/help", label: "Guide", icon: BookOpen },
 ];
 
 function BottomNav() {
@@ -43,8 +45,8 @@ function BottomNav() {
       }}
     >
       <div className="flex items-stretch justify-around max-w-lg mx-auto">
-        {NAV_ITEMS.map(({ path, label, icon: Icon }) => {
-          const active = location === path || location.startsWith(path + "/");
+        {NAV_ITEMS.map(({ path, label, icon: Icon, exact }) => {
+          const active = exact ? location === path : (location === path || location.startsWith(path + "/"));
           return (
             <button
               key={path}
@@ -101,7 +103,7 @@ function AppShell() {
   return (
     <div className="min-h-screen bg-background pb-20 relative">
       <Switch>
-        <Route path="/" component={Schedule} />
+        <Route path="/" component={Dashboard} />
         <Route path="/schedule" component={Schedule} />
         <Route path="/schedule/:id" component={RodeoDetail} />
         <Route path="/performance" component={Performance} />

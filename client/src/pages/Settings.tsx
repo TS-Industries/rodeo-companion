@@ -47,13 +47,18 @@ export default function Settings() {
 
   return (
     <div className="min-h-screen bg-background page-enter">
-      {/* Header */}
-      <div className="page-header sticky top-0 z-40">
-        <div className="max-w-lg mx-auto px-4 py-3">
-          <h1 className="text-xl font-bold leading-none" style={{ fontFamily: "'Playfair Display', serif", color: "oklch(0.78 0.18 80)", textShadow: "0 0 20px oklch(0.72 0.16 75 / 40%)" }}>
-            ⚙️ Settings
+      {/* ── Flashy Hero Header ── */}
+      <div className="hero-western relative px-4 pt-10 pb-6">
+        <div className="absolute top-4 right-6 text-2xl opacity-15 select-none pointer-events-none">⚙️</div>
+        <div className="absolute top-8 right-14 text-sm opacity-10 select-none pointer-events-none">✦</div>
+        <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: "linear-gradient(90deg, transparent, oklch(0.72 0.16 75 / 50%), transparent)" }} />
+        <div className="max-w-lg mx-auto relative">
+          <p className="text-[10px] font-black uppercase tracking-[0.25em] mb-1" style={{ color: "oklch(0.72 0.16 75 / 60%)" }}>✦ Preferences ✦</p>
+          <h1 className="text-3xl font-black leading-none mb-1"
+            style={{ fontFamily: "'Playfair Display', serif", color: "oklch(0.93 0.03 75)", textShadow: "0 0 30px oklch(0.72 0.16 75 / 50%)" }}>
+            Settings
           </h1>
-          <p className="text-xs mt-0.5" style={{ color: "oklch(0.52 0.05 60)" }}>Preferences &amp; account</p>
+          <p className="text-sm" style={{ color: "oklch(0.62 0.05 65)" }}>Account, units &amp; notifications</p>
         </div>
       </div>
 

@@ -78,7 +78,7 @@ const rodeosRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      await createRodeo({
+      const created = await createRodeo({
         userId: ctx.user.id,
         name: input.name,
         discipline: input.discipline,
@@ -98,7 +98,7 @@ const rodeosRouter = router({
         isEntered: false,
         notificationSent: false,
       });
-      return { success: true };
+      return { success: true, id: created.insertId };
     }),
 
   update: protectedProcedure

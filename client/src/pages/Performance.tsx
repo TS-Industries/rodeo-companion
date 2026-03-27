@@ -39,34 +39,45 @@ function RunCard({ run, onDelete, onVideoUpload }: { run: any; onDelete: () => v
 
   return (
     <>
-      <div className="card-western rounded-xl overflow-hidden">
-        <div className="h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${colors.accent}, transparent)` }} />
+      <div className="card-shimmer rounded-xl overflow-hidden" style={{ borderColor: `${colors.accent}40` }}>
+        <div className="h-0.5 w-full" style={{ background: `linear-gradient(90deg, transparent, ${colors.accent}, transparent)` }} />
         <button className="w-full text-left p-3" onClick={() => setExpanded(!expanded)}>
           <div className="flex items-center gap-3">
-            <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center text-xl flex-shrink-0", colors.bg)}>
+            <div className={cn("icon-badge text-xl", colors.bg)}>
               {DISCIPLINE_ICONS[discipline]}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold" style={{ color: "oklch(0.93 0.03 75)" }}>
+              <p className="text-sm font-black" style={{ color: "oklch(0.93 0.03 75)", fontFamily: "'Playfair Display', serif" }}>
                 {DISCIPLINE_LABELS[discipline]}
               </p>
-              <p className="text-xs" style={{ color: "oklch(0.52 0.05 60)" }}>
-                {format(new Date(run.runDate), "MMM d, yyyy")}
-              </p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <p className="text-xs" style={{ color: "oklch(0.52 0.05 60)" }}>
+                  {format(new Date(run.runDate), "MMM d, yyyy")}
+                </p>
+                {run.round && run.round !== "regular" && (
+                  <span className="text-[9px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded-full"
+                    style={{ background: run.round === "final" ? "oklch(0.72 0.16 75 / 20%)" : "oklch(0.65 0.14 195 / 20%)", color: run.round === "final" ? "oklch(0.78 0.18 80)" : "oklch(0.65 0.14 195)" }}>
+                    {run.round === "short_go" ? "Short Go" : "Final"}
+                  </span>
+                )}
+              </div>
             </div>
             <div className="text-right flex-shrink-0">
               {isTimed && total != null && (
-                <p className="text-base font-bold" style={{ color: "oklch(0.78 0.18 80)", fontFamily: "'Playfair Display', serif" }}>
+                <p className="text-lg font-black num-gold">
                   {formatTime(total)}
                 </p>
               )}
               {isScored && run.score != null && (
-                <p className="text-base font-bold" style={{ color: "oklch(0.78 0.18 80)", fontFamily: "'Playfair Display', serif" }}>
+                <p className="text-lg font-black num-gold">
                   {formatScore(run.score)}
                 </p>
               )}
               {isTimed && (run.penaltySeconds ?? 0) > 0 && (
-                <p className="text-xs" style={{ color: "oklch(0.65 0.18 25)" }}>+{run.penaltySeconds}s pen.</p>
+                <p className="text-xs font-semibold" style={{ color: "oklch(0.65 0.18 25)" }}>+{run.penaltySeconds}s pen.</p>
+              )}
+              {(run.prizeMoneyCents ?? 0) > 0 && (
+                <p className="text-xs font-bold" style={{ color: "oklch(0.65 0.14 145)" }}>💰 ${(run.prizeMoneyCents / 100).toFixed(0)}</p>
               )}
             </div>
             <ChevronRight className={cn("w-4 h-4 transition-transform flex-shrink-0", expanded && "rotate-90")} style={{ color: "oklch(0.52 0.05 60)" }} />
@@ -476,14 +487,19 @@ export default function Performance() {
 
   return (
     <div className="min-h-screen bg-background page-enter">
-      <div className="page-header sticky top-0 z-40">
-        <div className="max-w-lg mx-auto px-4 py-3">
-          <h1 className="text-xl font-bold leading-none" style={{ fontFamily: "'Playfair Display', serif", color: "oklch(0.78 0.18 80)", textShadow: "0 0 20px oklch(0.72 0.16 75 / 40%)" }}>
-            🏆 My Runs
+      {/* ── Flashy Hero Header ── */}
+      <div className="hero-western relative px-4 pt-10 pb-6">
+        {/* Decorative */}
+        <div className="absolute top-4 right-6 text-2xl opacity-15 select-none pointer-events-none">🏆</div>
+        <div className="absolute top-8 right-14 text-sm opacity-10 select-none pointer-events-none">✦</div>
+        <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: "linear-gradient(90deg, transparent, oklch(0.72 0.16 75 / 50%), transparent)" }} />
+        <div className="max-w-lg mx-auto relative">
+          <p className="text-[10px] font-black uppercase tracking-[0.25em] mb-1" style={{ color: "oklch(0.72 0.16 75 / 60%)" }}>✦ Performance ✦</p>
+          <h1 className="text-3xl font-black leading-none mb-1"
+            style={{ fontFamily: "'Playfair Display', serif", color: "oklch(0.93 0.03 75)", textShadow: "0 0 30px oklch(0.72 0.16 75 / 50%)" }}>
+            My Runs
           </h1>
-          <p className="text-xs mt-0.5" style={{ color: "oklch(0.52 0.05 60)" }}>
-            Log times, scores &amp; videos per discipline
-          </p>
+          <p className="text-sm" style={{ color: "oklch(0.62 0.05 65)" }}>Times, scores &amp; videos per discipline</p>
         </div>
       </div>
 

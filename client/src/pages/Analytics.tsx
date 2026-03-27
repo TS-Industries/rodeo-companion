@@ -30,33 +30,36 @@ const CHART_COLORS = ["#c2410c", "#0d9488", "#d97706", "#7c3aed", "#dc2626", "#2
 
 function StatCard({ label, value, sub, trend }: { label: string; value: string; sub?: string; trend?: "up" | "down" | "flat" }) {
   return (
-    <div className="card-western rounded-xl p-3">
-      <p className="text-xs" style={{ color: "oklch(0.62 0.05 65)" }}>{label}</p>
-      <div className="flex items-end gap-1 mt-0.5">
-        <p className="text-xl font-bold" style={{ color: "oklch(0.78 0.18 80)" }}>{value}</p>
-        {trend === "down" && <TrendingDown className="w-4 h-4 text-green-600 mb-0.5" />}
-        {trend === "up" && <TrendingUp className="w-4 h-4 text-red-500 mb-0.5" />}
-        {trend === "flat" && <Minus className="w-4 h-4 text-muted-foreground mb-0.5" />}
+    <div className="stat-card">
+      <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: "oklch(0.52 0.05 60)" }}>{label}</p>
+      <div className="flex items-end gap-1 mt-1">
+        <p className="text-2xl font-black num-gold">{value}</p>
+        {trend === "down" && <TrendingDown className="w-4 h-4 mb-1" style={{ color: "oklch(0.65 0.14 145)" }} />}
+        {trend === "up" && <TrendingUp className="w-4 h-4 mb-1" style={{ color: "oklch(0.65 0.18 25)" }} />}
+        {trend === "flat" && <Minus className="w-4 h-4 mb-1" style={{ color: "oklch(0.52 0.05 60)" }} />}
       </div>
-      {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
+      {sub && <p className="text-[10px] mt-0.5" style={{ color: "oklch(0.52 0.05 60)" }}>{sub}</p>}
     </div>
   );
 }
 
 function DrillCard({ drill }: { drill: { title: string; description: string; difficulty: string; duration: string } }) {
-  const diffColor = drill.difficulty === "beginner" ? "bg-green-100 text-green-700"
-    : drill.difficulty === "intermediate" ? "bg-yellow-100 text-yellow-700"
-    : "bg-red-100 text-red-700";
+  const diffStyle = drill.difficulty === "beginner"
+    ? { bg: "oklch(0.65 0.14 145 / 20%)", color: "oklch(0.65 0.14 145)" }
+    : drill.difficulty === "intermediate"
+    ? { bg: "oklch(0.72 0.16 75 / 20%)", color: "oklch(0.78 0.18 80)" }
+    : { bg: "oklch(0.65 0.18 25 / 20%)", color: "oklch(0.72 0.22 28)" };
   return (
-    <div className="bg-card border border-border rounded-xl p-4">
+    <div className="card-shimmer rounded-xl p-4">
       <div className="flex items-start justify-between gap-2 mb-2">
-        <h4 className="font-semibold text-sm text-foreground">{drill.title}</h4>
-        <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0", diffColor)}>
+        <h4 className="font-black text-sm" style={{ color: "oklch(0.93 0.03 75)", fontFamily: "'Playfair Display', serif" }}>{drill.title}</h4>
+        <span className="text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-wide flex-shrink-0"
+          style={{ background: diffStyle.bg, color: diffStyle.color, border: `1px solid ${diffStyle.color}40` }}>
           {drill.difficulty}
         </span>
       </div>
-      <p className="text-xs text-muted-foreground leading-relaxed">{drill.description}</p>
-      <p className="text-xs text-primary mt-2 font-medium">⏱ {drill.duration}</p>
+      <p className="text-xs leading-relaxed" style={{ color: "oklch(0.62 0.05 65)" }}>{drill.description}</p>
+      <p className="text-xs mt-2 font-bold" style={{ color: "oklch(0.72 0.16 75)" }}>⏱ {drill.duration}</p>
     </div>
   );
 }
@@ -412,13 +415,19 @@ export default function Analytics() {
 
   return (
     <div className="min-h-screen bg-background page-enter">
-      {/* Header */}
-      <div className="page-header sticky top-0 z-40">
-        <div className="max-w-lg mx-auto px-4 py-3">
-          <h1 className="text-xl font-bold leading-none" style={{ fontFamily: "'Playfair Display', serif", color: "oklch(0.78 0.18 80)", textShadow: "0 0 20px oklch(0.72 0.16 75 / 40%)" }}>
-            📊 Progress
+      {/* ── Flashy Hero Header ── */}
+      <div className="hero-western relative px-4 pt-10 pb-6">
+        <div className="absolute top-4 right-6 text-2xl opacity-15 select-none pointer-events-none">📊</div>
+        <div className="absolute top-8 right-14 text-sm opacity-10 select-none pointer-events-none">✦</div>
+        <div className="absolute top-5 left-6 text-xs opacity-10 select-none pointer-events-none">★</div>
+        <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: "linear-gradient(90deg, transparent, oklch(0.72 0.16 75 / 50%), transparent)" }} />
+        <div className="max-w-lg mx-auto relative">
+          <p className="text-[10px] font-black uppercase tracking-[0.25em] mb-1" style={{ color: "oklch(0.72 0.16 75 / 60%)" }}>✦ Analytics ✦</p>
+          <h1 className="text-3xl font-black leading-none mb-1"
+            style={{ fontFamily: "'Playfair Display', serif", color: "oklch(0.93 0.03 75)", textShadow: "0 0 30px oklch(0.72 0.16 75 / 50%)" }}>
+            Progress
           </h1>
-          <p className="text-xs mt-0.5" style={{ color: "oklch(0.52 0.05 60)" }}>Performance analytics &amp; drill suggestions</p>
+          <p className="text-sm" style={{ color: "oklch(0.62 0.05 65)" }}>Charts, P&amp;L, expenses &amp; drill suggestions</p>
         </div>
       </div>
 

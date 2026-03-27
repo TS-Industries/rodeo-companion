@@ -6,7 +6,7 @@ import type { TrpcContext } from "./_core/context";
 vi.mock("./db", () => ({
   getRodeosByUser: vi.fn().mockResolvedValue([]),
   getRodeoById: vi.fn().mockResolvedValue(null),
-  createRodeo: vi.fn().mockResolvedValue(undefined),
+  createRodeo: vi.fn().mockResolvedValue({ insertId: 42 }),
   updateRodeo: vi.fn().mockResolvedValue(undefined),
   deleteRodeo: vi.fn().mockResolvedValue(undefined),
   getPerformancesByUser: vi.fn().mockResolvedValue([]),
@@ -84,7 +84,7 @@ describe("rodeos router", () => {
       locationAddress: "Cheyenne, WY",
       notifyDaysBefore: 14,
     });
-    expect(result).toEqual({ success: true });
+    expect(result).toMatchObject({ success: true });
   });
 
   it("create rejects invalid discipline", async () => {

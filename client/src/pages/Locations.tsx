@@ -418,28 +418,24 @@ export default function Locations() {
 
   return (
     <div className="min-h-screen bg-background page-enter flex flex-col">
-      {/* ── Header ── */}
-      <div className="page-header sticky top-0 z-40 px-4 py-3">
-        <div className="max-w-lg mx-auto flex items-center justify-between">
+      {/* ── Flashy Hero Header ── */}
+      <div className="hero-western relative px-4 pt-10 pb-5">
+        <div className="absolute top-4 right-6 text-2xl opacity-15 select-none pointer-events-none">🗺️</div>
+        <div className="absolute top-8 right-14 text-sm opacity-10 select-none pointer-events-none">✦</div>
+        <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: "linear-gradient(90deg, transparent, oklch(0.72 0.16 75 / 50%), transparent)" }} />
+        <div className="max-w-lg mx-auto relative flex items-end justify-between">
           <div>
-            <h1
-              className="text-xl font-bold leading-none"
-              style={{ fontFamily: "'Playfair Display', serif", color: "oklch(0.78 0.18 80)", textShadow: "0 0 20px oklch(0.72 0.16 75 / 40%)" }}
-            >
-              🗺️ Trip Planner
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] mb-1" style={{ color: "oklch(0.72 0.16 75 / 60%)" }}>✦ Navigation ✦</p>
+            <h1 className="text-3xl font-black leading-none mb-1"
+              style={{ fontFamily: "'Playfair Display', serif", color: "oklch(0.93 0.03 75)", textShadow: "0 0 30px oklch(0.72 0.16 75 / 50%)" }}>
+              Trip Planner
             </h1>
-            <p className="text-xs mt-0.5" style={{ color: "oklch(0.52 0.05 60)" }}>
-              Multi-stop routes with fuel stations
-            </p>
+            <p className="text-sm" style={{ color: "oklch(0.62 0.05 65)" }}>Multi-stop routes &amp; fuel stations</p>
           </div>
           {routeBuilt && (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="gap-1.5 text-xs rounded-full"
+            <Button size="sm" variant="ghost" className="gap-1.5 text-xs rounded-full mb-1"
               style={{ border: "1px solid oklch(0.55 0.22 25 / 40%)", color: "oklch(0.65 0.20 25)" }}
-              onClick={clearRoute}
-            >
+              onClick={clearRoute}>
               <RotateCcw className="w-3.5 h-3.5" /> Clear
             </Button>
           )}

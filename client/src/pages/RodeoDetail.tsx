@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -30,12 +30,19 @@ import {
   type ExpenseCategory,
 } from "@/lib/expenses";
 import { cn } from "@/lib/utils";
+import { useUnits } from "@/contexts/UnitContext";
 
 // ─── Trip Budget Calculator ───────────────────────────────────────────────────
-function TripBudgetCalc({ distanceKm, countryCode }: { distanceKm?: number | null; countryCode?: string | null }) {
-  const isCanada = countryCode === "CA";
+function TripBudgetCalc({ distanceKm }: { distanceKm?: number | null; countryCode?: string | null }) {
+  const { isCanada, fuelEconomyLabel, fuelVolumeLabel, currencyLabel } = useUnits();
   const [fuelPrice, setFuelPrice] = useState(isCanada ? "1.65" : "3.50"); // CAD/L or USD/gal
   const [economy, setEconomy] = useState(isCanada ? "15" : "12"); // L/100km or MPG
+
+  // Sync defaults when unit system changes
+  useEffect(() => {
+    setFuelPrice(isCanada ? "1.65" : "3.50");
+    setEconomy(isCanada ? "15" : "12");
+  }, [isCanada]);
 
   const distance = distanceKm ?? 0;
   let fuelCost = 0;
@@ -62,13 +69,13 @@ function TripBudgetCalc({ distanceKm, countryCode }: { distanceKm?: number | nul
       <div className="grid grid-cols-2 gap-3">
         <div>
           <Label className="text-xs" style={{ color: "oklch(0.52 0.05 60)" }}>
-            {isCanada ? "Fuel Price (CAD/L)" : "Fuel Price (USD/gal)"}
+            Fuel Price ({currencyLabel}/{fuelVolumeLabel})
           </Label>
           <Input className="mt-1 text-sm" type="number" step="0.01" min="0" value={fuelPrice} onChange={(e) => setFuelPrice(e.target.value)} />
         </div>
         <div>
           <Label className="text-xs" style={{ color: "oklch(0.52 0.05 60)" }}>
-            {isCanada ? "Fuel Economy (L/100km)" : "Fuel Economy (MPG)"}
+            Fuel Economy ({fuelEconomyLabel})
           </Label>
           <Input className="mt-1 text-sm" type="number" step="0.1" min="1" value={economy} onChange={(e) => setEconomy(e.target.value)} />
         </div>
@@ -82,13 +89,13 @@ function TripBudgetCalc({ distanceKm, countryCode }: { distanceKm?: number | nul
           <div className="text-center p-2 rounded-lg" style={{ background: "oklch(0.16 0.04 48)" }}>
             <p className="text-xs" style={{ color: "oklch(0.52 0.05 60)" }}>Fuel Used</p>
             <p className="text-sm font-bold" style={{ color: "oklch(0.78 0.18 80)" }}>
-              {isCanada ? `${fuelUsed.toFixed(1)}L` : `${fuelUsed.toFixed(1)}gal`}
+              {fuelUsed.toFixed(1)}{fuelVolumeLabel}
             </p>
           </div>
           <div className="text-center p-2 rounded-lg" style={{ background: "oklch(0.16 0.04 48)" }}>
             <p className="text-xs" style={{ color: "oklch(0.52 0.05 60)" }}>Est. Cost</p>
             <p className="text-sm font-bold" style={{ color: "oklch(0.72 0.16 75)" }}>
-              {isCanada ? `C$${fuelCost.toFixed(2)}` : `$${fuelCost.toFixed(2)}`}
+              {currencyLabel === "CAD" ? `C$${fuelCost.toFixed(2)}` : `$${fuelCost.toFixed(2)}`}
             </p>
           </div>
         </div>
@@ -108,13 +115,32 @@ function AddExpenseDialog({ rodeoId, open, onClose }: { rodeoId: number; open: b
     onSuccess: () => { utils.expenses.listByRodeo.invalidate({ rodeoId }); toast.success("Expense added!"); onClose(); },
     onError: (e) => toast.error(e.message),
   });
-  const [form, setForm] = useState({
+
+  const freshForm = () => ({
     category: "entry_fee" as ExpenseCategory,
     description: "",
     amount: "",
     date: new Date().toISOString().split("T")[0],
     notes: "",
   });
+
+  const [form, setForm] = useState(freshForm);
+
+  // Reset the whole form every time the dialog opens
+  useEffect(() => {
+    if (open) setForm(freshForm());
+  }, [open]);
+
+  // When category changes, clear description, amount, and notes
+  const handleCategoryChange = (v: string) => {
+    setForm(prev => ({
+      ...prev,
+      category: v as ExpenseCategory,
+      description: "",
+      amount: "",
+      notes: "",
+    }));
+  };
 
   const handleSubmit = () => {
     const cents = Math.round(parseFloat(form.amount) * 100);
@@ -140,7 +166,7 @@ function AddExpenseDialog({ rodeoId, open, onClose }: { rodeoId: number; open: b
         <div className="space-y-3 py-1">
           <div>
             <Label className="text-xs font-semibold" style={{ color: "oklch(0.72 0.16 75)" }}>Category</Label>
-            <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v as ExpenseCategory })}>
+            <Select value={form.category} onValueChange={handleCategoryChange}>
               <SelectTrigger className="mt-1 text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {EXPENSE_CATEGORIES.map((c) => (
@@ -575,24 +601,34 @@ export default function RodeoDetail() {
 
   return (
     <div className="min-h-screen bg-background page-enter">
-      {/* Header */}
-      <div className="page-header sticky top-0 z-40">
-        <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
-          <button onClick={() => navigate("/schedule")} style={{ color: "oklch(0.72 0.16 75)" }}>
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-base font-bold truncate" style={{ fontFamily: "'Playfair Display', serif", color: "oklch(0.78 0.18 80)" }}>
-              {rodeo.name}
-            </h1>
-            <p className="text-xs" style={{ color: "oklch(0.52 0.05 60)" }}>
-              {RODEO_TYPE_LABELS[rodeo.rodeotype as RodeoType]}
-              {isCanada ? " · 🍁 Canada" : " · 🇺🇸 USA"}
-            </p>
+      {/* ── Flashy Hero Header ── */}
+      <div className="hero-western relative px-4 pt-10 pb-5">
+        <div className="absolute top-4 right-6 text-2xl opacity-15 select-none pointer-events-none">🏆</div>
+        <div className="absolute top-8 right-14 text-sm opacity-10 select-none pointer-events-none">✦</div>
+        <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: "linear-gradient(90deg, transparent, oklch(0.72 0.16 75 / 50%), transparent)" }} />
+        <div className="max-w-lg mx-auto relative">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <button onClick={() => navigate("/schedule")} className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ background: "oklch(0.72 0.16 75 / 15%)", color: "oklch(0.78 0.18 80)" }}>
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-0.5" style={{ color: "oklch(0.72 0.16 75 / 60%)" }}>
+                  {RODEO_TYPE_LABELS[rodeo.rodeotype as RodeoType]} {isCanada ? "🍁" : "🇺🇸"}
+                </p>
+                <h1 className="text-2xl font-black leading-tight"
+                  style={{ fontFamily: "'Playfair Display', serif", color: "oklch(0.93 0.03 75)", textShadow: "0 0 25px oklch(0.72 0.16 75 / 50%)" }}>
+                  {rodeo.name}
+                </h1>
+              </div>
+            </div>
+            <button onClick={() => { if (confirm("Delete this rodeo?")) deleteRodeo.mutate({ id: rodeoId }); }}
+              className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-4"
+              style={{ background: "oklch(0.65 0.18 25 / 15%)", color: "oklch(0.65 0.18 25)" }}>
+              <Trash2 className="w-4 h-4" />
+            </button>
           </div>
-          <button onClick={() => { if (confirm("Delete this rodeo?")) deleteRodeo.mutate({ id: rodeoId }); }} style={{ color: "oklch(0.52 0.05 60)" }}>
-            <Trash2 className="w-4 h-4" />
-          </button>
         </div>
       </div>
 

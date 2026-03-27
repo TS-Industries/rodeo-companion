@@ -92,7 +92,7 @@ export async function createRodeo(data: InsertRodeo) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
   const result = await db.insert(rodeos).values(data);
-  return result;
+  return { insertId: (result as any)[0]?.insertId as number | undefined };
 }
 
 export async function updateRodeo(id: number, userId: number, data: Partial<InsertRodeo>) {
