@@ -43,9 +43,9 @@ export default function Settings() {
   return (
     <div className="min-h-screen bg-background page-enter">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-card border-b border-border shadow-sm">
+      <div className="page-header sticky top-0 z-40">
         <div className="max-w-lg mx-auto px-4 py-3">
-          <h1 className="text-lg font-bold text-foreground" style={{ fontFamily: "'Playfair Display', serif" }}>
+          <h1 className="text-xl font-bold leading-none" style={{ fontFamily: "'Playfair Display', serif", color: "oklch(0.78 0.18 80)", textShadow: "0 0 20px oklch(0.72 0.16 75 / 40%)" }}>
             ⚙️ Settings
           </h1>
         </div>
@@ -53,23 +53,26 @@ export default function Settings() {
 
       <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
         {/* Profile card */}
-        <div className="bg-card border border-border rounded-xl p-4">
+        <div className="card-western rounded-xl p-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <User className="w-6 h-6 text-primary" />
+            <div
+              className="w-12 h-12 rounded-full flex items-center justify-center"
+              style={{ background: "oklch(0.72 0.16 75 / 15%)", border: "2px solid oklch(0.72 0.16 75 / 40%)" }}
+            >
+              <User className="w-6 h-6" style={{ color: "oklch(0.78 0.18 80)" }} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-foreground">{user?.name ?? "Rodeo Competitor"}</p>
-              <p className="text-xs text-muted-foreground truncate">{user?.email ?? ""}</p>
+              <p className="font-bold" style={{ color: "oklch(0.93 0.03 75)" }}>{user?.name ?? "Rodeo Competitor"}</p>
+              <p className="text-xs truncate" style={{ color: "oklch(0.52 0.05 60)" }}>{user?.email ?? ""}</p>
             </div>
           </div>
         </div>
 
         {/* Notification settings */}
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
-          <div className="px-4 py-3 border-b border-border flex items-center gap-2">
-            <Bell className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-semibold text-foreground">Notifications</h2>
+        <div className="card-western rounded-xl overflow-hidden">
+          <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: "1px solid oklch(0.30 0.06 50)", background: "oklch(0.16 0.04 46)" }}>
+            <Bell className="w-4 h-4" style={{ color: "oklch(0.72 0.16 75)" }} />
+            <h2 className="text-sm font-bold" style={{ color: "oklch(0.78 0.18 80)" }}>Notifications</h2>
           </div>
 
           {prefsLoading ? (

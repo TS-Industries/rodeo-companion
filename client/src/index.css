@@ -40,87 +40,92 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-gold: var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
 }
 
 /* ============================================================
-   RODEO COMPANION — Western-Inspired Design System
+   RODEO COMPANION — Bold Western Dark Theme
+   Deep leather browns, burnished gold, dusty crimson
    ============================================================ */
 :root {
-  /* Saddle-brown primary */
-  --primary: oklch(0.42 0.10 55);
-  --primary-foreground: oklch(0.97 0.01 60);
-  /* Burnt orange accent */
-  --accent: oklch(0.65 0.15 50);
-  --accent-foreground: oklch(0.97 0.01 60);
-  /* Warm tan secondary */
-  --secondary: oklch(0.88 0.04 70);
-  --secondary-foreground: oklch(0.28 0.06 55);
-  /* Muted dusty */
-  --muted: oklch(0.93 0.02 60);
-  --muted-foreground: oklch(0.52 0.04 55);
-  /* Warm parchment background */
-  --background: oklch(0.97 0.01 60);
-  --foreground: oklch(0.18 0.03 55);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.03 55);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.03 55);
-  --destructive: oklch(0.55 0.20 25);
+  /* ── Gold primary ── */
+  --primary:            oklch(0.72 0.16 75);   /* burnished gold */
+  --primary-foreground: oklch(0.14 0.04 45);   /* near-black */
+
+  /* ── Crimson accent ── */
+  --accent:             oklch(0.55 0.20 25);   /* rodeo red */
+  --accent-foreground:  oklch(0.97 0.01 60);
+
+  /* ── Deep leather secondary ── */
+  --secondary:          oklch(0.28 0.06 50);
+  --secondary-foreground: oklch(0.88 0.05 75);
+
+  /* ── Dark parchment muted ── */
+  --muted:              oklch(0.22 0.04 50);
+  --muted-foreground:   oklch(0.62 0.05 65);
+
+  /* ── Dark leather background ── */
+  --background:         oklch(0.14 0.04 45);   /* dark saddle leather */
+  --foreground:         oklch(0.93 0.03 75);   /* warm cream */
+
+  --card:               oklch(0.18 0.04 48);
+  --card-foreground:    oklch(0.93 0.03 75);
+
+  --popover:            oklch(0.20 0.05 48);
+  --popover-foreground: oklch(0.93 0.03 75);
+
+  --destructive:        oklch(0.55 0.22 25);
   --destructive-foreground: oklch(0.97 0.01 60);
-  --border: oklch(0.85 0.03 60);
-  --input: oklch(0.85 0.03 60);
-  --ring: oklch(0.42 0.10 55);
-  --radius: 0.65rem;
-  /* Chart — warm Western palette */
-  --chart-1: oklch(0.65 0.15 50);
-  --chart-2: oklch(0.62 0.10 195);
-  --chart-3: oklch(0.76 0.13 80);
-  --chart-4: oklch(0.42 0.10 55);
-  --chart-5: oklch(0.55 0.20 25);
-  /* Sidebar */
-  --sidebar: oklch(0.28 0.06 55);
-  --sidebar-foreground: oklch(0.93 0.02 60);
-  --sidebar-primary: oklch(0.65 0.15 50);
-  --sidebar-primary-foreground: oklch(0.97 0.01 60);
-  --sidebar-accent: oklch(0.38 0.08 55);
-  --sidebar-accent-foreground: oklch(0.93 0.02 60);
-  --sidebar-border: oklch(0.38 0.08 55);
-  --sidebar-ring: oklch(0.65 0.15 50);
+
+  --border:             oklch(0.30 0.06 50);
+  --input:              oklch(0.28 0.06 50);
+  --ring:               oklch(0.72 0.16 75);
+  --radius:             0.75rem;
+
+  /* ── Gold token ── */
+  --gold:               oklch(0.72 0.16 75);
+  --gold-foreground:    oklch(0.14 0.04 45);
+
+  /* ── Charts — Western palette ── */
+  --chart-1: oklch(0.72 0.16 75);   /* gold */
+  --chart-2: oklch(0.55 0.20 25);   /* crimson */
+  --chart-3: oklch(0.65 0.14 195);  /* teal */
+  --chart-4: oklch(0.78 0.14 80);   /* amber */
+  --chart-5: oklch(0.60 0.12 280);  /* purple */
+
+  /* ── Sidebar ── */
+  --sidebar:                      oklch(0.12 0.04 45);
+  --sidebar-foreground:           oklch(0.93 0.03 75);
+  --sidebar-primary:              oklch(0.72 0.16 75);
+  --sidebar-primary-foreground:   oklch(0.14 0.04 45);
+  --sidebar-accent:               oklch(0.22 0.05 48);
+  --sidebar-accent-foreground:    oklch(0.93 0.03 75);
+  --sidebar-border:               oklch(0.28 0.06 50);
+  --sidebar-ring:                 oklch(0.72 0.16 75);
 }
 
-.dark {
-  --primary: oklch(0.65 0.15 50);
-  --primary-foreground: oklch(0.97 0.01 60);
-  --accent: oklch(0.72 0.15 50);
-  --accent-foreground: oklch(0.18 0.03 55);
-  --secondary: oklch(0.32 0.06 55);
-  --secondary-foreground: oklch(0.88 0.04 70);
-  --muted: oklch(0.25 0.04 55);
-  --muted-foreground: oklch(0.65 0.04 60);
-  --background: oklch(0.16 0.03 55);
-  --foreground: oklch(0.93 0.02 60);
-  --card: oklch(0.20 0.04 55);
-  --card-foreground: oklch(0.93 0.02 60);
-  --popover: oklch(0.20 0.04 55);
-  --popover-foreground: oklch(0.93 0.02 60);
-  --destructive: oklch(0.65 0.20 25);
-  --destructive-foreground: oklch(0.97 0.01 60);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.65 0.15 50);
-  --chart-1: oklch(0.72 0.15 50);
-  --chart-2: oklch(0.65 0.10 195);
-  --chart-3: oklch(0.80 0.13 80);
-  --chart-4: oklch(0.55 0.10 55);
-  --chart-5: oklch(0.65 0.20 25);
-  --sidebar: oklch(0.20 0.04 55);
-  --sidebar-foreground: oklch(0.93 0.02 60);
-  --sidebar-primary: oklch(0.65 0.15 50);
-  --sidebar-primary-foreground: oklch(0.97 0.01 60);
-  --sidebar-accent: oklch(0.28 0.06 55);
-  --sidebar-accent-foreground: oklch(0.93 0.02 60);
-  --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: oklch(0.65 0.15 50);
+/* Light mode override (keep dark as default) */
+.light {
+  --background:         oklch(0.97 0.02 70);
+  --foreground:         oklch(0.16 0.04 50);
+  --card:               oklch(1 0 0);
+  --card-foreground:    oklch(0.16 0.04 50);
+  --popover:            oklch(1 0 0);
+  --popover-foreground: oklch(0.16 0.04 50);
+  --primary:            oklch(0.58 0.14 65);
+  --primary-foreground: oklch(0.97 0.02 70);
+  --secondary:          oklch(0.90 0.04 70);
+  --secondary-foreground: oklch(0.28 0.06 50);
+  --muted:              oklch(0.93 0.02 65);
+  --muted-foreground:   oklch(0.52 0.05 60);
+  --accent:             oklch(0.55 0.20 25);
+  --accent-foreground:  oklch(0.97 0.01 60);
+  --border:             oklch(0.85 0.04 65);
+  --input:              oklch(0.85 0.04 65);
+  --ring:               oklch(0.58 0.14 65);
+  --gold:               oklch(0.65 0.16 75);
+  --gold-foreground:    oklch(0.14 0.04 45);
 }
 
 @layer base {
@@ -131,6 +136,10 @@
     @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  h1, h2, h3, .font-display {
+    font-family: 'Playfair Display', 'Georgia', serif;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -146,73 +155,143 @@
 }
 
 @layer components {
-  /**
-   * Custom container utility that centers content and adds responsive padding.
-   *
-   * This overrides Tailwind's default container behavior to:
-   * - Auto-center content (mx-auto)
-   * - Add responsive horizontal padding
-   * - Set max-width for large screens
-   *
-   * Usage: <div className="container">...</div>
-   *
-   * For custom widths, use max-w-* utilities directly:
-   * <div className="max-w-6xl mx-auto px-4">...</div>
-   */
   .container {
     width: 100%;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 1rem; /* 16px - mobile padding */
+    padding-left: 1rem;
     padding-right: 1rem;
   }
-
   .flex {
     min-height: 0;
     min-width: 0;
   }
-
   @media (min-width: 640px) {
-    .container {
-      padding-left: 1.5rem; /* 24px - tablet padding */
-      padding-right: 1.5rem;
-    }
+    .container { padding-left: 1.5rem; padding-right: 1.5rem; }
   }
-
   @media (min-width: 1024px) {
-    .container {
-      padding-left: 2rem;
-      padding-right: 2rem;
-      max-width: 1280px;
-    }
+    .container { padding-left: 2rem; padding-right: 2rem; max-width: 1280px; }
   }
 
-  /* Mobile app max-width */
-  .mobile-container {
-    width: 100%;
-    max-width: 480px;
-    margin-left: auto;
-    margin-right: auto;
+  /* ── Western Gold Button glow ── */
+  .btn-gold {
+    background: linear-gradient(135deg, oklch(0.78 0.18 80), oklch(0.65 0.16 68));
+    color: oklch(0.14 0.04 45);
+    font-weight: 700;
+    box-shadow: 0 0 16px oklch(0.72 0.16 75 / 40%), 0 2px 8px oklch(0 0 0 / 40%);
+    transition: box-shadow 0.2s, transform 0.15s;
+  }
+  .btn-gold:hover {
+    box-shadow: 0 0 28px oklch(0.72 0.16 75 / 60%), 0 4px 12px oklch(0 0 0 / 50%);
+    transform: translateY(-1px);
+  }
+  .btn-gold:active { transform: translateY(0); }
+
+  /* ── Western Card ── */
+  .card-western {
+    background: linear-gradient(145deg, oklch(0.20 0.05 48), oklch(0.17 0.04 46));
+    border: 1px solid oklch(0.35 0.08 60);
+    box-shadow: 0 4px 20px oklch(0 0 0 / 40%), inset 0 1px 0 oklch(0.40 0.08 70 / 20%);
+    border-radius: var(--radius);
   }
 
-  /* Discipline color pills */
-  .pill-discipline {
-    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold;
-  }
-
-  /* Gold badge */
+  /* ── Gold shimmer badge ── */
   .badge-gold {
-    background: oklch(0.76 0.13 80);
-    color: oklch(0.18 0.03 55);
-    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold;
+    background: linear-gradient(135deg, oklch(0.78 0.18 80), oklch(0.65 0.16 68));
+    color: oklch(0.14 0.04 45);
+    font-weight: 700;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    box-shadow: 0 0 8px oklch(0.72 0.16 75 / 50%);
   }
 
-  /* Page animation */
+  /* ── Star divider ── */
+  .star-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: oklch(0.72 0.16 75);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .star-divider::before,
+  .star-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, oklch(0.72 0.16 75 / 50%), transparent);
+  }
+
+  /* ── Western page header ── */
+  .page-header {
+    background: linear-gradient(160deg, oklch(0.12 0.04 45) 0%, oklch(0.20 0.06 52) 100%);
+    border-bottom: 2px solid oklch(0.72 0.16 75 / 30%);
+    box-shadow: 0 4px 20px oklch(0 0 0 / 50%);
+  }
+
+  /* ── Glow text ── */
+  .text-gold-glow {
+    color: oklch(0.78 0.18 80);
+    text-shadow: 0 0 20px oklch(0.72 0.16 75 / 60%), 0 0 40px oklch(0.72 0.16 75 / 30%);
+  }
+
+  /* ── Rope border ── */
+  .border-rope {
+    border: 2px dashed oklch(0.72 0.16 75 / 40%);
+  }
+
+  /* ── Discipline pill ── */
+  .pill-discipline {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+
+  /* ── Page animation ── */
   .page-enter {
-    animation: pageEnter 0.2s ease-out;
+    animation: pageEnter 0.25s ease-out;
   }
   @keyframes pageEnter {
-    from { opacity: 0; transform: translateY(6px); }
+    from { opacity: 0; transform: translateY(8px); }
     to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Scrollbar hide ── */
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* ── Western glow card hover ── */
+  .card-hover {
+    transition: box-shadow 0.2s, border-color 0.2s, transform 0.15s;
+  }
+  .card-hover:hover {
+    box-shadow: 0 0 20px oklch(0.72 0.16 75 / 20%), 0 4px 16px oklch(0 0 0 / 40%);
+    border-color: oklch(0.72 0.16 75 / 50%);
+    transform: translateY(-1px);
+  }
+  .card-hover:active { transform: translateY(0); }
+
+  /* ── Bottom nav glow on active ── */
+  .nav-active {
+    color: oklch(0.78 0.18 80);
+    filter: drop-shadow(0 0 6px oklch(0.72 0.16 75 / 70%));
+  }
+
+  /* ── Input western style ── */
+  input, select, textarea {
+    background-color: oklch(0.20 0.05 48) !important;
+    border-color: oklch(0.32 0.07 55) !important;
+    color: oklch(0.93 0.03 75) !important;
+  }
+  input::placeholder, textarea::placeholder {
+    color: oklch(0.52 0.05 60) !important;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: oklch(0.72 0.16 75) !important;
+    box-shadow: 0 0 0 2px oklch(0.72 0.16 75 / 25%) !important;
   }
 }

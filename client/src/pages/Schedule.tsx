@@ -43,12 +43,14 @@ function RodeoCard({ rodeo, onClick }: { rodeo: any; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="w-full text-left bg-card border border-border rounded-xl p-4 shadow-sm hover:shadow-md hover:border-primary/30 transition-all active:scale-[0.99]"
+      className="w-full text-left card-western card-hover rounded-xl overflow-hidden"
     >
+      <div className="h-0.5 w-full" style={{ background: "linear-gradient(90deg, oklch(0.72 0.16 75), oklch(0.55 0.20 25))" }} />
+      <div className="p-4">
       <div className="flex items-start justify-between gap-2 mb-2">
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-foreground text-sm truncate">{rodeo.name}</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <h3 className="font-bold text-sm truncate" style={{ color: "oklch(0.93 0.03 75)" }}>{rodeo.name}</h3>
+          <p className="text-xs mt-0.5" style={{ color: "oklch(0.62 0.05 65)" }}>
             {RODEO_TYPE_LABELS[rodeo.rodeotype as RodeoType]}
           </p>
         </div>
@@ -66,8 +68,8 @@ function RodeoCard({ rodeo, onClick }: { rodeo: any; onClick: () => void }) {
       <DisciplineBadge discipline={rodeo.discipline} />
 
       <div className="mt-3 space-y-1.5">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <CalendarDays className="w-3.5 h-3.5 flex-shrink-0" />
+        <div className="flex items-center gap-2 text-xs" style={{ color: "oklch(0.72 0.06 65)" }}>
+          <CalendarDays className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "oklch(0.72 0.16 75)" }} />
           <span>
             {isPast ? "Was " : ""}
             {format(new Date(rodeo.rodeoDate), "EEE, MMM d, yyyy")}
@@ -75,8 +77,8 @@ function RodeoCard({ rodeo, onClick }: { rodeo: any; onClick: () => void }) {
           </span>
         </div>
         {rodeo.locationName && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+          <div className="flex items-center gap-2 text-xs" style={{ color: "oklch(0.62 0.05 65)" }}>
+            <MapPin className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "oklch(0.62 0.05 65)" }} />
             <span className="truncate">{rodeo.locationName}</span>
           </div>
         )}
@@ -89,6 +91,7 @@ function RodeoCard({ rodeo, onClick }: { rodeo: any; onClick: () => void }) {
             </span>
           </div>
         )}
+      </div>
       </div>
     </button>
   );
@@ -148,9 +151,9 @@ function AddRodeoDialog({ open, onClose }: { open: boolean; onClose: () => void 
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-sm mx-auto max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-sm mx-auto max-h-[90vh] overflow-y-auto" style={{ background: "oklch(0.18 0.04 48)", border: "1px solid oklch(0.72 0.16 75 / 30%)" }}>
         <DialogHeader>
-          <DialogTitle className="text-lg">Add Rodeo</DialogTitle>
+          <DialogTitle className="text-xl font-bold" style={{ fontFamily: "'Playfair Display', serif", color: "oklch(0.78 0.18 80)" }}>🤠 Add New Rodeo</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div>
@@ -269,8 +272,8 @@ function AddRodeoDialog({ open, onClose }: { open: boolean; onClose: () => void 
         </div>
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={onClose} size="sm">Cancel</Button>
-          <Button onClick={handleSubmit} disabled={createMutation.isPending} size="sm">
-            {createMutation.isPending ? "Saving…" : "Add Rodeo"}
+          <Button onClick={handleSubmit} disabled={createMutation.isPending} size="sm" className="btn-gold">
+            {createMutation.isPending ? "Saving…" : "★ Save Rodeo"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -296,25 +299,26 @@ export default function Schedule() {
   return (
     <div className="min-h-screen bg-background page-enter">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-card border-b border-border shadow-sm">
+      <div className="page-header sticky top-0 z-40">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
           <div>
-            <h1 className="text-lg font-bold text-foreground" style={{ fontFamily: "'Playfair Display', serif" }}>
+            <h1 className="text-xl font-bold leading-none" style={{ fontFamily: "'Playfair Display', serif", color: "oklch(0.78 0.18 80)", textShadow: "0 0 20px oklch(0.72 0.16 75 / 40%)" }}>
               🤠 My Schedule
             </h1>
-            <p className="text-xs text-muted-foreground">{upcoming.length} upcoming rodeo{upcoming.length !== 1 ? "s" : ""}</p>
+            <p className="text-xs mt-0.5" style={{ color: "oklch(0.52 0.05 60)" }}>{upcoming.length} upcoming rodeo{upcoming.length !== 1 ? "s" : ""}</p>
           </div>
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs"
+              className="w-9 h-9 p-0 rounded-full"
+              style={{ border: "1px solid oklch(0.72 0.16 75 / 30%)", color: "oklch(0.72 0.16 75)" }}
               onClick={() => checkDeadlines.mutate()}
               disabled={checkDeadlines.isPending}
             >
               <Bell className="w-4 h-4" />
             </Button>
-            <Button size="sm" onClick={() => setShowAdd(true)} className="gap-1">
+            <Button size="sm" onClick={() => setShowAdd(true)} className="btn-gold gap-1.5 rounded-full px-4">
               <Plus className="w-4 h-4" /> Add
             </Button>
           </div>

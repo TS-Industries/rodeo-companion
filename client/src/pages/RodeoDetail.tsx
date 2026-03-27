@@ -331,8 +331,8 @@ export default function RodeoDetail() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="sticky top-0 z-40 bg-card border-b border-border px-4 py-3 flex items-center gap-3">
-          <button onClick={() => navigate("/schedule")}><ArrowLeft className="w-5 h-5" /></button>
+        <div className="page-header px-4 py-3 flex items-center gap-3">
+          <button onClick={() => navigate("/schedule")} style={{ color: "oklch(0.72 0.16 75)" }}><ArrowLeft className="w-5 h-5" /></button>
           <div className="h-5 w-40 bg-muted rounded animate-pulse" />
         </div>
         <div className="max-w-lg mx-auto px-4 py-4 space-y-3">
@@ -363,20 +363,20 @@ export default function RodeoDetail() {
   return (
     <div className="min-h-screen bg-background page-enter">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-card border-b border-border shadow-sm">
+      <div className="page-header sticky top-0 z-40">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
-          <button onClick={() => navigate("/schedule")} className="text-muted-foreground hover:text-foreground transition-colors">
+          <button onClick={() => navigate("/schedule")} style={{ color: "oklch(0.72 0.16 75)" }}>
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex-1 min-w-0">
-            <h1 className="text-base font-bold text-foreground truncate" style={{ fontFamily: "'Playfair Display', serif" }}>
+            <h1 className="text-base font-bold truncate" style={{ fontFamily: "'Playfair Display', serif", color: "oklch(0.78 0.18 80)" }}>
               {rodeo.name}
             </h1>
-            <p className="text-xs text-muted-foreground">{RODEO_TYPE_LABELS[rodeo.rodeotype as RodeoType]}</p>
+            <p className="text-xs" style={{ color: "oklch(0.52 0.05 60)" }}>{RODEO_TYPE_LABELS[rodeo.rodeotype as RodeoType]}</p>
           </div>
           <button
             onClick={() => { if (confirm("Delete this rodeo?")) deleteRodeo.mutate({ id: rodeoId }); }}
-            className="text-muted-foreground hover:text-destructive transition-colors"
+            style={{ color: "oklch(0.52 0.05 60)" }}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -385,7 +385,9 @@ export default function RodeoDetail() {
 
       <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
         {/* Info card */}
-        <div className="bg-card border border-border rounded-xl p-4 space-y-3">
+        <div className="card-western rounded-xl overflow-hidden">
+          <div className="h-0.5 w-full" style={{ background: "linear-gradient(90deg, oklch(0.72 0.16 75), oklch(0.55 0.20 25))" }} />
+          <div className="p-4 space-y-3">
           <div className="flex items-center justify-between">
             <span className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-semibold", colors.bg, colors.text)}>
               {DISCIPLINE_ICONS[rodeo.discipline as Discipline]} {DISCIPLINE_LABELS[rodeo.discipline as Discipline]}
@@ -457,6 +459,7 @@ export default function RodeoDetail() {
             </div>
             <ChevronRight className="w-4 h-4" />
           </button>
+          </div>
         </div>
 
         {/* Tabs: Runs / Expenses */}

@@ -5,7 +5,6 @@ import { Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { useAuth } from "./_core/hooks/useAuth";
-import { getLoginUrl } from "./const";
 import Schedule from "./pages/Schedule";
 import RodeoDetail from "./pages/RodeoDetail";
 import Performance from "./pages/Performance";
@@ -34,7 +33,14 @@ function BottomNav() {
   const [location, navigate] = useLocation();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border shadow-lg">
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-50 border-t"
+      style={{
+        background: "linear-gradient(180deg, oklch(0.14 0.04 45) 0%, oklch(0.11 0.03 44) 100%)",
+        borderTopColor: "oklch(0.72 0.16 75 / 30%)",
+        boxShadow: "0 -4px 24px oklch(0 0 0 / 60%), 0 -1px 0 oklch(0.72 0.16 75 / 15%)",
+      }}
+    >
       <div className="flex items-stretch justify-around max-w-lg mx-auto">
         {NAV_ITEMS.map(({ path, label, icon: Icon }) => {
           const active = location === path || location.startsWith(path + "/");
@@ -43,36 +49,45 @@ function BottomNav() {
               key={path}
               onClick={() => navigate(path)}
               className={cn(
-                "flex flex-col items-center justify-center gap-0.5 flex-1 py-2 px-1 text-xs font-medium transition-colors",
-                active
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                "flex flex-col items-center justify-center gap-0.5 flex-1 py-2.5 px-1 text-xs font-semibold transition-all duration-200",
+                active ? "nav-active" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Icon
-                className={cn("w-5 h-5", active && "stroke-[2.5]")}
-              />
-              <span>{label}</span>
+              <Icon className={cn("w-5 h-5 transition-all", active && "scale-110")} />
+              <span className={cn("transition-all", active && "font-bold")}>{label}</span>
+              {active && (
+                <span
+                  className="absolute bottom-0 w-8 h-0.5 rounded-full"
+                  style={{ background: "oklch(0.72 0.16 75)", boxShadow: "0 0 8px oklch(0.72 0.16 75)" }}
+                />
+              )}
             </button>
           );
         })}
       </div>
-      {/* Safe area for iOS */}
-      <div className="h-safe-bottom" style={{ height: "env(safe-area-inset-bottom, 0px)" }} />
+      <div style={{ height: "env(safe-area-inset-bottom, 0px)" }} />
     </nav>
   );
 }
 
 function AppShell() {
   const { isAuthenticated, loading } = useAuth();
-  const [location] = useLocation();
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-          <p className="text-muted-foreground text-sm">Loading Rodeo Companion…</p>
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: "linear-gradient(160deg, oklch(0.12 0.04 45), oklch(0.18 0.05 50))" }}
+      >
+        <div className="flex flex-col items-center gap-4">
+          <div className="text-5xl animate-bounce">🤠</div>
+          <div
+            className="w-10 h-10 rounded-full border-4 border-t-transparent animate-spin"
+            style={{ borderColor: "oklch(0.72 0.16 75)", borderTopColor: "transparent" }}
+          />
+          <p className="text-sm font-medium" style={{ color: "oklch(0.72 0.16 75)" }}>
+            Saddling up…
+          </p>
         </div>
       </div>
     );
@@ -82,10 +97,8 @@ function AppShell() {
     return <Home />;
   }
 
-  const isHome = location === "/";
-
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-20 relative">
       <Switch>
         <Route path="/" component={Schedule} />
         <Route path="/schedule" component={Schedule} />
@@ -105,9 +118,17 @@ function AppShell() {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="light">
+      <ThemeProvider defaultTheme="dark">
         <TooltipProvider>
-          <Toaster />
+          <Toaster
+            toastOptions={{
+              style: {
+                background: "oklch(0.20 0.05 48)",
+                border: "1px solid oklch(0.72 0.16 75 / 40%)",
+                color: "oklch(0.93 0.03 75)",
+              },
+            }}
+          />
           <AppShell />
         </TooltipProvider>
       </ThemeProvider>

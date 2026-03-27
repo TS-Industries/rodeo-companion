@@ -48,3 +48,12 @@
 - [x] Expense summary per rodeo (total cost breakdown + category bar chart)
 - [x] Google Maps: show fuel/gas stations along the route to the rodeo
 - [x] Google Maps: route with directions, distance, estimated fuel cost
+
+## Enhancement Round 2 (User Request)
+- [x] Bold Western visual redesign: dark leather background, gold/amber accents, star badges, rope dividers, Western fonts
+- [x] Flashy hero header with Western branding on all pages
+- [x] Google Maps: address autocomplete search with Places API
+- [x] Google Maps: multi-stop waypoint route builder (add/remove/reorder stops)
+- [x] Google Maps: round-trip toggle (return to origin)
+- [x] Google Maps: per-leg fuel stations and distance/time breakdown
+- [x] Google Maps: total trip summary (distance, time, fuel cost)

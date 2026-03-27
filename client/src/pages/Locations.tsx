@@ -1,424 +1,704 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { useSearch } from "wouter";
-import { trpc } from "@/lib/trpc";
+/// <reference types="@types/google.maps" />
+import { useState, useRef, useCallback, useEffect } from "react";
+import { MapView } from "@/components/Map";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MapView } from "@/components/Map";
 import { toast } from "sonner";
 import {
-  MapPin, Navigation, Fuel, Search, X, ChevronDown, ChevronUp,
-  Clock, Route, DollarSign, Loader2,
+  MapPin, Plus, Trash2, RotateCcw, Navigation, Fuel, Clock,
+  Route, ChevronDown, ChevronUp, Loader2, GripVertical, Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+interface Stop {
+  id: string;
+  label: string;
+  address: string;
+  latLng: google.maps.LatLngLiteral | null;
+}
+
+interface LegInfo {
+  from: string;
+  to: string;
+  distance: string;
+  duration: string;
+  distanceMeters: number;
+}
 
 interface FuelStation {
   name: string;
   address: string;
-  lat: number;
-  lng: number;
-  placeId: string;
   rating?: number;
   isOpen?: boolean;
+  placeId: string;
+  location: google.maps.LatLngLiteral;
 }
 
-interface RouteInfo {
-  distance: string;
-  duration: string;
-  distanceMiles: number;
-}
+// ─── Autocomplete Input ───────────────────────────────────────────────────────
+function AddressInput({
+  value,
+  placeholder,
+  onSelect,
+  mapReady,
+  disabled,
+}: {
+  value: string;
+  placeholder: string;
+  onSelect: (address: string, latLng: google.maps.LatLngLiteral) => void;
+  mapReady: boolean;
+  disabled?: boolean;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const [localValue, setLocalValue] = useState(value);
 
-function FuelStationCard({ station, onNavigate }: { station: FuelStation; onNavigate: () => void }) {
+  useEffect(() => { setLocalValue(value); }, [value]);
+
+  useEffect(() => {
+    if (!mapReady || !inputRef.current || autocompleteRef.current) return;
+    try {
+      const ac = new google.maps.places.Autocomplete(inputRef.current, {
+        types: ["geocode", "establishment"],
+        fields: ["formatted_address", "geometry", "name"],
+      });
+      ac.addListener("place_changed", () => {
+        const place = ac.getPlace();
+        if (!place.geometry?.location) return;
+        const addr = place.formatted_address || place.name || "";
+        const latLng = { lat: place.geometry.location.lat(), lng: place.geometry.location.lng() };
+        setLocalValue(addr);
+        onSelect(addr, latLng);
+      });
+      autocompleteRef.current = ac;
+    } catch (e) {
+      console.warn("Autocomplete init failed:", e);
+    }
+  }, [mapReady, onSelect]);
+
   return (
-    <div className="flex items-start gap-3 bg-card border border-border rounded-xl p-3">
-      <div className="w-9 h-9 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
-        <Fuel className="w-4 h-4 text-orange-600" />
+    <input
+      ref={inputRef}
+      value={localValue}
+      onChange={(e) => setLocalValue(e.target.value)}
+      placeholder={placeholder}
+      disabled={disabled}
+      className="w-full h-9 px-3 text-sm rounded-lg outline-none transition-all"
+      style={{
+        background: "oklch(0.20 0.05 48)",
+        border: "1px solid oklch(0.32 0.07 55)",
+        color: "oklch(0.93 0.03 75)",
+      }}
+    />
+  );
+}
+
+// ─── Fuel Station Card ────────────────────────────────────────────────────────
+function FuelCard({ station }: { station: FuelStation }) {
+  return (
+    <div
+      className="flex items-start gap-3 p-3 rounded-xl"
+      style={{ background: "oklch(0.20 0.05 48)", border: "1px solid oklch(0.30 0.06 50)" }}
+    >
+      <div
+        className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+        style={{ background: "oklch(0.72 0.16 75 / 15%)", border: "1px solid oklch(0.72 0.16 75 / 30%)" }}
+      >
+        <Fuel className="w-4 h-4" style={{ color: "oklch(0.72 0.16 75)" }} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-foreground truncate">{station.name}</p>
-        <p className="text-xs text-muted-foreground truncate">{station.address}</p>
+        <p className="text-sm font-semibold truncate" style={{ color: "oklch(0.93 0.03 75)" }}>{station.name}</p>
+        <p className="text-xs truncate mt-0.5" style={{ color: "oklch(0.52 0.05 60)" }}>{station.address}</p>
         <div className="flex items-center gap-2 mt-1">
           {station.rating && (
-            <span className="text-xs text-yellow-600">★ {station.rating.toFixed(1)}</span>
+            <span className="text-xs font-medium" style={{ color: "oklch(0.78 0.18 80)" }}>
+              ★ {station.rating.toFixed(1)}
+            </span>
           )}
           {station.isOpen !== undefined && (
-            <span className={cn("text-xs font-medium", station.isOpen ? "text-green-600" : "text-red-500")}>
+            <span
+              className="text-xs font-semibold"
+              style={{ color: station.isOpen ? "oklch(0.65 0.14 145)" : "oklch(0.55 0.22 25)" }}
+            >
               {station.isOpen ? "Open" : "Closed"}
             </span>
           )}
         </div>
       </div>
-      <button
-        onClick={onNavigate}
-        className="flex-shrink-0 text-primary hover:text-primary/80 transition-colors"
+      <a
+        href={`https://www.google.com/maps/dir/?api=1&destination=${station.location.lat},${station.location.lng}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+        style={{ background: "oklch(0.72 0.16 75 / 10%)", color: "oklch(0.72 0.16 75)" }}
+        onClick={(e) => e.stopPropagation()}
       >
-        <Navigation className="w-4 h-4" />
-      </button>
+        <Navigation className="w-3.5 h-3.5" />
+      </a>
     </div>
   );
 }
 
+// ─── Main Component ───────────────────────────────────────────────────────────
 export default function Locations() {
-  const searchStr = useSearch();
-  const params = new URLSearchParams(searchStr);
-  const prefilledAddress = params.get("address") ?? "";
-  const prefilledName = params.get("name") ?? "";
-
-  const [destination, setDestination] = useState(prefilledAddress);
-  const [destinationName, setDestinationName] = useState(prefilledName);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
-  const [fuelStations, setFuelStations] = useState<FuelStation[]>([]);
-  const [loadingRoute, setLoadingRoute] = useState(false);
-  const [loadingFuel, setLoadingFuel] = useState(false);
-  const [showFuelList, setShowFuelList] = useState(false);
-  const [mapReady, setMapReady] = useState(false);
-  const [selectedStation, setSelectedStation] = useState<FuelStation | null>(null);
-
   const mapRef = useRef<google.maps.Map | null>(null);
   const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
-  const markersRef = useRef<google.maps.Marker[]>([]);
+  const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
+  const fuelMarkersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
+  const [mapReady, setMapReady] = useState(false);
 
-  const { data: rodeos } = trpc.rodeos.list.useQuery();
+  const [stops, setStops] = useState<Stop[]>([
+    { id: "origin", label: "Start", address: "", latLng: null },
+    { id: "dest1", label: "Stop 1", address: "", latLng: null },
+  ]);
+  const [roundTrip, setRoundTrip] = useState(false);
+  const [calculating, setCalculating] = useState(false);
+  const [legs, setLegs] = useState<LegInfo[]>([]);
+  const [totalDistance, setTotalDistance] = useState("");
+  const [totalDuration, setTotalDuration] = useState("");
+  const [fuelStations, setFuelStations] = useState<FuelStation[]>([]);
+  const [loadingFuel, setLoadingFuel] = useState(false);
+  const [expandedLeg, setExpandedLeg] = useState<number | null>(null);
+  const [fuelPrice, setFuelPrice] = useState(3.50);
+  const [mpg, setMpg] = useState(12);
+  const [routeBuilt, setRouteBuilt] = useState(false);
 
-  // Get user's current location
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => {
-          // Default to center of US if denied
-          setUserLocation({ lat: 39.8283, lng: -98.5795 });
-        }
-      );
-    }
-  }, []);
-
-  const clearMarkers = () => {
-    markersRef.current.forEach((m) => m.setMap(null));
+  // Clear map markers
+  const clearMarkers = useCallback(() => {
+    markersRef.current.forEach(m => { try { m.map = null; } catch {} });
     markersRef.current = [];
-  };
+    fuelMarkersRef.current.forEach(m => { try { m.map = null; } catch {} });
+    fuelMarkersRef.current = [];
+  }, []);
 
   const handleMapReady = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
     setMapReady(true);
-
-    // Init directions renderer
-    const renderer = new google.maps.DirectionsRenderer({
-      suppressMarkers: false,
-      polylineOptions: {
-        strokeColor: "#c2410c",
-        strokeWeight: 4,
-        strokeOpacity: 0.8,
-      },
-    });
-    renderer.setMap(map);
-    directionsRendererRef.current = renderer;
-
-    // If we have a prefilled destination, auto-route
-    if (prefilledAddress) {
-      setTimeout(() => calculateRoute(prefilledAddress, map, renderer), 500);
+    // Try to center on user location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => map.setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => {}
+      );
     }
-  }, [prefilledAddress]);
+  }, []);
 
-  const calculateRoute = async (dest: string, map?: google.maps.Map, renderer?: google.maps.DirectionsRenderer) => {
-    const theMap = map ?? mapRef.current;
-    const theRenderer = renderer ?? directionsRendererRef.current;
-    if (!theMap || !theRenderer || !dest) return;
+  const updateStop = useCallback((id: string, address: string, latLng: google.maps.LatLngLiteral) => {
+    setStops(prev => prev.map(s => s.id === id ? { ...s, address, latLng } : s));
+  }, []);
 
-    setLoadingRoute(true);
-    setFuelStations([]);
-    setRouteInfo(null);
-
-    try {
-      const directionsService = new google.maps.DirectionsService();
-      const origin = userLocation
-        ? new google.maps.LatLng(userLocation.lat, userLocation.lng)
-        : "Current Location";
-
-      const result = await directionsService.route({
-        origin,
-        destination: dest,
-        travelMode: google.maps.TravelMode.DRIVING,
-      });
-
-      theRenderer.setDirections(result);
-
-      const leg = result.routes[0]?.legs[0];
-      if (leg) {
-        const distMiles = (leg.distance?.value ?? 0) / 1609.34;
-        setRouteInfo({
-          distance: leg.distance?.text ?? "",
-          duration: leg.duration?.text ?? "",
-          distanceMiles: distMiles,
-        });
-
-        // Fit map to route
-        const bounds = new google.maps.LatLngBounds();
-        result.routes[0]?.legs.forEach((l) => {
-          l.steps.forEach((s) => {
-            bounds.extend(s.start_location);
-            bounds.extend(s.end_location);
-          });
-        });
-        theMap.fitBounds(bounds, { top: 60, bottom: 60, left: 20, right: 20 });
-
-        // Find fuel stations along the route
-        await findFuelStations(result, theMap);
-      }
-    } catch (err: any) {
-      toast.error("Could not find route. Check the destination address.");
-      console.error(err);
-    } finally {
-      setLoadingRoute(false);
-    }
+  const addStop = () => {
+    setStops(prev => [
+      ...prev,
+      { id: `stop-${Date.now()}`, label: `Stop ${prev.length}`, address: "", latLng: null },
+    ]);
   };
 
-  const findFuelStations = async (directionsResult: google.maps.DirectionsResult, map: google.maps.Map) => {
+  const removeStop = (id: string) => {
+    if (stops.length <= 2) return toast.error("Need at least 2 stops");
+    setStops(prev => prev.filter(s => s.id !== id));
+  };
+
+  // ── Fetch fuel stations near a LatLng ──
+  const fetchFuelStations = useCallback(async (points: google.maps.LatLngLiteral[]) => {
+    if (!mapRef.current || points.length === 0) return;
     setLoadingFuel(true);
-    clearMarkers();
+    setFuelStations([]);
+    fuelMarkersRef.current.forEach(m => { try { m.map = null; } catch {} });
+    fuelMarkersRef.current = [];
 
-    try {
-      const placesService = new google.maps.places.PlacesService(map);
-      const route = directionsResult.routes[0];
-      if (!route) return;
+    const allStations: FuelStation[] = [];
+    const seen = new Set<string>();
 
-      // Sample points along the route every ~50 miles
-      const legs = route.legs;
-      const samplePoints: google.maps.LatLng[] = [];
+    // Sample points along the route (start, midpoints, end)
+    const samplePoints = points.length <= 4 ? points : [
+      points[0],
+      points[Math.floor(points.length * 0.25)],
+      points[Math.floor(points.length * 0.5)],
+      points[Math.floor(points.length * 0.75)],
+      points[points.length - 1],
+    ];
 
-      legs.forEach((leg) => {
-        leg.steps.forEach((step, i) => {
-          if (i % 5 === 0) samplePoints.push(step.start_location);
-        });
-        if (leg.end_location) samplePoints.push(leg.end_location);
-      });
-
-      // Deduplicate by ~50km proximity
-      const dedupedPoints: google.maps.LatLng[] = [];
-      samplePoints.forEach((pt) => {
-        const tooClose = dedupedPoints.some((existing) => {
-          const dx = pt.lat() - existing.lat();
-          const dy = pt.lng() - existing.lng();
-          return Math.sqrt(dx * dx + dy * dy) < 0.5; // ~50km
-        });
-        if (!tooClose) dedupedPoints.push(pt);
-      });
-
-      const allStations: FuelStation[] = [];
-      const seen = new Set<string>();
-
-      // Search around each sample point (limit to 3 points to avoid too many requests)
-      const pointsToSearch = dedupedPoints.slice(0, Math.min(dedupedPoints.length, 4));
-
-      for (const point of pointsToSearch) {
+    for (const pt of samplePoints) {
+      try {
+        const service = new google.maps.places.PlacesService(mapRef.current);
         await new Promise<void>((resolve) => {
-          placesService.nearbySearch(
+          service.nearbySearch(
             {
-              location: point,
-              radius: 8000, // 8km radius
+              location: pt,
+              radius: 8000,
               type: "gas_station",
             },
             (results, status) => {
               if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-                results.slice(0, 3).forEach((place) => {
-                  if (!place.place_id || seen.has(place.place_id)) return;
-                  seen.add(place.place_id);
-                  const loc = place.geometry?.location;
-                  if (!loc) return;
+                for (const r of results.slice(0, 4)) {
+                  if (!r.place_id || seen.has(r.place_id)) continue;
+                  seen.add(r.place_id);
+                  const loc = r.geometry?.location;
+                  if (!loc) continue;
                   allStations.push({
-                    name: place.name ?? "Gas Station",
-                    address: place.vicinity ?? "",
-                    lat: loc.lat(),
-                    lng: loc.lng(),
-                    placeId: place.place_id,
-                    rating: place.rating,
-                    isOpen: place.opening_hours?.isOpen?.(),
+                    name: r.name ?? "Gas Station",
+                    address: r.vicinity ?? "",
+                    rating: r.rating,
+                    isOpen: r.opening_hours?.isOpen?.(),
+                    placeId: r.place_id,
+                    location: { lat: loc.lat(), lng: loc.lng() },
                   });
-                });
+                }
               }
               resolve();
             }
           );
         });
-      }
+      } catch {}
+    }
 
-      setFuelStations(allStations);
+    // Deduplicate and limit
+    const unique = allStations.slice(0, 12);
+    setFuelStations(unique);
 
-      // Add fuel station markers
-      allStations.forEach((station) => {
-        const marker = new google.maps.Marker({
-          position: { lat: station.lat, lng: station.lng },
-          map,
-          title: station.name,
-          icon: {
-            url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(`
-              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-                <circle cx="16" cy="16" r="14" fill="#ea580c" stroke="white" stroke-width="2"/>
-                <text x="16" y="21" text-anchor="middle" font-size="14" fill="white">⛽</text>
-              </svg>
-            `),
-            scaledSize: new google.maps.Size(32, 32),
-            anchor: new google.maps.Point(16, 16),
-          },
+    // Add fuel markers
+    for (const s of unique) {
+      try {
+        const pin = document.createElement("div");
+        pin.innerHTML = `<div style="background:oklch(0.72 0.16 75);color:oklch(0.14 0.04 45);font-size:10px;font-weight:700;padding:3px 6px;border-radius:6px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.4)">⛽</div>`;
+        const m = new google.maps.marker.AdvancedMarkerElement({
+          map: mapRef.current!,
+          position: s.location,
+          title: s.name,
+          content: pin,
         });
-        markersRef.current.push(marker);
+        fuelMarkersRef.current.push(m);
+      } catch {}
+    }
+
+    setLoadingFuel(false);
+  }, []);
+
+  // ── Build Route ──
+  const buildRoute = useCallback(async () => {
+    const validStops = stops.filter(s => s.latLng);
+    if (validStops.length < 2) return toast.error("Enter at least 2 locations");
+
+    setCalculating(true);
+    setLegs([]);
+    setFuelStations([]);
+    setRouteBuilt(false);
+    clearMarkers();
+
+    if (directionsRendererRef.current) {
+      directionsRendererRef.current.setMap(null);
+      directionsRendererRef.current = null;
+    }
+
+    try {
+      const service = new google.maps.DirectionsService();
+      const renderer = new google.maps.DirectionsRenderer({
+        map: mapRef.current!,
+        polylineOptions: {
+          strokeColor: "#C8860A",
+          strokeWeight: 5,
+          strokeOpacity: 0.9,
+        },
+        suppressMarkers: false,
+      });
+      directionsRendererRef.current = renderer;
+
+      const origin = validStops[0].latLng!;
+      const destination = roundTrip ? origin : validStops[validStops.length - 1].latLng!;
+      const waypoints = (roundTrip ? validStops.slice(1) : validStops.slice(1, -1)).map(s => ({
+        location: s.latLng!,
+        stopover: true,
+      }));
+
+      const result = await new Promise<google.maps.DirectionsResult>((resolve, reject) => {
+        service.route(
+          {
+            origin,
+            destination,
+            waypoints,
+            travelMode: google.maps.TravelMode.DRIVING,
+            optimizeWaypoints: false,
+          },
+          (res, status) => {
+            if (status === "OK" && res) resolve(res);
+            else reject(new Error(`Directions failed: ${status}`));
+          }
+        );
       });
 
-      if (allStations.length > 0) setShowFuelList(true);
-    } catch (err) {
-      console.error("Fuel station search error:", err);
+      renderer.setDirections(result);
+
+      // Build leg summaries
+      const legData: LegInfo[] = result.routes[0].legs.map((leg, i) => ({
+        from: validStops[i]?.address || leg.start_address,
+        to: roundTrip && i === result.routes[0].legs.length - 1
+          ? validStops[0].address
+          : validStops[i + 1]?.address || leg.end_address,
+        distance: leg.distance?.text ?? "",
+        duration: leg.duration?.text ?? "",
+        distanceMeters: leg.distance?.value ?? 0,
+      }));
+
+      setLegs(legData);
+
+      const totalMeters = legData.reduce((s, l) => s + l.distanceMeters, 0);
+      const totalMiles = (totalMeters / 1609.34).toFixed(0);
+      setTotalDistance(`${totalMiles} mi`);
+
+      const totalSecs = result.routes[0].legs.reduce((s, l) => s + (l.duration?.value ?? 0), 0);
+      const h = Math.floor(totalSecs / 3600);
+      const m = Math.floor((totalSecs % 3600) / 60);
+      setTotalDuration(h > 0 ? `${h}h ${m}m` : `${m}m`);
+
+      setRouteBuilt(true);
+
+      // Collect route path points for fuel search
+      const path: google.maps.LatLngLiteral[] = [];
+      result.routes[0].legs.forEach(leg => {
+        leg.steps?.forEach(step => {
+          step.path?.forEach(pt => path.push({ lat: pt.lat(), lng: pt.lng() }));
+        });
+      });
+      if (path.length === 0) {
+        validStops.forEach(s => { if (s.latLng) path.push(s.latLng); });
+      }
+      fetchFuelStations(path);
+
+    } catch (err: any) {
+      toast.error(err.message ?? "Could not build route");
     } finally {
-      setLoadingFuel(false);
+      setCalculating(false);
     }
+  }, [stops, roundTrip, clearMarkers, fetchFuelStations]);
+
+  const clearRoute = () => {
+    if (directionsRendererRef.current) {
+      directionsRendererRef.current.setMap(null);
+      directionsRendererRef.current = null;
+    }
+    clearMarkers();
+    setLegs([]);
+    setFuelStations([]);
+    setTotalDistance("");
+    setTotalDuration("");
+    setRouteBuilt(false);
   };
 
-  const navigateToStation = (station: FuelStation) => {
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${station.lat},${station.lng}&destination_place_id=${station.placeId}`;
-    window.open(url, "_blank");
-  };
-
-  const estimatedFuelCost = routeInfo
-    ? `~$${((routeInfo.distanceMiles / 20) * 3.5).toFixed(0)}–$${((routeInfo.distanceMiles / 15) * 4.0).toFixed(0)}`
-    : null;
+  // Estimated fuel cost
+  const totalMilesNum = parseFloat(totalDistance) || 0;
+  const estimatedFuelCost = mpg > 0 ? ((totalMilesNum / mpg) * fuelPrice).toFixed(2) : "0.00";
 
   return (
     <div className="min-h-screen bg-background page-enter flex flex-col">
-      {/* Header */}
-      <div className="sticky top-0 z-40 bg-card border-b border-border shadow-sm">
-        <div className="max-w-lg mx-auto px-4 py-3">
-          <h1 className="text-lg font-bold text-foreground" style={{ fontFamily: "'Playfair Display', serif" }}>
-            📍 Locations
-          </h1>
+      {/* ── Header ── */}
+      <div className="page-header sticky top-0 z-40 px-4 py-3">
+        <div className="max-w-lg mx-auto flex items-center justify-between">
+          <div>
+            <h1
+              className="text-xl font-bold leading-none"
+              style={{ fontFamily: "'Playfair Display', serif", color: "oklch(0.78 0.18 80)", textShadow: "0 0 20px oklch(0.72 0.16 75 / 40%)" }}
+            >
+              🗺️ Trip Planner
+            </h1>
+            <p className="text-xs mt-0.5" style={{ color: "oklch(0.52 0.05 60)" }}>
+              Multi-stop routes with fuel stations
+            </p>
+          </div>
+          {routeBuilt && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="gap-1.5 text-xs rounded-full"
+              style={{ border: "1px solid oklch(0.55 0.22 25 / 40%)", color: "oklch(0.65 0.20 25)" }}
+              onClick={clearRoute}
+            >
+              <RotateCcw className="w-3.5 h-3.5" /> Clear
+            </Button>
+          )}
         </div>
       </div>
 
-      <div className="max-w-lg mx-auto w-full px-4 py-3 space-y-3 flex-1 flex flex-col">
-        {/* Search / destination input */}
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              className="pl-9 text-sm"
-              placeholder="Enter rodeo location or address…"
-              value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && calculateRoute(destination)}
-            />
-            {destination && (
-              <button onClick={() => { setDestination(""); setDestinationName(""); setRouteInfo(null); setFuelStations([]); directionsRendererRef.current?.setDirections({ routes: [] } as any); clearMarkers(); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-          <Button
-            onClick={() => calculateRoute(destination)}
-            disabled={!destination || loadingRoute || !mapReady}
-            size="sm"
-            className="gap-1.5 flex-shrink-0"
+      <div className="max-w-lg mx-auto w-full px-4 py-4 flex flex-col gap-4">
+        {/* ── Stop Builder ── */}
+        <div
+          className="rounded-xl overflow-hidden"
+          style={{ background: "oklch(0.18 0.04 48)", border: "1px solid oklch(0.30 0.06 50)" }}
+        >
+          <div
+            className="px-4 py-2.5 flex items-center justify-between"
+            style={{ borderBottom: "1px solid oklch(0.30 0.06 50)", background: "oklch(0.16 0.04 46)" }}
           >
-            {loadingRoute ? <Loader2 className="w-4 h-4 animate-spin" /> : <Navigation className="w-4 h-4" />}
-            Route
-          </Button>
+            <div className="flex items-center gap-2">
+              <Route className="w-4 h-4" style={{ color: "oklch(0.72 0.16 75)" }} />
+              <span className="text-sm font-bold" style={{ color: "oklch(0.78 0.18 80)" }}>Route Stops</span>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <span className="text-xs font-medium" style={{ color: "oklch(0.62 0.05 65)" }}>Round Trip</span>
+              <div
+                className="relative w-10 h-5 rounded-full transition-colors cursor-pointer"
+                style={{ background: roundTrip ? "oklch(0.72 0.16 75)" : "oklch(0.28 0.06 50)" }}
+                onClick={() => setRoundTrip(v => !v)}
+              >
+                <div
+                  className="absolute top-0.5 w-4 h-4 rounded-full transition-transform"
+                  style={{
+                    background: "oklch(0.93 0.03 75)",
+                    transform: roundTrip ? "translateX(22px)" : "translateX(2px)",
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.4)",
+                  }}
+                />
+              </div>
+            </label>
+          </div>
+
+          <div className="p-3 space-y-2">
+            {stops.map((stop, i) => (
+              <div key={stop.id} className="flex items-center gap-2">
+                {/* Stop number badge */}
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold"
+                  style={
+                    i === 0
+                      ? { background: "oklch(0.65 0.14 145 / 20%)", color: "oklch(0.65 0.14 145)", border: "1px solid oklch(0.65 0.14 145 / 40%)" }
+                      : i === stops.length - 1 && !roundTrip
+                      ? { background: "oklch(0.55 0.22 25 / 20%)", color: "oklch(0.65 0.20 25)", border: "1px solid oklch(0.55 0.22 25 / 40%)" }
+                      : { background: "oklch(0.72 0.16 75 / 15%)", color: "oklch(0.78 0.18 80)", border: "1px solid oklch(0.72 0.16 75 / 30%)" }
+                  }
+                >
+                  {i === 0 ? "S" : i === stops.length - 1 && !roundTrip ? "E" : i}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <AddressInput
+                    value={stop.address}
+                    placeholder={
+                      i === 0 ? "Starting location…"
+                      : i === stops.length - 1 && !roundTrip ? "Final destination…"
+                      : `Stop ${i} address…`
+                    }
+                    onSelect={(addr, latLng) => updateStop(stop.id, addr, latLng)}
+                    mapReady={mapReady}
+                  />
+                </div>
+
+                {/* Remove button (not for first 2) */}
+                {stops.length > 2 && i > 0 && (
+                  <button
+                    onClick={() => removeStop(stop.id)}
+                    className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-colors hover:bg-destructive/20"
+                    style={{ color: "oklch(0.52 0.05 60)" }}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            ))}
+
+            {/* Round trip indicator */}
+            {roundTrip && (
+              <div
+                className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs"
+                style={{ background: "oklch(0.72 0.16 75 / 10%)", border: "1px dashed oklch(0.72 0.16 75 / 30%)", color: "oklch(0.72 0.16 75)" }}
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                Returns to starting location
+              </div>
+            )}
+
+            <div className="flex gap-2 pt-1">
+              <Button
+                size="sm"
+                variant="ghost"
+                className="flex-1 gap-1.5 text-xs rounded-lg"
+                style={{ border: "1px dashed oklch(0.72 0.16 75 / 30%)", color: "oklch(0.72 0.16 75)" }}
+                onClick={addStop}
+              >
+                <Plus className="w-3.5 h-3.5" /> Add Stop
+              </Button>
+              <Button
+                size="sm"
+                className="flex-1 btn-gold gap-1.5 text-xs rounded-lg"
+                onClick={buildRoute}
+                disabled={calculating || !mapReady}
+              >
+                {calculating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Navigation className="w-3.5 h-3.5" />}
+                {calculating ? "Routing…" : "Build Route"}
+              </Button>
+            </div>
+          </div>
         </div>
 
-        {/* Quick-pick from upcoming rodeos */}
-        {rodeos && rodeos.filter(r => r.locationAddress || r.locationName).length > 0 && (
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-            {rodeos
-              .filter((r) => r.locationAddress || r.locationName)
-              .slice(0, 5)
-              .map((r) => (
-                <button
-                  key={r.id}
-                  onClick={() => {
-                    const addr = r.locationAddress ?? r.locationName ?? "";
-                    setDestination(addr);
-                    setDestinationName(r.name);
-                    calculateRoute(addr);
-                  }}
-                  className="flex-shrink-0 text-xs bg-secondary text-secondary-foreground px-3 py-1.5 rounded-full hover:bg-secondary/80 transition-colors whitespace-nowrap"
-                >
-                  📍 {r.name}
-                </button>
-              ))}
-          </div>
-        )}
+        {/* ── Map ── */}
+        <div
+          className="rounded-xl overflow-hidden"
+          style={{ border: "1px solid oklch(0.30 0.06 50)", height: "clamp(280px, calc(100vh - 520px), 420px)" }}
+        >
+          <MapView
+            onMapReady={handleMapReady}
+            initialCenter={{ lat: 39.8283, lng: -98.5795 }}
+            initialZoom={4}
+            className="w-full h-full"
+          />
+        </div>
 
-        {/* Route info */}
-        {routeInfo && (
-          <div className="bg-card border border-border rounded-xl p-3">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-              Route to {destinationName || destination}
-            </p>
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div>
-                <p className="text-xs text-muted-foreground">Distance</p>
-                <p className="text-sm font-bold text-foreground">{routeInfo.distance}</p>
+        {/* ── Trip Summary ── */}
+        {routeBuilt && (
+          <div
+            className="rounded-xl overflow-hidden"
+            style={{ background: "oklch(0.18 0.04 48)", border: "1px solid oklch(0.72 0.16 75 / 30%)" }}
+          >
+            <div
+              className="px-4 py-2.5"
+              style={{ background: "linear-gradient(135deg, oklch(0.72 0.16 75 / 15%), oklch(0.55 0.20 25 / 10%))", borderBottom: "1px solid oklch(0.72 0.16 75 / 20%)" }}
+            >
+              <div className="flex items-center gap-2">
+                <Star className="w-4 h-4 fill-current" style={{ color: "oklch(0.72 0.16 75)" }} />
+                <span className="text-sm font-bold" style={{ color: "oklch(0.78 0.18 80)" }}>Trip Summary</span>
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Drive Time</p>
-                <p className="text-sm font-bold text-foreground">{routeInfo.duration}</p>
+            </div>
+            <div className="p-4">
+              <div className="grid grid-cols-3 gap-3 mb-4">
+                {[
+                  { icon: Route, label: "Distance", value: totalDistance },
+                  { icon: Clock, label: "Drive Time", value: totalDuration },
+                  { icon: Fuel, label: "Est. Fuel", value: `$${estimatedFuelCost}` },
+                ].map(({ icon: Icon, label, value }) => (
+                  <div
+                    key={label}
+                    className="flex flex-col items-center gap-1 p-3 rounded-xl"
+                    style={{ background: "oklch(0.22 0.05 48)", border: "1px solid oklch(0.30 0.06 50)" }}
+                  >
+                    <Icon className="w-4 h-4" style={{ color: "oklch(0.72 0.16 75)" }} />
+                    <span className="text-base font-bold" style={{ color: "oklch(0.93 0.03 75)" }}>{value}</span>
+                    <span className="text-xs" style={{ color: "oklch(0.52 0.05 60)" }}>{label}</span>
+                  </div>
+                ))}
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Est. Fuel</p>
-                <p className="text-sm font-bold text-primary">{estimatedFuelCost}</p>
+
+              {/* Fuel cost inputs */}
+              <div className="flex gap-3 mb-4">
+                <div className="flex-1">
+                  <label className="text-xs font-medium block mb-1" style={{ color: "oklch(0.62 0.05 65)" }}>
+                    $/gallon
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="1"
+                    value={fuelPrice}
+                    onChange={e => setFuelPrice(parseFloat(e.target.value) || 3.5)}
+                    className="w-full h-8 px-2 text-sm rounded-lg"
+                    style={{ background: "oklch(0.22 0.05 48)", border: "1px solid oklch(0.30 0.06 50)", color: "oklch(0.93 0.03 75)" }}
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="text-xs font-medium block mb-1" style={{ color: "oklch(0.62 0.05 65)" }}>
+                    MPG (vehicle)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={mpg}
+                    onChange={e => setMpg(parseInt(e.target.value) || 12)}
+                    className="w-full h-8 px-2 text-sm rounded-lg"
+                    style={{ background: "oklch(0.22 0.05 48)", border: "1px solid oklch(0.30 0.06 50)", color: "oklch(0.93 0.03 75)" }}
+                  />
+                </div>
               </div>
+
+              {/* Leg breakdown */}
+              {legs.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold" style={{ color: "oklch(0.62 0.05 65)" }}>
+                    LEG BREAKDOWN
+                  </p>
+                  {legs.map((leg, i) => (
+                    <div
+                      key={i}
+                      className="rounded-lg overflow-hidden"
+                      style={{ background: "oklch(0.22 0.05 48)", border: "1px solid oklch(0.30 0.06 50)" }}
+                    >
+                      <button
+                        className="w-full flex items-center justify-between p-3 text-left"
+                        onClick={() => setExpandedLeg(expandedLeg === i ? null : i)}
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div
+                            className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                            style={{ background: "oklch(0.72 0.16 75 / 20%)", color: "oklch(0.78 0.18 80)" }}
+                          >
+                            {i + 1}
+                          </div>
+                          <span className="text-xs truncate" style={{ color: "oklch(0.72 0.06 65)" }}>
+                            Leg {i + 1}: {leg.distance} · {leg.duration}
+                          </span>
+                        </div>
+                        {expandedLeg === i
+                          ? <ChevronUp className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "oklch(0.52 0.05 60)" }} />
+                          : <ChevronDown className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "oklch(0.52 0.05 60)" }} />
+                        }
+                      </button>
+                      {expandedLeg === i && (
+                        <div className="px-3 pb-3 space-y-1" style={{ borderTop: "1px solid oklch(0.28 0.06 50)" }}>
+                          <p className="text-xs pt-2" style={{ color: "oklch(0.52 0.05 60)" }}>
+                            <span style={{ color: "oklch(0.65 0.14 145)" }}>From:</span> {leg.from}
+                          </p>
+                          <p className="text-xs" style={{ color: "oklch(0.52 0.05 60)" }}>
+                            <span style={{ color: "oklch(0.65 0.20 25)" }}>To:</span> {leg.to}
+                          </p>
+                          <p className="text-xs font-semibold mt-1" style={{ color: "oklch(0.72 0.16 75)" }}>
+                            Est. fuel: ${mpg > 0 ? (((leg.distanceMeters / 1609.34) / mpg) * fuelPrice).toFixed(2) : "0.00"}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* Map */}
-        <div className="rounded-xl overflow-hidden border border-border flex-1" style={{ minHeight: 300, height: "calc(100vh - 420px)" }}>
-          <MapView
-            onMapReady={handleMapReady}
-            initialCenter={userLocation ?? { lat: 39.8283, lng: -98.5795 }}
-            initialZoom={userLocation ? 10 : 4}
-          />
-        </div>
-
-        {/* Fuel stations panel */}
+        {/* ── Fuel Stations ── */}
         {(loadingFuel || fuelStations.length > 0) && (
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
-            <button
-              className="w-full flex items-center justify-between px-4 py-3"
-              onClick={() => setShowFuelList(!showFuelList)}
+          <div
+            className="rounded-xl overflow-hidden"
+            style={{ background: "oklch(0.18 0.04 48)", border: "1px solid oklch(0.30 0.06 50)" }}
+          >
+            <div
+              className="px-4 py-2.5 flex items-center gap-2"
+              style={{ borderBottom: "1px solid oklch(0.30 0.06 50)", background: "oklch(0.16 0.04 46)" }}
             >
-              <div className="flex items-center gap-2">
-                <Fuel className="w-4 h-4 text-orange-600" />
-                <span className="text-sm font-semibold text-foreground">
-                  {loadingFuel ? "Finding fuel stations…" : `${fuelStations.length} Fuel Stations Along Route`}
+              <Fuel className="w-4 h-4" style={{ color: "oklch(0.72 0.16 75)" }} />
+              <span className="text-sm font-bold" style={{ color: "oklch(0.78 0.18 80)" }}>
+                Fuel Stations Along Route
+              </span>
+              {loadingFuel && <Loader2 className="w-3.5 h-3.5 animate-spin ml-auto" style={{ color: "oklch(0.72 0.16 75)" }} />}
+              {!loadingFuel && fuelStations.length > 0 && (
+                <span
+                  className="ml-auto text-xs font-semibold px-2 py-0.5 rounded-full"
+                  style={{ background: "oklch(0.72 0.16 75 / 15%)", color: "oklch(0.78 0.18 80)" }}
+                >
+                  {fuelStations.length} found
                 </span>
-                {loadingFuel && <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />}
-              </div>
-              {!loadingFuel && (showFuelList ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />)}
-            </button>
-
-            {showFuelList && !loadingFuel && (
-              <div className="px-3 pb-3 space-y-2 max-h-64 overflow-y-auto">
-                {fuelStations.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">No fuel stations found along this route</p>
-                ) : (
-                  fuelStations.map((station) => (
-                    <FuelStationCard
-                      key={station.placeId}
-                      station={station}
-                      onNavigate={() => navigateToStation(station)}
-                    />
-                  ))
-                )}
-              </div>
-            )}
+              )}
+            </div>
+            <div className="p-3 space-y-2">
+              {loadingFuel ? (
+                <div className="flex items-center justify-center py-6 gap-2" style={{ color: "oklch(0.52 0.05 60)" }}>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="text-sm">Searching for fuel stations…</span>
+                </div>
+              ) : (
+                fuelStations.map(s => <FuelCard key={s.placeId} station={s} />)
+              )}
+            </div>
           </div>
         )}
 
-        {/* Empty state */}
-        {!routeInfo && !loadingRoute && fuelStations.length === 0 && (
-          <div className="text-center py-4">
-            <p className="text-xs text-muted-foreground">
-              Enter a destination above to get directions and see fuel stations along the way.
-            </p>
-          </div>
-        )}
+        {/* Bottom padding for nav */}
+        <div className="h-4" />
       </div>
     </div>
   );

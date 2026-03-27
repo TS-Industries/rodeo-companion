@@ -92,7 +92,8 @@ function RunCard({ run, rodeoName }: { run: any; rodeoName?: string }) {
   const colors = DISCIPLINE_COLORS[run.discipline as Discipline];
 
   return (
-    <div className="bg-card border border-border rounded-xl overflow-hidden">
+    <div className="card-western card-hover rounded-xl overflow-hidden">
+      <div className="h-0.5 w-full" style={{ background: "linear-gradient(90deg, oklch(0.72 0.16 75), oklch(0.55 0.20 25))" }} />
       <button className="w-full text-left p-3" onClick={() => setExpanded(!expanded)}>
         <div className="flex items-center gap-3">
           <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center text-lg flex-shrink-0", colors.bg)}>
@@ -148,12 +149,12 @@ export default function Performance() {
   return (
     <div className="min-h-screen bg-background page-enter">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-card border-b border-border shadow-sm">
+      <div className="page-header sticky top-0 z-40">
         <div className="max-w-lg mx-auto px-4 py-3">
-          <h1 className="text-lg font-bold text-foreground" style={{ fontFamily: "'Playfair Display', serif" }}>
+          <h1 className="text-xl font-bold leading-none" style={{ fontFamily: "'Playfair Display', serif", color: "oklch(0.78 0.18 80)", textShadow: "0 0 20px oklch(0.72 0.16 75 / 40%)" }}>
             🏆 My Runs
           </h1>
-          <p className="text-xs text-muted-foreground">{filtered.length} run{filtered.length !== 1 ? "s" : ""} recorded</p>
+          <p className="text-xs mt-0.5" style={{ color: "oklch(0.52 0.05 60)" }}>{filtered.length} run{filtered.length !== 1 ? "s" : ""} recorded</p>
         </div>
       </div>
 

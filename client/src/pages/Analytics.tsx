@@ -30,10 +30,10 @@ const CHART_COLORS = ["#c2410c", "#0d9488", "#d97706", "#7c3aed", "#dc2626", "#2
 
 function StatCard({ label, value, sub, trend }: { label: string; value: string; sub?: string; trend?: "up" | "down" | "flat" }) {
   return (
-    <div className="bg-card border border-border rounded-xl p-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
+    <div className="card-western rounded-xl p-3">
+      <p className="text-xs" style={{ color: "oklch(0.62 0.05 65)" }}>{label}</p>
       <div className="flex items-end gap-1 mt-0.5">
-        <p className="text-xl font-bold text-foreground">{value}</p>
+        <p className="text-xl font-bold" style={{ color: "oklch(0.78 0.18 80)" }}>{value}</p>
         {trend === "down" && <TrendingDown className="w-4 h-4 text-green-600 mb-0.5" />}
         {trend === "up" && <TrendingUp className="w-4 h-4 text-red-500 mb-0.5" />}
         {trend === "flat" && <Minus className="w-4 h-4 text-muted-foreground mb-0.5" />}
@@ -292,11 +292,12 @@ export default function Analytics() {
   return (
     <div className="min-h-screen bg-background page-enter">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-card border-b border-border shadow-sm">
+      <div className="page-header sticky top-0 z-40">
         <div className="max-w-lg mx-auto px-4 py-3">
-          <h1 className="text-lg font-bold text-foreground" style={{ fontFamily: "'Playfair Display', serif" }}>
+          <h1 className="text-xl font-bold leading-none" style={{ fontFamily: "'Playfair Display', serif", color: "oklch(0.78 0.18 80)", textShadow: "0 0 20px oklch(0.72 0.16 75 / 40%)" }}>
             📊 Progress
           </h1>
+          <p className="text-xs mt-0.5" style={{ color: "oklch(0.52 0.05 60)" }}>Performance analytics &amp; drill suggestions</p>
         </div>
       </div>
 
