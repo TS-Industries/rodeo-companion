@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE `expenses` MODIFY COLUMN `category` enum('entry_fee','fuel','lodging','food','equipment','repairs','vet','other') NOT NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2PYvEfQ4DSv7tRb.2d2e5dd58f47 --database C9GZTdmmkAQAM2QeyCH5WD --execute ALTER TABLE `expenses` MODIFY COLUMN `category` enum('entry_fee','fuel','lodging','food','equipment','repairs','vet','other') NOT NULL;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1024
+}

@@ -33,6 +33,7 @@ export const DISCIPLINES = [
   "bareback",
   "saddle_bronc",
   "steer_wrestling",
+  "bull_riding",
 ] as const;
 export type Discipline = (typeof DISCIPLINES)[number];
 
@@ -44,6 +45,7 @@ export const DISCIPLINE_LABELS: Record<Discipline, string> = {
   bareback: "Bareback",
   saddle_bronc: "Saddle Bronc",
   steer_wrestling: "Steer Wrestling",
+  bull_riding: "Bull Riding",
 };
 
 // Rodeo events / scheduled rodeos
@@ -52,6 +54,7 @@ export const rodeos = mysqlTable("rodeos", {
   userId: int("userId").notNull(),
   name: varchar("name", { length: 255 }).notNull(),
   discipline: mysqlEnum("discipline", DISCIPLINES).notNull(),
+  disciplines: text("disciplines"), // JSON array of Discipline[] for multi-discipline entries
   rodeotype: mysqlEnum("rodeotype", ["jackpot", "amateur", "professional"]).default("jackpot").notNull(),
   rodeoDate: timestamp("rodeoDate").notNull(),
   entryDeadline: timestamp("entryDeadline").notNull(),
@@ -59,6 +62,9 @@ export const rodeos = mysqlTable("rodeos", {
   locationAddress: varchar("locationAddress", { length: 512 }),
   locationLat: float("locationLat"),
   locationLng: float("locationLng"),
+  locationPlaceId: varchar("locationPlaceId", { length: 512 }),
+  parkingNotes: text("parkingNotes"),
+  countryCode: varchar("countryCode", { length: 4 }), // 'US' or 'CA' for unit system
   notes: text("notes"),
   isEntered: boolean("isEntered").default(false).notNull(),
   notifyDaysBefore: int("notifyDaysBefore").default(14).notNull(),
@@ -127,6 +133,7 @@ export const EXPENSE_CATEGORIES = [
   "lodging",
   "food",
   "equipment",
+  "repairs",
   "vet",
   "other",
 ] as const;
@@ -138,6 +145,7 @@ export const EXPENSE_CATEGORY_LABELS: Record<ExpenseCategory, string> = {
   lodging: "Lodging",
   food: "Food & Drink",
   equipment: "Equipment",
+  repairs: "Repairs",
   vet: "Vet / Horse Care",
   other: "Other",
 };

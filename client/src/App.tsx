@@ -11,13 +11,14 @@ import Performance from "./pages/Performance";
 import Analytics from "./pages/Analytics";
 import Locations from "./pages/Locations";
 import Settings from "./pages/Settings";
+import Help from "./pages/Help";
 import Home from "./pages/Home";
 import {
   CalendarDays,
   Trophy,
   BarChart3,
   MapPin,
-  Settings as SettingsIcon,
+  BookOpen,
 } from "lucide-react";
 import { cn } from "./lib/utils";
 
@@ -26,7 +27,7 @@ const NAV_ITEMS = [
   { path: "/performance", label: "Runs", icon: Trophy },
   { path: "/analytics", label: "Progress", icon: BarChart3 },
   { path: "/locations", label: "Map", icon: MapPin },
-  { path: "/settings", label: "Settings", icon: SettingsIcon },
+  { path: "/help", label: "Guide", icon: BookOpen },
 ];
 
 function BottomNav() {
@@ -107,6 +108,7 @@ function AppShell() {
         <Route path="/analytics" component={Analytics} />
         <Route path="/locations" component={Locations} />
         <Route path="/settings" component={Settings} />
+        <Route path="/help" component={Help} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>

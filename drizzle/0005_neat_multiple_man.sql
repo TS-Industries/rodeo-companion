@@ -1,0 +1,1 @@
+ALTER TABLE `expenses` MODIFY COLUMN `category` enum('entry_fee','fuel','lodging','food','equipment','repairs','vet','other') NOT NULL;

@@ -4,6 +4,7 @@ export const EXPENSE_CATEGORIES = [
   "lodging",
   "food",
   "equipment",
+  "repairs",
   "vet",
   "other",
 ] as const;
@@ -12,32 +13,35 @@ export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
 
 export const EXPENSE_CATEGORY_LABELS: Record<ExpenseCategory, string> = {
   entry_fee: "Entry Fee",
-  fuel: "Fuel",
-  lodging: "Lodging",
-  food: "Food & Drink",
+  fuel:      "Fuel",
+  lodging:   "Lodging",
+  food:      "Food & Drink",
   equipment: "Equipment",
-  vet: "Vet / Horse Care",
-  other: "Other",
+  repairs:   "Repairs",
+  vet:       "Vet / Horse Care",
+  other:     "Other",
 };
 
 export const EXPENSE_CATEGORY_ICONS: Record<ExpenseCategory, string> = {
   entry_fee: "🏆",
-  fuel: "⛽",
-  lodging: "🏨",
-  food: "🍔",
+  fuel:      "⛽",
+  lodging:   "🏨",
+  food:      "🍔",
   equipment: "🪢",
-  vet: "🐴",
-  other: "💰",
+  repairs:   "🔧",
+  vet:       "🐴",
+  other:     "💰",
 };
 
-export const EXPENSE_CATEGORY_COLORS: Record<ExpenseCategory, { bg: string; text: string }> = {
-  entry_fee: { bg: "bg-yellow-100", text: "text-yellow-800" },
-  fuel:      { bg: "bg-orange-100", text: "text-orange-800" },
-  lodging:   { bg: "bg-blue-100",   text: "text-blue-800" },
-  food:      { bg: "bg-green-100",  text: "text-green-800" },
-  equipment: { bg: "bg-purple-100", text: "text-purple-800" },
-  vet:       { bg: "bg-teal-100",   text: "text-teal-800" },
-  other:     { bg: "bg-gray-100",   text: "text-gray-800" },
+export const EXPENSE_CATEGORY_COLORS: Record<ExpenseCategory, { bg: string; text: string; accent: string }> = {
+  entry_fee: { bg: "bg-amber-900/40",  text: "text-amber-300",  accent: "#d97706" },
+  fuel:      { bg: "bg-orange-900/40", text: "text-orange-300", accent: "#ea580c" },
+  lodging:   { bg: "bg-blue-900/40",   text: "text-blue-300",   accent: "#2563eb" },
+  food:      { bg: "bg-green-900/40",  text: "text-green-300",  accent: "#16a34a" },
+  equipment: { bg: "bg-purple-900/40", text: "text-purple-300", accent: "#7c3aed" },
+  repairs:   { bg: "bg-red-900/40",    text: "text-red-300",    accent: "#dc2626" },
+  vet:       { bg: "bg-teal-900/40",   text: "text-teal-300",   accent: "#0d9488" },
+  other:     { bg: "bg-zinc-900/40",   text: "text-zinc-300",   accent: "#71717a" },
 };
 
 export function formatDollars(cents: number): string {

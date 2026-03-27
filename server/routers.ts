@@ -61,6 +61,7 @@ const rodeosRouter = router({
       z.object({
         name: z.string().min(1),
         discipline: disciplineEnum,
+        disciplines: z.array(disciplineEnum).optional(), // multi-discipline
         rodeotype: rodeoTypeEnum.default("jackpot"),
         rodeoDate: z.number(), // UTC ms
         entryDeadline: z.number(),
@@ -68,6 +69,9 @@ const rodeosRouter = router({
         locationAddress: z.string().optional(),
         locationLat: z.number().optional(),
         locationLng: z.number().optional(),
+        locationPlaceId: z.string().optional(),
+        parkingNotes: z.string().optional(),
+        countryCode: z.string().optional(),
         notes: z.string().optional(),
         notifyDaysBefore: z.number().default(14),
       })
@@ -77,6 +81,7 @@ const rodeosRouter = router({
         userId: ctx.user.id,
         name: input.name,
         discipline: input.discipline,
+        disciplines: input.disciplines ? JSON.stringify(input.disciplines) : null,
         rodeotype: input.rodeotype,
         rodeoDate: new Date(input.rodeoDate),
         entryDeadline: new Date(input.entryDeadline),
@@ -84,6 +89,9 @@ const rodeosRouter = router({
         locationAddress: input.locationAddress ?? null,
         locationLat: input.locationLat ?? null,
         locationLng: input.locationLng ?? null,
+        locationPlaceId: input.locationPlaceId ?? null,
+        parkingNotes: input.parkingNotes ?? null,
+        countryCode: input.countryCode ?? null,
         notes: input.notes ?? null,
         notifyDaysBefore: input.notifyDaysBefore,
         isEntered: false,

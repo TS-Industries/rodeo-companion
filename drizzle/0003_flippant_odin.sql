@@ -1,0 +1,2 @@
+ALTER TABLE `performances` MODIFY COLUMN `discipline` enum('barrel_racing','breakaway_roping','team_roping','tie_down_roping','bareback','saddle_bronc','steer_wrestling','bull_riding') NOT NULL;--> statement-breakpoint
+ALTER TABLE `rodeos` MODIFY COLUMN `discipline` enum('barrel_racing','breakaway_roping','team_roping','tie_down_roping','bareback','saddle_bronc','steer_wrestling','bull_riding') NOT NULL;

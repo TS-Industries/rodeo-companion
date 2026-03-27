@@ -57,3 +57,22 @@
 - [x] Google Maps: round-trip toggle (return to origin)
 - [x] Google Maps: per-leg fuel stations and distance/time breakdown
 - [x] Google Maps: total trip summary (distance, time, fuel cost)
+
+## Enhancement Round 3 (User Request)
+- [x] Add bull riding as 8th discipline
+- [x] Improved discipline icons (custom SVG/emoji for all 8 events)
+- [x] Multi-discipline selection per rodeo entry (e.g., Barrels + Breakaway)
+- [x] Google Maps venue/arena lookup with Places autocomplete in schedule form
+- [x] Parking info search for large rigs at venue
+- [x] Calendar date picker for rodeo date selection
+- [x] Canada/US detection: km vs miles, L/100km vs MPG throughout app
+- [x] Per-discipline run slots per rodeo (separate entry per discipline selected)
+- [x] Runs linked to specific rodeo schedule entry
+- [x] Time entry in seconds with decimal support
+- [x] Per-run video tied to each discipline run
+- [x] Video stored on-device option + cloud storage
+- [x] Expense categories: fuel, entry fees, food, repairs
+- [x] Trip budget calculator with MPG / L per 100km
+- [x] Fuel price display along route (GasBuddy-style via Google Places)
+- [x] In-app User Guide / Help page with instructions for all features
+- [x] North America coverage (Canada + US) with unit conversion
