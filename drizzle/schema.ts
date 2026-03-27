@@ -85,6 +85,7 @@ export const performances = mysqlTable("performances", {
   timeSeconds: float("timeSeconds"), // null for rough stock (scored differently)
   score: float("score"),             // for rough stock events
   penaltySeconds: float("penaltySeconds").default(0),
+  prizeMoneyCents: int("prizeMoneyCents").default(0), // prize money won in cents (0 = no winnings)
   notes: text("notes"),
   runDate: timestamp("runDate").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

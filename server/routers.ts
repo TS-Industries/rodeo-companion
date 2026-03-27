@@ -172,6 +172,7 @@ const performancesRouter = router({
         timeSeconds: z.number().optional(),
         score: z.number().optional(),
         penaltySeconds: z.number().default(0),
+        prizeMoneyCents: z.number().int().min(0).default(0),
         notes: z.string().optional(),
         runDate: z.number(),
       })
@@ -184,6 +185,7 @@ const performancesRouter = router({
         timeSeconds: input.timeSeconds ?? null,
         score: input.score ?? null,
         penaltySeconds: input.penaltySeconds,
+        prizeMoneyCents: input.prizeMoneyCents,
         notes: input.notes ?? null,
         runDate: new Date(input.runDate),
       });
@@ -197,6 +199,7 @@ const performancesRouter = router({
         timeSeconds: z.number().optional().nullable(),
         score: z.number().optional().nullable(),
         penaltySeconds: z.number().optional(),
+        prizeMoneyCents: z.number().int().min(0).optional(),
         notes: z.string().optional().nullable(),
         runDate: z.number().optional(),
       })
@@ -277,6 +280,73 @@ const videosRouter = router({
 // ─── Analytics ────────────────────────────────────────────────────────────────
 
 const analyticsRouter = router({
+  // Returns per-rodeo winnings, expenses, and net P&L
+  financials: protectedProcedure
+    .input(z.object({ period: z.enum(["week", "month", "year", "all"]).default("all") }))
+    .query(async ({ ctx, input }) => {
+      const allRuns = await getPerformancesByUser(ctx.user.id);
+      const allExpenses = await getExpensesByUser(ctx.user.id);
+      const allRodeos = await getRodeosByUser(ctx.user.id);
+
+      const now = Date.now();
+      const msMap = { week: 7, month: 30, year: 365, all: 99999 };
+      const cutoff = now - msMap[input.period] * 24 * 60 * 60 * 1000;
+
+      const filteredRuns = allRuns.filter((r) => r.runDate.getTime() >= cutoff);
+      const filteredExpenses = allExpenses.filter((e) => e.date.getTime() >= cutoff);
+
+      // Aggregate winnings per rodeo
+      const winningsByRodeo: Record<number, number> = {};
+      for (const run of filteredRuns) {
+        winningsByRodeo[run.rodeoId] = (winningsByRodeo[run.rodeoId] ?? 0) + (run.prizeMoneyCents ?? 0);
+      }
+
+      // Aggregate expenses per rodeo
+      const expensesByRodeo: Record<number, number> = {};
+      for (const exp of filteredExpenses) {
+        expensesByRodeo[exp.rodeoId] = (expensesByRodeo[exp.rodeoId] ?? 0) + exp.amountCents;
+      }
+
+      // Build per-rodeo P&L
+      const rodeoIds = new Set([...Object.keys(winningsByRodeo), ...Object.keys(expensesByRodeo)].map(Number));
+      const rodeoMap = Object.fromEntries(allRodeos.map((r) => [r.id, r]));
+
+      const perRodeo = Array.from(rodeoIds).map((rodeoId) => {
+        const rodeo = rodeoMap[rodeoId];
+        const winnings = winningsByRodeo[rodeoId] ?? 0;
+        const expenses = expensesByRodeo[rodeoId] ?? 0;
+        return {
+          rodeoId,
+          rodeoName: rodeo?.name ?? "Unknown Rodeo",
+          rodeoDate: rodeo?.rodeoDate?.getTime() ?? 0,
+          winningsCents: winnings,
+          expensesCents: expenses,
+          netCents: winnings - expenses,
+        };
+      }).sort((a, b) => b.rodeoDate - a.rodeoDate);
+
+      const totalWinnings = perRodeo.reduce((s, r) => s + r.winningsCents, 0);
+      const totalExpenses = perRodeo.reduce((s, r) => s + r.expensesCents, 0);
+
+      // Chart data: monthly buckets
+      const chartBuckets: Record<string, { winnings: number; expenses: number }> = {};
+      for (const run of filteredRuns) {
+        const key = run.runDate.toISOString().slice(0, 7); // YYYY-MM
+        if (!chartBuckets[key]) chartBuckets[key] = { winnings: 0, expenses: 0 };
+        chartBuckets[key].winnings += run.prizeMoneyCents ?? 0;
+      }
+      for (const exp of filteredExpenses) {
+        const key = exp.date.toISOString().slice(0, 7);
+        if (!chartBuckets[key]) chartBuckets[key] = { winnings: 0, expenses: 0 };
+        chartBuckets[key].expenses += exp.amountCents;
+      }
+      const chartData = Object.entries(chartBuckets)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([month, vals]) => ({ month, ...vals }));
+
+      return { perRodeo, totalWinnings, totalExpenses, netTotal: totalWinnings - totalExpenses, chartData };
+    }),
+
   summary: protectedProcedure
     .input(
       z.object({

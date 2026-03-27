@@ -9,7 +9,7 @@ import {
   BarChart, Bar, PieChart, Pie, Cell, Legend,
 } from "recharts";
 import { format } from "date-fns";
-import { BarChart3, TrendingDown, TrendingUp, Minus, Dumbbell, DollarSign, Loader2 } from "lucide-react";
+import { BarChart3, TrendingDown, TrendingUp, Minus, Dumbbell, DollarSign, Loader2, Trophy } from "lucide-react";
 import {
   DISCIPLINES, DISCIPLINE_LABELS, DISCIPLINE_ICONS, DISCIPLINE_COLORS,
   isTimedDiscipline, formatTime, formatScore, type Discipline,
@@ -239,6 +239,127 @@ function ExpensesTab({ period }: { period: Period }) {
   );
 }
 
+// ─── Financials Tab ──────────────────────────────────────────────────────────
+function FinancialsTab({ period }: { period: Period }) {
+  const { data: fin, isLoading } = trpc.analytics.financials.useQuery({ period });
+
+  if (isLoading) {
+    return <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin" style={{ color: "oklch(0.72 0.16 75)" }} /></div>;
+  }
+
+  if (!fin || (fin.totalWinnings === 0 && fin.totalExpenses === 0)) {
+    return (
+      <div className="text-center py-12">
+        <Trophy className="w-10 h-10 mx-auto mb-2" style={{ color: "oklch(0.42 0.04 55)" }} />
+        <p className="text-sm" style={{ color: "oklch(0.52 0.05 60)" }}>No financial data for this period</p>
+        <p className="text-xs mt-1" style={{ color: "oklch(0.42 0.04 55)" }}>Log runs with prize money and add expenses to see your P&amp;L</p>
+      </div>
+    );
+  }
+
+  const net = fin.netTotal;
+  const isProfit = net >= 0;
+
+  // Format chart data: convert cents to dollars
+  const chartData = fin.chartData.map((d) => ({
+    month: d.month,
+    Winnings: parseFloat((d.winnings / 100).toFixed(2)),
+    Expenses: parseFloat((d.expenses / 100).toFixed(2)),
+    Net: parseFloat(((d.winnings - d.expenses) / 100).toFixed(2)),
+  }));
+
+  return (
+    <div className="space-y-4">
+      {/* Summary cards */}
+      <div className="grid grid-cols-3 gap-2">
+        <div className="card-western rounded-xl p-3">
+          <p className="text-xs" style={{ color: "oklch(0.62 0.05 65)" }}>Total Won</p>
+          <p className="text-lg font-bold" style={{ color: "oklch(0.65 0.18 145)" }}>${(fin.totalWinnings / 100).toFixed(2)}</p>
+        </div>
+        <div className="card-western rounded-xl p-3">
+          <p className="text-xs" style={{ color: "oklch(0.62 0.05 65)" }}>Total Spent</p>
+          <p className="text-lg font-bold" style={{ color: "oklch(0.65 0.18 25)" }}>${(fin.totalExpenses / 100).toFixed(2)}</p>
+        </div>
+        <div className="card-western rounded-xl p-3">
+          <p className="text-xs" style={{ color: "oklch(0.62 0.05 65)" }}>Net P&amp;L</p>
+          <p className="text-lg font-bold" style={{ color: isProfit ? "oklch(0.65 0.18 145)" : "oklch(0.65 0.18 25)" }}>
+            {isProfit ? "+" : ""}{(net / 100).toFixed(2)}
+          </p>
+        </div>
+      </div>
+
+      {/* Winnings vs Expenses bar chart */}
+      {chartData.length > 0 && (
+        <div className="rounded-xl p-4" style={{ background: "oklch(0.18 0.04 48)", border: "1px solid oklch(0.28 0.06 50)" }}>
+          <p className="text-sm font-semibold mb-3" style={{ color: "oklch(0.78 0.18 80)" }}>Winnings vs Expenses</p>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.28 0.06 50)" />
+              <XAxis dataKey="month" tick={{ fontSize: 10, fill: "oklch(0.52 0.05 60)" }} />
+              <YAxis tick={{ fontSize: 10, fill: "oklch(0.52 0.05 60)" }} />
+              <Tooltip
+                contentStyle={{ background: "oklch(0.18 0.04 48)", border: "1px solid oklch(0.32 0.07 55)", borderRadius: 8, fontSize: 12 }}
+                formatter={(v: number) => [`$${v.toFixed(2)}`, ""]}
+              />
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Bar dataKey="Winnings" fill="oklch(0.65 0.18 145)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Expenses" fill="oklch(0.65 0.18 25)" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Net P&L line chart */}
+      {chartData.length > 1 && (
+        <div className="rounded-xl p-4" style={{ background: "oklch(0.18 0.04 48)", border: "1px solid oklch(0.28 0.06 50)" }}>
+          <p className="text-sm font-semibold mb-3" style={{ color: "oklch(0.78 0.18 80)" }}>Net P&amp;L Trend</p>
+          <ResponsiveContainer width="100%" height={160}>
+            <LineChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.28 0.06 50)" />
+              <XAxis dataKey="month" tick={{ fontSize: 10, fill: "oklch(0.52 0.05 60)" }} />
+              <YAxis tick={{ fontSize: 10, fill: "oklch(0.52 0.05 60)" }} />
+              <Tooltip
+                contentStyle={{ background: "oklch(0.18 0.04 48)", border: "1px solid oklch(0.32 0.07 55)", borderRadius: 8, fontSize: 12 }}
+                formatter={(v: number) => [`$${v.toFixed(2)}`, "Net P&L"]}
+              />
+              <Line type="monotone" dataKey="Net" stroke="oklch(0.72 0.16 75)" strokeWidth={2} dot={{ r: 3 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Per-rodeo P&L table */}
+      {fin.perRodeo.length > 0 && (
+        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid oklch(0.28 0.06 50)" }}>
+          <div className="px-4 py-2.5" style={{ background: "oklch(0.20 0.05 48)" }}>
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "oklch(0.52 0.05 60)" }}>Per-Rodeo Breakdown</p>
+          </div>
+          <div className="divide-y" style={{ borderColor: "oklch(0.25 0.05 50)" }}>
+            {fin.perRodeo.map((r) => {
+              const rNet = r.netCents;
+              const rIsProfit = rNet >= 0;
+              return (
+                <div key={r.rodeoId} className="flex items-center gap-3 px-4 py-3" style={{ background: "oklch(0.16 0.04 48)" }}>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate" style={{ color: "oklch(0.88 0.03 70)" }}>{r.rodeoName}</p>
+                    <div className="flex items-center gap-3 mt-0.5">
+                      <span className="text-xs" style={{ color: "oklch(0.65 0.18 145)" }}>Won: ${(r.winningsCents / 100).toFixed(2)}</span>
+                      <span className="text-xs" style={{ color: "oklch(0.65 0.18 25)" }}>Spent: ${(r.expensesCents / 100).toFixed(2)}</span>
+                    </div>
+                  </div>
+                  <span className="text-sm font-bold flex-shrink-0" style={{ color: rIsProfit ? "oklch(0.65 0.18 145)" : "oklch(0.65 0.18 25)" }}>
+                    {rIsProfit ? "+" : ""}{(rNet / 100).toFixed(2)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function DrillsTab({ discipline }: { discipline: string }) {
   const { data: drills, isLoading, refetch } = trpc.drills.getSuggestions.useQuery(
     { discipline: discipline === "all" ? "barrel_racing" : discipline as Discipline },
@@ -323,13 +444,17 @@ export default function Analytics() {
 
         {/* Tabs */}
         <Tabs defaultValue="performance">
-          <TabsList className="w-full">
-            <TabsTrigger value="performance" className="flex-1 text-xs">Performance</TabsTrigger>
-            <TabsTrigger value="expenses" className="flex-1 text-xs">Expenses</TabsTrigger>
-            <TabsTrigger value="drills" className="flex-1 text-xs">Drills</TabsTrigger>
+          <TabsList className="w-full grid grid-cols-4">
+            <TabsTrigger value="performance" className="text-xs">Runs</TabsTrigger>
+            <TabsTrigger value="financials" className="text-xs">P&amp;L</TabsTrigger>
+            <TabsTrigger value="expenses" className="text-xs">Expenses</TabsTrigger>
+            <TabsTrigger value="drills" className="text-xs">Drills</TabsTrigger>
           </TabsList>
           <TabsContent value="performance" className="mt-4">
             <PerformanceTab discipline={discipline} period={period} />
+          </TabsContent>
+          <TabsContent value="financials" className="mt-4">
+            <FinancialsTab period={period} />
           </TabsContent>
           <TabsContent value="expenses" className="mt-4">
             <ExpensesTab period={period} />

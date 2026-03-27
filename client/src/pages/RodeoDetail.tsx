@@ -301,16 +301,18 @@ function AddPerformanceDialog({ rodeoId, discipline, open, onClose }: {
     onError: (e) => toast.error(e.message),
   });
   const isTimed = isTimedDiscipline(discipline);
-  const [form, setForm] = useState({ value: "", penalty: "0", notes: "", runDate: new Date().toISOString().split("T")[0] });
+  const [form, setForm] = useState({ value: "", penalty: "0", prizeMoney: "", notes: "", runDate: new Date().toISOString().split("T")[0] });
 
   const handleSubmit = () => {
     const val = parseFloat(form.value);
     if (isNaN(val)) { toast.error("Enter a valid value"); return; }
+    const prizeMoneyDollars = parseFloat(form.prizeMoney) || 0;
     createMutation.mutate({
       rodeoId, discipline,
       timeSeconds: isTimed ? val : undefined,
       score: !isTimed ? val : undefined,
       penaltySeconds: parseFloat(form.penalty) || 0,
+      prizeMoneyCents: Math.round(prizeMoneyDollars * 100),
       notes: form.notes || undefined,
       runDate: new Date(form.runDate).getTime(),
     });
@@ -341,6 +343,14 @@ function AddPerformanceDialog({ rodeoId, discipline, open, onClose }: {
           <div>
             <Label className="text-xs font-semibold" style={{ color: "oklch(0.72 0.16 75)" }}>Run Date</Label>
             <Input className="mt-1" type="date" value={form.runDate} onChange={(e) => setForm({ ...form, runDate: e.target.value })} />
+          </div>
+          <div>
+            <Label className="text-xs font-semibold" style={{ color: "oklch(0.72 0.16 75)" }}>💰 Prize Money Won</Label>
+            <div className="relative mt-1">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: "oklch(0.52 0.05 60)" }}>$</span>
+              <Input className="pl-7" type="number" min="0" step="0.01" placeholder="0.00 (leave blank if no winnings)" value={form.prizeMoney} onChange={(e) => setForm({ ...form, prizeMoney: e.target.value })} />
+            </div>
+            <p className="text-xs mt-1" style={{ color: "oklch(0.42 0.04 55)" }}>Enter 0 or leave blank if you didn't place</p>
           </div>
           <div>
             <Label className="text-xs font-semibold" style={{ color: "oklch(0.72 0.16 75)" }}>Notes</Label>
@@ -383,6 +393,7 @@ function PerformancesList({ rodeoId, disciplines }: { rodeoId: number; disciplin
         const colors = DISCIPLINE_COLORS[discipline];
         const allTimes = disciplineRuns.filter(r => r.timeSeconds != null).map(r => (r.timeSeconds ?? 0) + (r.penaltySeconds ?? 0));
         const bestTime = allTimes.length ? Math.min(...allTimes) : null;
+        const totalWinnings = disciplineRuns.reduce((s, r) => s + (r.prizeMoneyCents ?? 0), 0);
 
         return (
           <div key={discipline} className="rounded-xl overflow-hidden" style={{ border: "1px solid oklch(0.28 0.06 50)" }}>
@@ -395,9 +406,14 @@ function PerformancesList({ rodeoId, disciplines }: { rodeoId: number; disciplin
                   </span>
                   <div>
                     <p className="text-sm font-bold" style={{ color: "oklch(0.88 0.03 70)" }}>{DISCIPLINE_LABELS[discipline]}</p>
-                    {isTimed && bestTime != null && (
-                      <p className="text-xs" style={{ color: "oklch(0.72 0.16 75)" }}>Best: {formatTime(bestTime)}</p>
-                    )}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {isTimed && bestTime != null && (
+                        <p className="text-xs" style={{ color: "oklch(0.72 0.16 75)" }}>Best: {formatTime(bestTime)}</p>
+                      )}
+                      {totalWinnings > 0 && (
+                        <p className="text-xs font-semibold" style={{ color: "oklch(0.65 0.18 145)" }}>💰 ${(totalWinnings / 100).toFixed(2)} won</p>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <Button size="sm" onClick={() => setAddFor(discipline)} className="btn-gold h-7 text-xs gap-1 px-2.5 rounded-full">
@@ -423,12 +439,19 @@ function PerformancesList({ rodeoId, disciplines }: { rodeoId: number; disciplin
                           {isBest ? "★" : `#${idx + 1}`}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <span className="text-sm font-semibold" style={{ color: "oklch(0.88 0.03 70)" }}>
-                            {isTimed ? formatTime(total) : formatScore(run.score)}
-                          </span>
-                          {isTimed && (run.penaltySeconds ?? 0) > 0 && (
-                            <span className="text-xs ml-1" style={{ color: "oklch(0.65 0.18 25)" }}>(+{run.penaltySeconds}s)</span>
-                          )}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-semibold" style={{ color: "oklch(0.88 0.03 70)" }}>
+                              {isTimed ? formatTime(total) : formatScore(run.score)}
+                            </span>
+                            {isTimed && (run.penaltySeconds ?? 0) > 0 && (
+                              <span className="text-xs" style={{ color: "oklch(0.65 0.18 25)" }}>(+{run.penaltySeconds}s)</span>
+                            )}
+                            {(run.prizeMoneyCents ?? 0) > 0 && (
+                              <span className="text-xs font-bold px-1.5 py-0.5 rounded-full" style={{ background: "oklch(0.65 0.18 145 / 20%)", color: "oklch(0.65 0.18 145)" }}>
+                                💰 ${((run.prizeMoneyCents ?? 0) / 100).toFixed(2)}
+                              </span>
+                            )}
+                          </div>
                           <p className="text-xs" style={{ color: "oklch(0.42 0.04 55)" }}>{format(new Date(run.runDate), "MMM d, yyyy")}</p>
                         </div>
                         <button onClick={() => deleteMutation.mutate({ id: run.id })} className="p-1">

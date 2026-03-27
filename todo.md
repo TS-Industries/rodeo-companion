@@ -76,3 +76,13 @@
 - [x] Fuel price display along route (GasBuddy-style via Google Places)
 - [x] In-app User Guide / Help page with instructions for all features
 - [x] North America coverage (Canada + US) with unit conversion
+
+## Enhancement Round 4 — Prize Money & Net P&L
+- [ ] Add prizeMoneyCents column to performances table
+- [ ] Update server procedures to accept/return prize money
+- [ ] Prize money input field in run-logging dialog
+- [ ] Show prize money on run cards in RodeoDetail
+- [ ] Per-rodeo net P&L card (total winnings minus total expenses)
+- [ ] Analytics: winnings vs expenses bar chart
+- [ ] Analytics: net P&L per rodeo summary list
+- [ ] Analytics: total season winnings, expenses, and net

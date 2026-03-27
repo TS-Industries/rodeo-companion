@@ -1,0 +1,1 @@
+ALTER TABLE `performances` ADD `prizeMoneyCents` int DEFAULT 0;
