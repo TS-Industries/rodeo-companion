@@ -86,3 +86,14 @@
 - [ ] Analytics: winnings vs expenses bar chart
 - [ ] Analytics: net P&L per rodeo summary list
 - [ ] Analytics: total season winnings, expenses, and net
+
+## Enhancement Round 5 (User Request)
+- [ ] Short Go / Final round tracking per run (regular / short_go / final)
+- [ ] Round badge shown on each run card
+- [ ] Runs grouped/labeled by round within each discipline section
+- [ ] Global Canada/USA unit toggle in Settings (persistent via localStorage)
+- [ ] Unit preference propagates to trip budget calculator (L/100km vs MPG)
+- [ ] Unit preference propagates to map fuel cost estimate
+- [ ] Fix fuel stations: find stations along full route path, not just endpoints
+- [ ] Show fuel price data from Google Places where available
+- [ ] Improve expense entry discoverability (quick-add shortcut on Schedule/Runs pages)

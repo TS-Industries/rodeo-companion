@@ -9,6 +9,7 @@ import {
   Route, ChevronDown, ChevronUp, Loader2, GripVertical, Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useUnits } from "@/contexts/UnitContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Stop {
@@ -159,8 +160,9 @@ export default function Locations() {
   const [fuelStations, setFuelStations] = useState<FuelStation[]>([]);
   const [loadingFuel, setLoadingFuel] = useState(false);
   const [expandedLeg, setExpandedLeg] = useState<number | null>(null);
-  const [fuelPrice, setFuelPrice] = useState(3.50);
-  const [mpg, setMpg] = useState(12);
+  const { isCanada, distanceLabel, fuelEconomyLabel, fuelVolumeLabel, currencyLabel, defaultFuelEconomy } = useUnits();
+  const [fuelPrice, setFuelPrice] = useState(isCanada ? 1.65 : 3.50);
+  const [fuelEconomy, setFuelEconomy] = useState(defaultFuelEconomy); // MPG or L/100km
   const [routeBuilt, setRouteBuilt] = useState(false);
 
   // Clear map markers
@@ -210,14 +212,24 @@ export default function Locations() {
     const allStations: FuelStation[] = [];
     const seen = new Set<string>();
 
-    // Sample points along the route (start, midpoints, end)
-    const samplePoints = points.length <= 4 ? points : [
-      points[0],
-      points[Math.floor(points.length * 0.25)],
-      points[Math.floor(points.length * 0.5)],
-      points[Math.floor(points.length * 0.75)],
-      points[points.length - 1],
-    ];
+    // Sample points every ~40km along the full route path for thorough coverage
+    const totalPoints = points.length;
+    const samplePoints: google.maps.LatLngLiteral[] = [];
+    if (totalPoints <= 6) {
+      samplePoints.push(...points);
+    } else {
+      // Always include start and end, then sample every ~40 points in between
+      const step = Math.max(1, Math.floor(totalPoints / 8));
+      for (let i = 0; i < totalPoints; i += step) {
+        samplePoints.push(points[i]);
+      }
+      if (samplePoints[samplePoints.length - 1] !== points[totalPoints - 1]) {
+        samplePoints.push(points[totalPoints - 1]);
+      }
+    }
+
+    // Search radius: ~15km per sample point to ensure overlap between samples
+    const searchRadius = 15000;
 
     for (const pt of samplePoints) {
       try {
@@ -226,12 +238,12 @@ export default function Locations() {
           service.nearbySearch(
             {
               location: pt,
-              radius: 8000,
+              radius: searchRadius,
               type: "gas_station",
             },
             (results, status) => {
               if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-                for (const r of results.slice(0, 4)) {
+                for (const r of results.slice(0, 5)) {
                   if (!r.place_id || seen.has(r.place_id)) continue;
                   seen.add(r.place_id);
                   const loc = r.geometry?.location;
@@ -253,8 +265,9 @@ export default function Locations() {
       } catch {}
     }
 
-    // Deduplicate and limit
-    const unique = allStations.slice(0, 12);
+    // Sort by rating (best first), deduplicate and limit to 20
+    allStations.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+    const unique = allStations.slice(0, 20);
     setFuelStations(unique);
 
     // Add fuel markers
@@ -343,8 +356,11 @@ export default function Locations() {
       setLegs(legData);
 
       const totalMeters = legData.reduce((s, l) => s + l.distanceMeters, 0);
-      const totalMiles = (totalMeters / 1609.34).toFixed(0);
-      setTotalDistance(`${totalMiles} mi`);
+      const totalKm = totalMeters / 1000;
+      const displayDist = isCanada
+        ? `${totalKm.toFixed(0)} km`
+        : `${(totalKm * 0.621371).toFixed(0)} mi`;
+      setTotalDistance(displayDist);
 
       const totalSecs = result.routes[0].legs.reduce((s, l) => s + (l.duration?.value ?? 0), 0);
       const h = Math.floor(totalSecs / 3600);
@@ -385,9 +401,20 @@ export default function Locations() {
     setRouteBuilt(false);
   };
 
-  // Estimated fuel cost
-  const totalMilesNum = parseFloat(totalDistance) || 0;
-  const estimatedFuelCost = mpg > 0 ? ((totalMilesNum / mpg) * fuelPrice).toFixed(2) : "0.00";
+  // Estimated fuel cost — handle both unit systems
+  const totalDistNum = parseFloat(totalDistance) || 0;
+  const estimatedFuelCost = (() => {
+    if (fuelEconomy <= 0) return "0.00";
+    if (isCanada) {
+      // L/100km: litres = distance_km * L/100km / 100
+      const litres = totalDistNum * fuelEconomy / 100;
+      return (litres * fuelPrice).toFixed(2);
+    } else {
+      // MPG: gallons = miles / MPG
+      const gallons = totalDistNum / fuelEconomy;
+      return (gallons * fuelPrice).toFixed(2);
+    }
+  })();
 
   return (
     <div className="min-h-screen bg-background page-enter flex flex-col">
@@ -576,31 +603,36 @@ export default function Locations() {
                 ))}
               </div>
 
-              {/* Fuel cost inputs */}
+              {/* Fuel cost inputs — unit-aware */}
+              <div className="rounded-lg p-2 mb-3 text-xs" style={{ background: "oklch(0.20 0.04 48)", border: "1px solid oklch(0.28 0.06 50)", color: "oklch(0.52 0.05 60)" }}>
+                {isCanada ? "🍁 Canadian units: km · L/100km · CAD" : "🇺🇸 US units: miles · MPG · USD"}
+                <span className="ml-1" style={{ color: "oklch(0.42 0.04 55)" }}>— change in Settings</span>
+              </div>
               <div className="flex gap-3 mb-4">
                 <div className="flex-1">
                   <label className="text-xs font-medium block mb-1" style={{ color: "oklch(0.62 0.05 65)" }}>
-                    $/gallon
+                    {isCanada ? `$/L (fuel price)` : `$/gal (fuel price)`}
                   </label>
                   <input
                     type="number"
                     step="0.01"
-                    min="1"
+                    min="0.1"
                     value={fuelPrice}
-                    onChange={e => setFuelPrice(parseFloat(e.target.value) || 3.5)}
+                    onChange={e => setFuelPrice(parseFloat(e.target.value) || (isCanada ? 1.65 : 3.5))}
                     className="w-full h-8 px-2 text-sm rounded-lg"
                     style={{ background: "oklch(0.22 0.05 48)", border: "1px solid oklch(0.30 0.06 50)", color: "oklch(0.93 0.03 75)" }}
                   />
                 </div>
                 <div className="flex-1">
                   <label className="text-xs font-medium block mb-1" style={{ color: "oklch(0.62 0.05 65)" }}>
-                    MPG (vehicle)
+                    {fuelEconomyLabel} (vehicle)
                   </label>
                   <input
                     type="number"
+                    step="0.1"
                     min="1"
-                    value={mpg}
-                    onChange={e => setMpg(parseInt(e.target.value) || 12)}
+                    value={fuelEconomy}
+                    onChange={e => setFuelEconomy(parseFloat(e.target.value) || defaultFuelEconomy)}
                     className="w-full h-8 px-2 text-sm rounded-lg"
                     style={{ background: "oklch(0.22 0.05 48)", border: "1px solid oklch(0.30 0.06 50)", color: "oklch(0.93 0.03 75)" }}
                   />
@@ -648,7 +680,15 @@ export default function Locations() {
                             <span style={{ color: "oklch(0.65 0.20 25)" }}>To:</span> {leg.to}
                           </p>
                           <p className="text-xs font-semibold mt-1" style={{ color: "oklch(0.72 0.16 75)" }}>
-                            Est. fuel: ${mpg > 0 ? (((leg.distanceMeters / 1609.34) / mpg) * fuelPrice).toFixed(2) : "0.00"}
+                            Est. fuel: ${fuelEconomy > 0 ? (() => {
+                              const legKm = leg.distanceMeters / 1000;
+                              if (isCanada) {
+                                return (legKm * fuelEconomy / 100 * fuelPrice).toFixed(2);
+                              } else {
+                                const legMi = legKm * 0.621371;
+                                return (legMi / fuelEconomy * fuelPrice).toFixed(2);
+                              }
+                            })() : "0.00"}
                           </p>
                         </div>
                       )}

@@ -1,0 +1,1 @@
+ALTER TABLE `performances` ADD `round` enum('regular','short_go','final') DEFAULT 'regular' NOT NULL;

@@ -31,10 +31,11 @@ import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
 import { invokeLLM } from "./_core/llm";
 import { notifyOwner } from "./_core/notification";
-import { DISCIPLINES, DISCIPLINE_LABELS, EXPENSE_CATEGORIES, type Discipline } from "../drizzle/schema";
+import { DISCIPLINES, DISCIPLINE_LABELS, EXPENSE_CATEGORIES, ROUND_TYPES, type Discipline } from "../drizzle/schema";
 
 const disciplineEnum = z.enum(DISCIPLINES);
 const rodeoTypeEnum = z.enum(["jackpot", "amateur", "professional"]);
+const roundEnum = z.enum(ROUND_TYPES);
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
@@ -169,6 +170,7 @@ const performancesRouter = router({
       z.object({
         rodeoId: z.number(),
         discipline: disciplineEnum,
+        round: roundEnum.default("regular"),
         timeSeconds: z.number().optional(),
         score: z.number().optional(),
         penaltySeconds: z.number().default(0),
@@ -182,6 +184,7 @@ const performancesRouter = router({
         userId: ctx.user.id,
         rodeoId: input.rodeoId,
         discipline: input.discipline,
+        round: input.round,
         timeSeconds: input.timeSeconds ?? null,
         score: input.score ?? null,
         penaltySeconds: input.penaltySeconds,
@@ -196,6 +199,7 @@ const performancesRouter = router({
     .input(
       z.object({
         id: z.number(),
+        round: roundEnum.optional(),
         timeSeconds: z.number().optional().nullable(),
         score: z.number().optional().nullable(),
         penaltySeconds: z.number().optional(),

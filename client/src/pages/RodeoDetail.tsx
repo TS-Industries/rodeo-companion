@@ -18,6 +18,13 @@ import {
   RODEO_TYPE_LABELS, isTimedDiscipline, formatTime, formatScore,
   type Discipline, type RodeoType,
 } from "@/lib/disciplines";
+import { ROUND_TYPE_LABELS, type RoundType } from "../../../drizzle/schema";
+
+const ROUND_BADGE_STYLES: Record<RoundType, { bg: string; text: string; label: string }> = {
+  regular: { bg: "oklch(0.25 0.05 50)", text: "oklch(0.72 0.08 65)", label: "Regular" },
+  short_go: { bg: "oklch(0.28 0.12 75 / 40%)", text: "oklch(0.78 0.18 80)", label: "Short Go" },
+  final: { bg: "oklch(0.30 0.15 25 / 40%)", text: "oklch(0.75 0.20 30)", label: "🏆 Final" },
+};
 import {
   EXPENSE_CATEGORIES, EXPENSE_CATEGORY_LABELS, EXPENSE_CATEGORY_ICONS, EXPENSE_CATEGORY_COLORS, formatDollars,
   type ExpenseCategory,
@@ -301,7 +308,7 @@ function AddPerformanceDialog({ rodeoId, discipline, open, onClose }: {
     onError: (e) => toast.error(e.message),
   });
   const isTimed = isTimedDiscipline(discipline);
-  const [form, setForm] = useState({ value: "", penalty: "0", prizeMoney: "", notes: "", runDate: new Date().toISOString().split("T")[0] });
+  const [form, setForm] = useState({ value: "", penalty: "0", prizeMoney: "", round: "regular" as RoundType, notes: "", runDate: new Date().toISOString().split("T")[0] });
 
   const handleSubmit = () => {
     const val = parseFloat(form.value);
@@ -309,6 +316,7 @@ function AddPerformanceDialog({ rodeoId, discipline, open, onClose }: {
     const prizeMoneyDollars = parseFloat(form.prizeMoney) || 0;
     createMutation.mutate({
       rodeoId, discipline,
+      round: form.round,
       timeSeconds: isTimed ? val : undefined,
       score: !isTimed ? val : undefined,
       penaltySeconds: parseFloat(form.penalty) || 0,
@@ -327,6 +335,31 @@ function AddPerformanceDialog({ rodeoId, discipline, open, onClose }: {
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-1">
+          {/* Round selector */}
+          <div>
+            <Label className="text-xs font-semibold" style={{ color: "oklch(0.72 0.16 75)" }}>Round</Label>
+            <div className="flex gap-2 mt-1">
+              {(["regular", "short_go", "final"] as RoundType[]).map((r) => {
+                const style = ROUND_BADGE_STYLES[r];
+                const isSelected = form.round === r;
+                return (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => setForm({ ...form, round: r })}
+                    className="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                    style={{
+                      background: isSelected ? style.bg : "oklch(0.22 0.04 48)",
+                      color: isSelected ? style.text : "oklch(0.42 0.04 55)",
+                      border: `1px solid ${isSelected ? style.text : "oklch(0.28 0.06 50)"}`,
+                    }}
+                  >
+                    {style.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <div>
             <Label className="text-xs font-semibold" style={{ color: "oklch(0.72 0.16 75)" }}>
               {isTimed ? "Time in Seconds *" : "Score (points) *"}
@@ -446,6 +479,15 @@ function PerformancesList({ rodeoId, disciplines }: { rodeoId: number; disciplin
                             {isTimed && (run.penaltySeconds ?? 0) > 0 && (
                               <span className="text-xs" style={{ color: "oklch(0.65 0.18 25)" }}>(+{run.penaltySeconds}s)</span>
                             )}
+                            {/* Round badge */}
+                            {run.round && run.round !== "regular" && (() => {
+                              const rs = ROUND_BADGE_STYLES[run.round as RoundType];
+                              return (
+                                <span className="text-xs font-bold px-1.5 py-0.5 rounded-full" style={{ background: rs.bg, color: rs.text }}>
+                                  {rs.label}
+                                </span>
+                              );
+                            })()}
                             {(run.prizeMoneyCents ?? 0) > 0 && (
                               <span className="text-xs font-bold px-1.5 py-0.5 rounded-full" style={{ background: "oklch(0.65 0.18 145 / 20%)", color: "oklch(0.65 0.18 145)" }}>
                                 💰 ${((run.prizeMoneyCents ?? 0) / 100).toFixed(2)}

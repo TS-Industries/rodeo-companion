@@ -182,6 +182,11 @@ function RodeoCard({ rodeo, onClick }: { rodeo: any; onClick: () => void }) {
             </div>
           )}
         </div>
+        {/* Quick-action hint */}
+        <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: "1px solid oklch(0.28 0.06 50)" }}>
+          <span className="text-xs" style={{ color: "oklch(0.42 0.04 55)" }}>Tap to view runs, expenses &amp; map</span>
+          <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "oklch(0.72 0.16 75 / 12%)", color: "oklch(0.72 0.16 75)" }}>💰 Log Expenses →</span>
+        </div>
       </div>
     </button>
   );

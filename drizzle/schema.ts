@@ -76,12 +76,22 @@ export const rodeos = mysqlTable("rodeos", {
 export type Rodeo = typeof rodeos.$inferSelect;
 export type InsertRodeo = typeof rodeos.$inferInsert;
 
+// Round types for performances
+export const ROUND_TYPES = ["regular", "short_go", "final"] as const;
+export type RoundType = (typeof ROUND_TYPES)[number];
+export const ROUND_TYPE_LABELS: Record<RoundType, string> = {
+  regular: "Regular Round",
+  short_go: "Short Go",
+  final: "Final",
+};
+
 // Performance runs logged per rodeo
 export const performances = mysqlTable("performances", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
   rodeoId: int("rodeoId").notNull(),
   discipline: mysqlEnum("discipline", DISCIPLINES).notNull(),
+  round: mysqlEnum("round", ROUND_TYPES).default("regular").notNull(), // which round of competition
   timeSeconds: float("timeSeconds"), // null for rough stock (scored differently)
   score: float("score"),             // for rough stock events
   penaltySeconds: float("penaltySeconds").default(0),
