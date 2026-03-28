@@ -162,7 +162,7 @@ function AddRunDialog({ open, onClose, rodeoId, availableDisciplines }: {
           const fd = new FormData();
           fd.append("video", videoFile);
           fd.append("performanceId", String(data.id));
-          const res = await fetch("/api/upload-video", { method: "POST", body: fd });
+          const res = await fetch("/api/upload/video", { method: "POST", body: fd });
           if (!res.ok) throw new Error("Upload failed");
           utils.videos.listByPerformance.invalidate({ performanceId: data.id });
         } catch {
@@ -307,7 +307,7 @@ function VideoUploadDialog({ open, onClose, performanceId }: { open: boolean; on
       const fd = new FormData();
       fd.append("video", file);
       fd.append("performanceId", String(performanceId));
-      const res = await fetch("/api/upload-video", { method: "POST", body: fd });
+      const res = await fetch("/api/upload/video", { method: "POST", body: fd });
       if (!res.ok) throw new Error("Upload failed");
       utils.videos.listByPerformance.invalidate({ performanceId });
       toast.success("Video uploaded! 🎬");

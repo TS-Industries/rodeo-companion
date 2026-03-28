@@ -194,3 +194,56 @@ export const horses = mysqlTable("horses", {
 
 export type Horse = typeof horses.$inferSelect;
 export type InsertHorse = typeof horses.$inferInsert;
+
+// Season prize money goal (one row per user per year)
+export const seasonGoals = mysqlTable("season_goals", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  year: int("year").notNull(), // e.g. 2026
+  targetCents: int("targetCents").notNull().default(0), // target prize money in cents
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SeasonGoal = typeof seasonGoals.$inferSelect;
+export type InsertSeasonGoal = typeof seasonGoals.$inferInsert;
+
+// Partner contact roles
+export const PARTNER_ROLES = ["header", "heeler", "partner", "coach", "other"] as const;
+export type PartnerRole = (typeof PARTNER_ROLES)[number];
+
+export const PARTNER_ROLE_LABELS: Record<PartnerRole, string> = {
+  header: "Header",
+  heeler: "Heeler",
+  partner: "Partner",
+  coach: "Coach",
+  other: "Other",
+};
+
+// Contacts (team roping partners, coaches, etc.)
+export const contacts = mysqlTable("contacts", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  name: varchar("name", { length: 128 }).notNull(),
+  role: mysqlEnum("role", PARTNER_ROLES).default("partner").notNull(),
+  phone: varchar("phone", { length: 32 }),
+  email: varchar("email", { length: 320 }),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Contact = typeof contacts.$inferSelect;
+export type InsertContact = typeof contacts.$inferInsert;
+
+// Rodeo ↔ Contact link (which partner is riding with you at each rodeo)
+export const rodeoContacts = mysqlTable("rodeo_contacts", {
+  id: int("id").autoincrement().primaryKey(),
+  rodeoId: int("rodeoId").notNull(),
+  contactId: int("contactId").notNull(),
+  userId: int("userId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type RodeoContact = typeof rodeoContacts.$inferSelect;
+export type InsertRodeoContact = typeof rodeoContacts.$inferInsert;

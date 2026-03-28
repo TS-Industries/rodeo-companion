@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Bell, User, LogOut, Shield, Loader2, Globe, Fuel } from "lucide-react";
+import { Bell, User, LogOut, Shield, Loader2, Globe, Fuel, Trophy } from "lucide-react";
 import { useUnits, type UnitSystem } from "@/contexts/UnitContext";
 
 export default function Settings() {
@@ -26,6 +26,19 @@ export default function Settings() {
 
   const [enableDeadline, setEnableDeadline] = useState(true);
   const [daysBefore, setDaysBefore] = useState(14);
+
+  // Season goal
+  const currentYear = new Date().getFullYear();
+  const { data: seasonGoal, refetch: refetchGoal } = trpc.seasonGoals.get.useQuery({ year: currentYear });
+  const upsertGoal = trpc.seasonGoals.upsert.useMutation({
+    onSuccess: () => { toast.success("Season goal saved! 🏆"); refetchGoal(); },
+    onError: (e) => toast.error(e.message),
+  });
+  const [goalInput, setGoalInput] = useState("");
+
+  useEffect(() => {
+    if (seasonGoal) setGoalInput(String((seasonGoal.targetCents / 100).toFixed(0)));
+  }, [seasonGoal]);
 
   useEffect(() => {
     if (prefs) {
@@ -73,6 +86,47 @@ export default function Settings() {
               <p className="font-bold" style={{ color: "oklch(0.93 0.03 75)" }}>{user?.name ?? "Rodeo Competitor"}</p>
               <p className="text-xs truncate" style={{ color: "oklch(0.52 0.05 60)" }}>{user?.email ?? ""}</p>
             </div>
+          </div>
+        </div>
+
+        {/* ─── Season Goal ─── */}
+        <div className="card-western rounded-xl overflow-hidden">
+          {sectionHeader(<Trophy className="w-4 h-4" style={{ color: "oklch(0.72 0.16 75)" }} />, `${currentYear} Season Prize Money Goal`)}
+          <div className="p-4 space-y-3">
+            <p className="text-xs" style={{ color: "oklch(0.52 0.05 60)" }}>
+              Set a target prize money goal for the {currentYear} season. Your progress will be shown on the Dashboard.
+            </p>
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold" style={{ color: "oklch(0.72 0.16 75)" }}>$</span>
+                <Input
+                  type="number"
+                  min="0"
+                  step="100"
+                  placeholder="e.g. 5000"
+                  className="pl-7"
+                  value={goalInput}
+                  onChange={(e) => setGoalInput(e.target.value)}
+                />
+              </div>
+              <Button
+                size="sm"
+                className="btn-gold flex-shrink-0"
+                disabled={upsertGoal.isPending || !goalInput}
+                onClick={() => {
+                  const val = parseFloat(goalInput);
+                  if (isNaN(val) || val < 0) { toast.error("Enter a valid dollar amount"); return; }
+                  upsertGoal.mutate({ year: currentYear, targetDollars: val });
+                }}
+              >
+                {upsertGoal.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Save Goal"}
+              </Button>
+            </div>
+            {seasonGoal && seasonGoal.targetCents > 0 && (
+              <p className="text-xs" style={{ color: "oklch(0.65 0.14 145)" }}>
+                ✓ Current goal: ${(seasonGoal.targetCents / 100).toLocaleString()} for {currentYear}
+              </p>
+            )}
           </div>
         </div>
 

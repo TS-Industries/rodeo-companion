@@ -30,12 +30,21 @@ import {
   createHorse,
   updateHorse,
   deleteHorse,
+  getSeasonGoal,
+  upsertSeasonGoal,
+  listContacts,
+  createContact,
+  updateContact,
+  deleteContact,
+  getRodeoContacts,
+  linkContactToRodeo,
+  unlinkContactFromRodeo,
 } from "./db";
 import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
 import { invokeLLM } from "./_core/llm";
 import { notifyOwner } from "./_core/notification";
-import { DISCIPLINES, DISCIPLINE_LABELS, EXPENSE_CATEGORIES, ROUND_TYPES, type Discipline } from "../drizzle/schema";
+import { DISCIPLINES, DISCIPLINE_LABELS, EXPENSE_CATEGORIES, ROUND_TYPES, PARTNER_ROLES, type Discipline } from "../drizzle/schema";
 
 const disciplineEnum = z.enum(DISCIPLINES);
 const rodeoTypeEnum = z.enum(["jackpot", "amateur", "professional"]);
@@ -595,6 +604,92 @@ const horsesRouter = router({
     }),
 });
 
+// ─── Season Goals ───────────────────────────────────────────────────────────────
+const seasonGoalsRouter = router({
+  get: protectedProcedure
+    .input(z.object({ year: z.number().int().optional() }))
+    .query(async ({ ctx, input }) => {
+      const year = input.year ?? new Date().getFullYear();
+      return getSeasonGoal(ctx.user.id, year);
+    }),
+
+  upsert: protectedProcedure
+    .input(z.object({
+      year: z.number().int().optional(),
+      targetDollars: z.number().min(0),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const year = input.year ?? new Date().getFullYear();
+      await upsertSeasonGoal(ctx.user.id, year, Math.round(input.targetDollars * 100));
+      return { success: true };
+    }),
+});
+
+// ─── Contacts ────────────────────────────────────────────────────────────────────
+const contactsRouter = router({
+  list: protectedProcedure.query(({ ctx }) => listContacts(ctx.user.id)),
+
+  create: protectedProcedure
+    .input(z.object({
+      name: z.string().min(1).max(128),
+      role: z.enum(PARTNER_ROLES).default("partner"),
+      phone: z.string().max(32).optional().nullable(),
+      email: z.string().email().optional().nullable(),
+      notes: z.string().optional().nullable(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const result = await createContact({
+        userId: ctx.user.id,
+        name: input.name,
+        role: input.role,
+        phone: input.phone ?? null,
+        email: input.email ?? null,
+        notes: input.notes ?? null,
+      });
+      return result;
+    }),
+
+  update: protectedProcedure
+    .input(z.object({
+      id: z.number(),
+      name: z.string().min(1).max(128).optional(),
+      role: z.enum(PARTNER_ROLES).optional(),
+      phone: z.string().max(32).optional().nullable(),
+      email: z.string().email().optional().nullable(),
+      notes: z.string().optional().nullable(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { id, ...data } = input;
+      await updateContact(id, ctx.user.id, data);
+      return { success: true };
+    }),
+
+  delete: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await deleteContact(input.id, ctx.user.id);
+      return { success: true };
+    }),
+
+  getForRodeo: protectedProcedure
+    .input(z.object({ rodeoId: z.number() }))
+    .query(({ ctx, input }) => getRodeoContacts(input.rodeoId, ctx.user.id)),
+
+  linkToRodeo: protectedProcedure
+    .input(z.object({ rodeoId: z.number(), contactId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await linkContactToRodeo(input.rodeoId, input.contactId, ctx.user.id);
+      return { success: true };
+    }),
+
+  unlinkFromRodeo: protectedProcedure
+    .input(z.object({ rodeoId: z.number(), contactId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await unlinkContactFromRodeo(input.rodeoId, input.contactId, ctx.user.id);
+      return { success: true };
+    }),
+});
+
 // ─── App Router ─────────────────────────────────────────────────────────────────
 export const appRouter = router({
   system: systemRouter,
@@ -607,5 +702,7 @@ export const appRouter = router({
   notifications: notificationsRouter,
    expenses: expensesRouter,
   horses: horsesRouter,
+  seasonGoals: seasonGoalsRouter,
+  contacts: contactsRouter,
 });
 export type AppRouter = typeof appRouter;

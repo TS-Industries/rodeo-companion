@@ -10,7 +10,7 @@ import {
 import { format } from "date-fns";
 import {
   TrendingDown, TrendingUp, Minus, Dumbbell, Loader2, Trophy,
-  ExternalLink, Play, Target, Award, Star, Zap,
+  ExternalLink, Play, Target, Award, Star, Zap, Download,
 } from "lucide-react";
 import {
   DISCIPLINES, DISCIPLINE_LABELS, DISCIPLINE_ICONS,
@@ -406,6 +406,101 @@ function ExpensesTab({ period }: { period: Period }) {
 // ─── Financials Tab ───────────────────────────────────────────────────────────
 function FinancialsTab({ period }: { period: Period }) {
   const { data: fin, isLoading } = trpc.analytics.financials.useQuery({ period });
+  const { data: allRuns } = trpc.performances.list.useQuery();
+  const { data: allExpenses } = trpc.expenses.listAll.useQuery();
+  const { data: seasonGoal } = trpc.seasonGoals.get.useQuery({ year: new Date().getFullYear() });
+
+  const handleDownloadReport = () => {
+    if (!fin) return;
+    const year = new Date().getFullYear();
+    const net = fin.netTotal;
+    const isProfit = net >= 0;
+    const roi = fin.totalExpenses > 0 ? ((fin.totalWinnings - fin.totalExpenses) / fin.totalExpenses) * 100 : null;
+    const goalTarget = seasonGoal?.targetCents ?? 0;
+    const goalPct = goalTarget > 0 ? Math.min(100, Math.round((fin.totalWinnings / goalTarget) * 100)) : null;
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Rodeo Companion — ${year} Season Report</title>
+<style>
+  body { font-family: Georgia, serif; max-width: 800px; margin: 40px auto; padding: 0 20px; color: #1a1a1a; }
+  h1 { font-size: 2rem; border-bottom: 3px solid #d97706; padding-bottom: 8px; color: #92400e; }
+  h2 { font-size: 1.2rem; color: #78350f; margin-top: 28px; border-left: 4px solid #d97706; padding-left: 10px; }
+  .hero { background: #fef3c7; border: 2px solid #d97706; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center; }
+  .hero .net { font-size: 3rem; font-weight: bold; color: ${isProfit ? "#16a34a" : "#dc2626"}; }
+  .hero .label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; color: #78350f; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .stat { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 14px; }
+  .stat .val { font-size: 1.5rem; font-weight: bold; }
+  .stat .lbl { font-size: 0.75rem; color: #78350f; text-transform: uppercase; }
+  table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.9rem; }
+  th { background: #fef3c7; padding: 8px 12px; text-align: left; font-size: 0.75rem; text-transform: uppercase; color: #78350f; }
+  td { padding: 8px 12px; border-bottom: 1px solid #fde68a; }
+  .profit { color: #16a34a; font-weight: bold; }
+  .loss { color: #dc2626; font-weight: bold; }
+  .footer { margin-top: 40px; font-size: 0.75rem; color: #999; text-align: center; border-top: 1px solid #eee; padding-top: 16px; }
+  @media print { body { margin: 20px; } }
+</style>
+</head>
+<body>
+<h1>🤠 Rodeo Companion — ${year} Season Report</h1>
+<p style="color:#78350f">Generated ${new Date().toLocaleDateString()} · Period: ${period === "all" ? "All Time" : period === "year" ? "This Year" : period === "month" ? "This Month" : "This Week"}</p>
+
+<div class="hero">
+  <div class="label">Net P&amp;L</div>
+  <div class="net">${isProfit ? "+" : ""}$${(net / 100).toFixed(2)}</div>
+  ${roi != null ? `<div style="color:#78350f;margin-top:6px">ROI: ${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%</div>` : ""}
+  ${goalPct != null ? `<div style="color:#78350f;margin-top:4px">${year} Goal Progress: ${goalPct}% of $${(goalTarget / 100).toLocaleString()}</div>` : ""}
+</div>
+
+<div class="grid">
+  <div class="stat">
+    <div class="lbl">Total Prize Money Won</div>
+    <div class="val" style="color:#16a34a">$${(fin.totalWinnings / 100).toFixed(2)}</div>
+  </div>
+  <div class="stat">
+    <div class="lbl">Total Expenses</div>
+    <div class="val" style="color:#dc2626">$${(fin.totalExpenses / 100).toFixed(2)}</div>
+  </div>
+  <div class="stat">
+    <div class="lbl">Total Runs</div>
+    <div class="val">${allRuns?.length ?? 0}</div>
+  </div>
+  <div class="stat">
+    <div class="lbl">Rodeos Entered</div>
+    <div class="val">${fin.perRodeo.length}</div>
+  </div>
+</div>
+
+${fin.perRodeo.length > 0 ? `
+<h2>Per-Rodeo Breakdown</h2>
+<table>
+  <thead><tr><th>Rodeo</th><th>Won</th><th>Spent</th><th>Net</th></tr></thead>
+  <tbody>
+    ${fin.perRodeo.map(r => {
+      const rNet = r.netCents;
+      const cls = rNet >= 0 ? "profit" : "loss";
+      return `<tr><td>${r.rodeoName}</td><td class="profit">$${(r.winningsCents/100).toFixed(2)}</td><td class="loss">$${(r.expensesCents/100).toFixed(2)}</td><td class="${cls}">${rNet >= 0 ? "+" : ""}$${(rNet/100).toFixed(2)}</td></tr>`;
+    }).join("")}
+  </tbody>
+</table>
+` : ""}
+
+<div class="footer">Rodeo Companion — Your Season at a Glance · Printed from rodeocompanion.app</div>
+</body>
+</html>`;
+
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url, "_blank");
+    if (win) {
+      win.onload = () => { win.print(); };
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+  };
 
   if (isLoading) {
     return <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin" style={{ color: "oklch(0.72 0.16 75)" }} /></div>;
@@ -434,6 +529,21 @@ function FinancialsTab({ period }: { period: Period }) {
 
   return (
     <div className="space-y-4">
+      {/* Download Report button */}
+      <button
+        onClick={handleDownloadReport}
+        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm transition-all active:scale-[0.98]"
+        style={{
+          background: "linear-gradient(135deg, oklch(0.22 0.08 55), oklch(0.18 0.06 50))",
+          border: "1px solid oklch(0.72 0.16 75 / 50%)",
+          color: "oklch(0.88 0.18 80)",
+          boxShadow: "0 0 16px oklch(0.72 0.16 75 / 15%)",
+        }}
+      >
+        <Download className="w-4 h-4" />
+        Download Season Report (PDF)
+      </button>
+
       <div className="rounded-xl p-5 text-center relative overflow-hidden"
         style={{
           background: isProfit

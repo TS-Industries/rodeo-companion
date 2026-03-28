@@ -179,6 +179,8 @@ export default function Dashboard() {
   const { data: rodeos } = trpc.rodeos.list.useQuery();
   const { data: allRuns } = trpc.performances.list.useQuery();
   const { data: summary } = trpc.analytics.summary.useQuery({ period: "all" });
+  const currentYear = new Date().getFullYear();
+  const { data: seasonGoal } = trpc.seasonGoals.get.useQuery({ year: currentYear });
 
   const now = new Date();
   const upcoming = (rodeos ?? []).filter((r) => new Date(r.rodeoDate) >= now)
@@ -280,6 +282,61 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        {/* ── Season Goal Progress ── */}
+        {seasonGoal && seasonGoal.targetCents > 0 && (() => {
+          const pct = Math.min(100, Math.round((totalWinnings / seasonGoal.targetCents) * 100));
+          const isHit = pct >= 100;
+          return (
+            <div className="rounded-2xl overflow-hidden"
+              style={{
+                background: isHit
+                  ? "linear-gradient(135deg, oklch(0.18 0.08 145), oklch(0.14 0.05 140))"
+                  : "linear-gradient(135deg, oklch(0.20 0.07 54), oklch(0.14 0.05 48))",
+                border: `1px solid ${isHit ? "oklch(0.65 0.18 145 / 50%)" : "oklch(0.72 0.16 75 / 35%)"}`,
+                boxShadow: isHit ? "0 0 24px oklch(0.65 0.18 145 / 20%)" : "0 0 20px oklch(0.72 0.16 75 / 12%)",
+              }}>
+              <div className="px-4 pt-4 pb-2">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <Trophy className="w-4 h-4" style={{ color: isHit ? "oklch(0.65 0.18 145)" : "oklch(0.72 0.16 75)" }} />
+                    <span className="text-xs font-black uppercase tracking-wide" style={{ color: isHit ? "oklch(0.65 0.18 145)" : "oklch(0.72 0.16 75)" }}>
+                      {currentYear} Season Goal
+                    </span>
+                  </div>
+                  <span className="text-xs font-black" style={{ color: isHit ? "oklch(0.65 0.18 145)" : "oklch(0.78 0.18 80)" }}>
+                    {pct}%
+                  </span>
+                </div>
+                <div className="flex items-end justify-between mb-2">
+                  <p className="text-2xl font-black" style={{ fontFamily: "'Playfair Display', serif", color: isHit ? "oklch(0.75 0.18 145)" : "oklch(0.88 0.18 80)", textShadow: isHit ? "0 0 20px oklch(0.65 0.18 145 / 60%)" : "0 0 20px oklch(0.72 0.16 75 / 50%)" }}>
+                    ${(totalWinnings / 100).toFixed(0)}
+                    <span className="text-sm font-semibold ml-1" style={{ color: "oklch(0.52 0.05 60)" }}>/ ${(seasonGoal.targetCents / 100).toLocaleString()}</span>
+                  </p>
+                  {isHit && <span className="text-lg">🏆</span>}
+                </div>
+                {/* Progress bar */}
+                <div className="h-3 rounded-full overflow-hidden" style={{ background: "oklch(0.25 0.05 50)" }}>
+                  <div
+                    className="h-full rounded-full transition-all duration-700"
+                    style={{
+                      width: `${pct}%`,
+                      background: isHit
+                        ? "linear-gradient(90deg, oklch(0.55 0.18 145), oklch(0.72 0.22 145))"
+                        : "linear-gradient(90deg, oklch(0.62 0.16 75), oklch(0.78 0.20 80))",
+                      boxShadow: isHit ? "0 0 8px oklch(0.65 0.18 145 / 60%)" : "0 0 8px oklch(0.72 0.16 75 / 60%)",
+                    }}
+                  />
+                </div>
+                <p className="text-xs mt-2" style={{ color: "oklch(0.52 0.05 60)" }}>
+                  {isHit
+                    ? "🎉 Goal achieved! Incredible season!"
+                    : `$${((seasonGoal.targetCents - totalWinnings) / 100).toFixed(0)} to go`}
+                </p>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ── Next Rodeo Countdown ── */}
         <div>

@@ -135,3 +135,13 @@
 - [x] Horses page added to bottom navigation bar
 - [x] Improved progress charts (glowing area charts, personal best highlight, improvement badges, run history table)
 - [x] Drill video links in Analytics drills section (YouTube search links per discipline)
+
+## Enhancement Round 10 (User Request)
+- [x] Fix video uploads — S3 storage pipeline working end-to-end (fixed /api/upload-video → /api/upload/video)
+- [x] Season goal tracker — prize money target field in Settings
+- [x] Season goal tracker — Dashboard progress bar showing winnings vs target (glowing gold bar)
+- [x] Partner contacts — Contacts page with name, phone, role (header/heeler/coach/other)
+- [x] Partner contacts — link a partner to a rodeo entry (Partners tab in RodeoDetail)
+- [x] Partner contacts — show linked partner on RodeoDetail page with phone tap-to-call
+- [x] PDF season report — "Download Report" button in Analytics P&L tab
+- [x] PDF report includes: season stats, total runs, P&L summary, per-rodeo breakdown, goal progress
