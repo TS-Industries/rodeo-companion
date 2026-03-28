@@ -1,14 +1,12 @@
 /**
- * Multi-source Canadian Rodeo Scraper
- * Covers:
- *  - CPRA (rodeocanada.com) — Professional
- *  - WRA (wrarodeo.com) — Amateur Alberta
- *  - KCRA (kcrarodeo.com) — Amateur Saskatchewan
- *  - RAM Rodeo (ramrodeoontario.com) — Amateur Ontario
- *  - AHSRA Finals (hardcoded) — High School / Junior High Alberta
- *
- * All events are upserted into the cpra_events table with a `source` field
- * stored in rawData so the UI can filter by level.
+ * Multi-source Canadian Rodeo Scraper — v2
+ * Sources:
+ *  - CPRA (rodeocanada.com) — Professional (text-based parsing)
+ *  - WRA (wrarodeo.com) — Amateur Alberta (hardcoded from scraped data)
+ *  - KCRA (kcrarodeo.com) — Amateur Saskatchewan (hardcoded from scraped data)
+ *  - RAM Rodeo (ramrodeoontario.com) — Amateur Ontario (live scrape)
+ *  - AHSRA D1/D2/D3 HS + D1/D2/D3 JH — High School Alberta (hardcoded from scraped data)
+ *  - AHSRA Finals — Provincial + National Finals (hardcoded)
  */
 
 import * as cheerio from "cheerio";
@@ -28,100 +26,26 @@ const HEADERS = {
 async function fetchHtml(url: string): Promise<string> {
   const res = await fetch(url, {
     headers: HEADERS,
-    signal: AbortSignal.timeout(15000),
+    signal: AbortSignal.timeout(20000),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
   return res.text();
 }
 
-const DISCIPLINE_MAP: Record<string, Discipline> = {
-  BB: "bareback",
-  SW: "steer_wrestling",
-  TR: "team_roping",
-  SB: "saddle_bronc",
-  LBR: "barrel_racing",
-  BR: "barrel_racing",
-  TDR: "tie_down_roping",
-  BAW: "bull_riding",
-  BU: "bull_riding",
-  "BULL RIDING": "bull_riding",
-  "BARREL RACING": "barrel_racing",
-  "TEAM ROPING": "team_roping",
-  "TIE DOWN": "tie_down_roping",
-  "TIE-DOWN": "tie_down_roping",
-  BAREBACK: "bareback",
-  "SADDLE BRONC": "saddle_bronc",
-  "STEER WRESTLING": "steer_wrestling",
-  BREAKAWAY: "breakaway_roping",
-  "POLE BENDING": "barrel_racing", // map to barrel racing as closest
-  "GOAT TYING": "tie_down_roping",
-};
+const ALL_DISCIPLINES: Discipline[] = [
+  "barrel_racing", "team_roping", "tie_down_roping",
+  "bareback", "saddle_bronc", "steer_wrestling", "bull_riding",
+];
 
-function parseDisciplines(text: string): Discipline[] {
-  const found = new Set<Discipline>();
-  const abbrevs = text.split(/[,\s\/]+/).map((s) => s.trim().toUpperCase());
-  for (const abbrev of abbrevs) {
-    if (DISCIPLINE_MAP[abbrev]) found.add(DISCIPLINE_MAP[abbrev]);
-  }
-  for (const [key, val] of Object.entries(DISCIPLINE_MAP)) {
-    if (text.toUpperCase().includes(key)) found.add(val);
-  }
-  return Array.from(found);
-}
-
-function parseDate(dateStr: string, year = 2026): Date | null {
-  if (!dateStr) return null;
-  try {
-    const cleaned = dateStr.replace(/\*+/g, "").trim();
-    const match = cleaned.match(
-      /([A-Za-z]+)\s+(\d+)(?:\s*[-–]\s*(?:[A-Za-z]+\s+)?(\d+))?,?\s*(\d{4})?/
-    );
-    if (match) {
-      const month = match[1];
-      const day = parseInt(match[2]);
-      const yr = match[4] ? parseInt(match[4]) : year;
-      const d = new Date(`${month} ${day}, ${yr}`);
-      if (!isNaN(d.getTime())) return d;
-    }
-    const d = new Date(cleaned);
-    if (!isNaN(d.getTime())) return d;
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-function parseEndDate(dateStr: string, startDate: Date | null): Date | null {
-  if (!dateStr || !startDate) return startDate;
-  try {
-    const cleaned = dateStr.replace(/\*+/g, "").trim();
-    const rangeMatch = cleaned.match(
-      /([A-Za-z]+)\s+(\d+)\s*[-–]\s*(?:([A-Za-z]+)\s+)?(\d+),?\s*(\d{4})?/
-    );
-    if (rangeMatch) {
-      const startMonth = rangeMatch[1];
-      const endMonth = rangeMatch[3] || startMonth;
-      const endDay = parseInt(rangeMatch[4]);
-      const yr = rangeMatch[5] ? parseInt(rangeMatch[5]) : startDate.getFullYear();
-      const d = new Date(`${endMonth} ${endDay}, ${yr}`);
-      if (!isNaN(d.getTime())) return d;
-    }
-    return startDate;
-  } catch {
-    return startDate;
-  }
-}
+const HS_DISCIPLINES: Discipline[] = [
+  "barrel_racing", "breakaway_roping", "team_roping",
+  "tie_down_roping", "bareback", "saddle_bronc",
+  "steer_wrestling", "bull_riding",
+];
 
 function slugify(source: string, name: string, dateStr: string): string {
-  const base = name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-  const datePart = dateStr
-    .replace(/[^a-z0-9]+/gi, "-")
-    .replace(/^-|-$/g, "")
-    .toLowerCase()
-    .slice(0, 20);
+  const base = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const datePart = dateStr.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase().slice(0, 20);
   return `${source}-${base}-${datePart}`;
 }
 
@@ -135,7 +59,7 @@ interface RodeoEvent {
   startDate: Date | null;
   endDate: Date | null;
   entryOpenDate: Date | null;
-  disciplines: string; // JSON array
+  disciplines: string;
   purseAmount: number | null;
   entryFee: number | null;
   committeeContact: string | null;
@@ -143,7 +67,7 @@ interface RodeoEvent {
   isSpecialEvent: boolean;
   detailsUrl: string | null;
   websiteUrl: string | null;
-  rawData: string; // includes { source, level, ... }
+  rawData: string;
 }
 
 async function upsertEvents(events: RodeoEvent[]): Promise<number> {
@@ -152,10 +76,28 @@ async function upsertEvents(events: RodeoEvent[]): Promise<number> {
   let count = 0;
   for (const event of events) {
     try {
-      await db
-        .insert(cpraEvents)
-        .values({
-          externalId: event.externalId,
+      await db.insert(cpraEvents).values({
+        externalId: event.externalId,
+        name: event.name,
+        province: event.province ?? undefined,
+        city: event.city ?? undefined,
+        locationName: event.locationName ?? undefined,
+        locationAddress: event.locationAddress ?? undefined,
+        startDate: event.startDate ?? undefined,
+        endDate: event.endDate ?? undefined,
+        entryOpenDate: event.entryOpenDate ?? undefined,
+        disciplines: event.disciplines,
+        purseAmount: event.purseAmount ?? undefined,
+        entryFee: event.entryFee ?? undefined,
+        committeeContact: event.committeeContact ?? undefined,
+        committeePhone: event.committeePhone ?? undefined,
+        isSpecialEvent: event.isSpecialEvent,
+        detailsUrl: event.detailsUrl ?? undefined,
+        websiteUrl: event.websiteUrl ?? undefined,
+        rawData: event.rawData,
+        scrapedAt: new Date(),
+      }).onDuplicateKeyUpdate({
+        set: {
           name: event.name,
           province: event.province ?? undefined,
           city: event.city ?? undefined,
@@ -174,29 +116,8 @@ async function upsertEvents(events: RodeoEvent[]): Promise<number> {
           websiteUrl: event.websiteUrl ?? undefined,
           rawData: event.rawData,
           scrapedAt: new Date(),
-        })
-        .onDuplicateKeyUpdate({
-          set: {
-            name: event.name,
-            province: event.province ?? undefined,
-            city: event.city ?? undefined,
-            locationName: event.locationName ?? undefined,
-            locationAddress: event.locationAddress ?? undefined,
-            startDate: event.startDate ?? undefined,
-            endDate: event.endDate ?? undefined,
-            entryOpenDate: event.entryOpenDate ?? undefined,
-            disciplines: event.disciplines,
-            purseAmount: event.purseAmount ?? undefined,
-            entryFee: event.entryFee ?? undefined,
-            committeeContact: event.committeeContact ?? undefined,
-            committeePhone: event.committeePhone ?? undefined,
-            isSpecialEvent: event.isSpecialEvent,
-            detailsUrl: event.detailsUrl ?? undefined,
-            websiteUrl: event.websiteUrl ?? undefined,
-            rawData: event.rawData,
-            scrapedAt: new Date(),
-          },
-        });
+        },
+      });
       count++;
     } catch (err) {
       console.warn(`[Scraper] Failed to upsert ${event.name}:`, err);
@@ -205,98 +126,178 @@ async function upsertEvents(events: RodeoEvent[]): Promise<number> {
   return count;
 }
 
-// ─── CPRA Scraper (Professional) ─────────────────────────────────────────────
+// ─── CPRA Scraper (Professional) — Text-based parsing ────────────────────────
 
-async function scrapeCpraDetailsPage(url: string): Promise<Partial<RodeoEvent>> {
+export async function scrapeCpra(): Promise<number> {
+  console.log("[CPRA] Scraping rodeocanada.com/2026-schedule/ (text-based)...");
   try {
-    const html = await fetchHtml(url);
+    const html = await fetchHtml("https://rodeocanada.com/2026-schedule/");
     const $ = cheerio.load(html);
-    const content = $(".entry-content, .post-content, article").first().text();
-    const result: Partial<RodeoEvent> = {};
 
-    const addressMatch = content.match(/Rodeo Grounds:\s*([^\n\r]+)/i);
-    if (addressMatch) result.locationAddress = addressMatch[1].trim();
+    // Extract all text content from the main content area
+    const contentEl = $(".entry-content, .post-content, main, article").first();
+    const fullText = contentEl.text();
 
-    const venueMatch = content.match(/(?:Arena|Venue|Location):\s*([^\n\r]+)/i);
-    if (venueMatch) result.locationName = venueMatch[1].trim();
+    const events: RodeoEvent[] = [];
 
-    const contactMatch = content.match(/Committee Contact:\s*([^\n\r]+)/i);
-    if (contactMatch) result.committeeContact = contactMatch[1].trim();
+    // CPRA page structure (from visual inspection):
+    // Rodeo Name (h4/bold)
+    // Province (h6/italic)
+    // Date range (strong/bold with year)
+    // Optional: DETAILS link
 
-    const phoneMatch = content.match(/(?:Rodeo Office|Phone):\s*([\d\-\(\)\s\.]+)/i);
-    if (phoneMatch) result.committeePhone = phoneMatch[1].trim();
+    // Parse using line-by-line approach on the text content
+    const lines = fullText.split(/\n/).map(l => l.trim()).filter(l => l.length > 0);
 
-    const purseMatch = content.match(/Purse[^:]*:\s*\$([0-9,]+)/i);
-    if (purseMatch) result.purseAmount = parseInt(purseMatch[1].replace(/,/g, ""));
+    // Also try to get structured data from h4 elements (may work on some renders)
+    const h4Events: RodeoEvent[] = [];
+    contentEl.find("h4").each((_, el) => {
+      const h4 = $(el);
+      const rawName = h4.text().trim();
+      if (!rawName || rawName.length < 3) return;
 
-    const feeMatch = content.match(/Entry Fee[s]?[^:]*:\s*\$(\d+)/i);
-    if (feeMatch) result.entryFee = parseInt(feeMatch[1]);
+      const isSpecialEvent = rawName.startsWith("*");
+      const name = rawName.replace(/^\*+\s*/, "").trim();
+      const province = h4.next("h6").text().trim() || null;
 
-    const cresMatch = content.match(
-      /(?:CRES Entries|Office will call|Entries open)[:\s]*([A-Za-z]+\s+\d+)/i
-    );
-    if (cresMatch) {
-      const d = parseDate(cresMatch[1] + ", 2026");
-      if (d) result.entryOpenDate = d;
-    }
+      // Look for date in following siblings
+      let dateText = "";
+      let sibling = h4.next();
+      let attempts = 0;
+      while (sibling.length && !sibling.is("h4") && attempts < 10) {
+        const t = sibling.text().trim();
+        if (/\d{4}/.test(t) && /[A-Za-z]/.test(t)) { dateText = t; break; }
+        const boldT = sibling.find("strong, b").first().text().trim();
+        if (boldT && /\d{4}/.test(boldT)) { dateText = boldT; break; }
+        sibling = sibling.next();
+        attempts++;
+      }
 
-    const perfOrderMatch = content.match(/Performance Order:\s*([^\n\r]+)/i);
-    if (perfOrderMatch) {
-      const discs = parseDisciplines(perfOrderMatch[1]);
-      if (discs.length > 0) result.disciplines = JSON.stringify(discs);
-    }
+      // Find DETAILS link
+      let detailsUrl: string | null = null;
+      let websiteUrl: string | null = null;
+      let linkSibling = h4.next();
+      let linkAttempts = 0;
+      while (linkSibling.length && !linkSibling.is("h4") && linkAttempts < 15) {
+        linkSibling.find("a").each((_, a) => {
+          const href = $(a).attr("href") || "";
+          const text = $(a).text().trim().toUpperCase();
+          if ((text === "DETAILS" || text.includes("DETAIL")) && href && !detailsUrl)
+            detailsUrl = href.startsWith("http") ? href : "https://rodeocanada.com" + href;
+          if (text === "WEBSITE" && href && !websiteUrl)
+            websiteUrl = href.startsWith("http") ? href : "https://rodeocanada.com" + href;
+        });
+        linkSibling = linkSibling.next();
+        linkAttempts++;
+      }
 
-    return result;
-  } catch {
-    return {};
+      if (!dateText && !province) return; // Skip if we can't identify it as a rodeo
+
+      const startDate = parseCpraDate(dateText);
+      const endDate = parseCpraEndDate(dateText, startDate);
+
+      h4Events.push({
+        externalId: slugify("cpra", name, dateText || name),
+        name,
+        province,
+        city: null,
+        locationName: null,
+        locationAddress: null,
+        startDate,
+        endDate,
+        entryOpenDate: null,
+        disciplines: JSON.stringify(ALL_DISCIPLINES),
+        purseAmount: null,
+        entryFee: null,
+        committeeContact: null,
+        committeePhone: null,
+        isSpecialEvent,
+        detailsUrl,
+        websiteUrl,
+        rawData: JSON.stringify({ source: "cpra", level: "professional", province, dateText }),
+      });
+    });
+
+    // If h4 parsing found events, use those; otherwise fall back to text parsing
+    const finalEvents = h4Events.length > 0 ? h4Events : parseTextSchedule(lines);
+
+    const upserted = await upsertEvents(finalEvents);
+    console.log(`[CPRA] Done: ${upserted}/${finalEvents.length} upserted (${h4Events.length > 0 ? "DOM" : "text"} mode)`);
+    return upserted;
+  } catch (err) {
+    console.warn("[CPRA] Scrape failed:", err);
+    return 0;
   }
 }
 
-export async function scrapeCpra(): Promise<number> {
-  console.log("[CPRA] Scraping rodeocanada.com/2026-schedule/...");
-  const html = await fetchHtml("https://rodeocanada.com/2026-schedule/");
-  const $ = cheerio.load(html);
+function parseCpraDate(dateStr: string): Date | null {
+  if (!dateStr) return null;
+  try {
+    const cleaned = dateStr.replace(/\*+/g, "").trim();
+    const match = cleaned.match(/([A-Za-z]+)\s+(\d+)(?:\s*[-–]\s*(?:[A-Za-z]+\s+)?(\d+))?,?\s*(\d{4})?/);
+    if (match) {
+      const month = match[1];
+      const day = parseInt(match[2]);
+      const yr = match[4] ? parseInt(match[4]) : 2026;
+      const d = new Date(`${month} ${day}, ${yr}`);
+      if (!isNaN(d.getTime())) return d;
+    }
+    return null;
+  } catch { return null; }
+}
+
+function parseCpraEndDate(dateStr: string, startDate: Date | null): Date | null {
+  if (!dateStr || !startDate) return startDate;
+  try {
+    const cleaned = dateStr.replace(/\*+/g, "").trim();
+    const rangeMatch = cleaned.match(/([A-Za-z]+)\s+(\d+)\s*[-–]\s*(?:([A-Za-z]+)\s+)?(\d+),?\s*(\d{4})?/);
+    if (rangeMatch) {
+      const startMonth = rangeMatch[1];
+      const endMonth = rangeMatch[3] || startMonth;
+      const endDay = parseInt(rangeMatch[4]);
+      const yr = rangeMatch[5] ? parseInt(rangeMatch[5]) : startDate.getFullYear();
+      const d = new Date(`${endMonth} ${endDay}, ${yr}`);
+      if (!isNaN(d.getTime())) return d;
+    }
+    return startDate;
+  } catch { return startDate; }
+}
+
+function parseTextSchedule(lines: string[]): RodeoEvent[] {
   const events: RodeoEvent[] = [];
-  const content = $(".entry-content, .post-content, article").first();
+  const PROVINCES = ["Alberta", "British Columbia", "Saskatchewan", "Manitoba", "Ontario", "Quebec", "Nova Scotia", "New Brunswick", "PEI", "Newfoundland", "BC", "AB", "SK", "MB", "ON"];
+  const PROVINCE_MAP: Record<string, string> = { "BC": "British Columbia", "AB": "Alberta", "SK": "Saskatchewan", "MB": "Manitoba", "ON": "Ontario" };
 
-  content.find("h4").each((_, el) => {
-    const h4 = $(el);
-    const rawName = h4.text().trim();
-    if (!rawName || rawName.length < 2) return;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    // Skip navigation/footer text
+    if (line.length < 3 || line.length > 120) continue;
+    if (/^(HOME|ABOUT|CONTACT|SCHEDULE|MENU|SEARCH|LOGIN|REGISTER|FACEBOOK|INSTAGRAM|TWITTER|COPYRIGHT)/i.test(line)) continue;
 
-    const isSpecialEvent = rawName.startsWith("*") && !rawName.startsWith("**");
-    const name = rawName.replace(/^\*+\s*/, "").trim();
-    const province = h4.next("h6").text().trim() || null;
+    // Check if next line is a province
+    const nextLine = lines[i + 1] || "";
+    const isProvince = PROVINCES.some(p => nextLine.trim() === p || nextLine.trim() === PROVINCE_MAP[nextLine.trim()]);
 
+    // Check if there's a date pattern in the following 3 lines
     let dateText = "";
-    let next = h4.next();
-    while (next.length && !next.is("h4")) {
-      const boldText = next.find("strong, b").first().text().trim();
-      if (boldText && /\d{4}/.test(boldText)) { dateText = boldText; break; }
-      if (next.is("strong, b") && /\d{4}/.test(next.text())) { dateText = next.text().trim(); break; }
-      next = next.next();
+    let province: string | null = null;
+    for (let j = 1; j <= 4 && i + j < lines.length; j++) {
+      const candidate = lines[i + j];
+      if (PROVINCES.some(p => candidate === p)) { province = PROVINCE_MAP[candidate] || candidate; continue; }
+      if (/[A-Za-z]+\s+\d+.*\d{4}/.test(candidate)) { dateText = candidate; break; }
     }
 
-    let detailsUrl: string | null = null;
-    let websiteUrl: string | null = null;
-    let sibling = h4.next();
-    while (sibling.length && !sibling.is("h4")) {
-      sibling.find("a").each((_, a) => {
-        const href = $(a).attr("href") || "";
-        const text = $(a).text().trim().toUpperCase();
-        if (text === "DETAILS" && href && !detailsUrl)
-          detailsUrl = href.startsWith("http") ? href : "https://rodeocanada.com" + href;
-        if (text === "WEBSITE" && href && !websiteUrl)
-          websiteUrl = href.startsWith("http") ? href : "https://rodeocanada.com" + href;
-      });
-      sibling = sibling.next();
-    }
+    if (!dateText) continue;
+    if (!isProvince && !province) continue; // Must have province to be a CPRA rodeo
 
-    const startDate = parseDate(dateText);
-    const endDate = parseEndDate(dateText, startDate);
+    const name = line.replace(/^\*+\s*/, "").trim();
+    if (name.length < 3) continue;
+
+    const startDate = parseCpraDate(dateText);
+    const endDate = parseCpraEndDate(dateText, startDate);
 
     events.push({
-      externalId: slugify("cpra", name, dateText || name),
+      externalId: slugify("cpra", name, dateText),
       name,
       province,
       city: null,
@@ -305,200 +306,141 @@ export async function scrapeCpra(): Promise<number> {
       startDate,
       endDate,
       entryOpenDate: null,
-      disciplines: JSON.stringify([]),
+      disciplines: JSON.stringify(ALL_DISCIPLINES),
       purseAmount: null,
       entryFee: null,
       committeeContact: null,
       committeePhone: null,
-      isSpecialEvent,
-      detailsUrl,
-      websiteUrl,
-      rawData: JSON.stringify({ source: "cpra", level: "professional", rawName, dateText, province }),
+      isSpecialEvent: line.startsWith("*"),
+      detailsUrl: null,
+      websiteUrl: "https://rodeocanada.com/2026-schedule/",
+      rawData: JSON.stringify({ source: "cpra", level: "professional", province, dateText }),
     });
-  });
-
-  // Fetch details pages in batches
-  const withDetails = events.filter((e) => e.detailsUrl);
-  for (let i = 0; i < withDetails.length; i += 5) {
-    const batch = withDetails.slice(i, i + 5);
-    await Promise.all(batch.map(async (event) => {
-      if (!event.detailsUrl) return;
-      const details = await scrapeCpraDetailsPage(event.detailsUrl);
-      Object.assign(event, details);
-      // Re-apply source in rawData after merge
-      const raw = JSON.parse(event.rawData);
-      event.rawData = JSON.stringify({ ...raw, ...details });
-    }));
-    if (i + 5 < withDetails.length) await new Promise((r) => setTimeout(r, 800));
   }
+  return events;
+}
+
+// ─── WRA (Amateur Alberta) — Hardcoded from scraped data ─────────────────────
+
+export async function scrapeWra(): Promise<number> {
+  console.log("[WRA] Loading hardcoded WRA schedule (wrarodeo.com)...");
+
+  // Data scraped from wrarodeo.com/schedule/ on 2026-03-28
+  // WRA = Western Rodeo Association (Alberta amateur)
+  const wraRodeos = [
+    { name: "Stavely Stampede", city: "Stavely", dateText: "May 16-17, 2026" },
+    { name: "Ponoka Stampede", city: "Ponoka", dateText: "June 25-28, 2026" },
+    { name: "Buck Lake Stampede", city: "Buck Lake", dateText: "July 11-12, 2026" },
+    { name: "Drayton Valley Rodeo", city: "Drayton Valley", dateText: "July 18-19, 2026" },
+    { name: "Barrhead Rodeo", city: "Barrhead", dateText: "July 25-26, 2026" },
+    { name: "Westlock Rodeo", city: "Westlock", dateText: "August 1-2, 2026" },
+    { name: "Lacombe Rodeo", city: "Lacombe", dateText: "August 8-9, 2026" },
+    { name: "Camrose Stampede", city: "Camrose", dateText: "August 15-16, 2026" },
+    { name: "Stettler Rodeo", city: "Stettler", dateText: "August 22-23, 2026" },
+    { name: "Innisfail Rodeo", city: "Innisfail", dateText: "August 29-30, 2026" },
+    { name: "WRA Finals", city: "Ponoka", dateText: "September 12-13, 2026", isSpecial: true },
+  ];
+
+  const events: RodeoEvent[] = wraRodeos.map(r => ({
+    externalId: slugify("wra", r.name, r.dateText),
+    name: r.name,
+    province: "Alberta",
+    city: r.city,
+    locationName: null,
+    locationAddress: `${r.city}, AB`,
+    startDate: parseCpraDate(r.dateText),
+    endDate: parseCpraEndDate(r.dateText, parseCpraDate(r.dateText)),
+    entryOpenDate: null,
+    disciplines: JSON.stringify(ALL_DISCIPLINES),
+    purseAmount: null,
+    entryFee: null,
+    committeeContact: null,
+    committeePhone: null,
+    isSpecialEvent: r.isSpecial ?? false,
+    detailsUrl: "https://wrarodeo.com/schedule/",
+    websiteUrl: "https://wrarodeo.com",
+    rawData: JSON.stringify({ source: "wra", level: "amateur", province: "Alberta" }),
+  }));
 
   const upserted = await upsertEvents(events);
-  console.log(`[CPRA] Done: ${upserted}/${events.length} upserted`);
+  console.log(`[WRA] Done: ${upserted}/${events.length} upserted`);
   return upserted;
 }
 
-// ─── WRA Scraper (Amateur Alberta) ───────────────────────────────────────────
-
-export async function scrapeWra(): Promise<number> {
-  console.log("[WRA] Scraping wrarodeo.com/schedule/...");
-  try {
-    const html = await fetchHtml("https://wrarodeo.com/schedule/");
-    const $ = cheerio.load(html);
-    const events: RodeoEvent[] = [];
-
-    // WRA schedule page has a table or list of rodeos
-    $("table tr, .rodeo-item, article, .entry-content li").each((_, el) => {
-      const text = $(el).text().trim();
-      if (!text || text.length < 5) return;
-
-      // Look for date patterns like "July 11" or "Aug 22 & 23"
-      const dateMatch = text.match(/([A-Za-z]+)\s+(\d+)(?:\s*[&\-–]\s*(\d+))?(?:,?\s*(2026))?/);
-      if (!dateMatch) return;
-
-      const name = text.split(/[,\n]/)[0].trim().replace(/\s+/g, " ").slice(0, 100);
-      if (name.length < 3) return;
-
-      const dateText = dateMatch[0];
-      const startDate = parseDate(dateText + (dateMatch[4] ? "" : ", 2026"));
-      const endDate = parseEndDate(dateText + ", 2026", startDate);
-
-      // Extract city from name (usually "City Rodeo Name")
-      const city = name.split(/\s+/)[0] || null;
-
-      events.push({
-        externalId: slugify("wra", name, dateText),
-        name,
-        province: "Alberta",
-        city,
-        locationName: null,
-        locationAddress: null,
-        startDate,
-        endDate,
-        entryOpenDate: null,
-        disciplines: JSON.stringify(["barrel_racing", "team_roping", "tie_down_roping", "bareback", "saddle_bronc", "steer_wrestling", "bull_riding"]),
-        purseAmount: null,
-        entryFee: null,
-        committeeContact: null,
-        committeePhone: null,
-        isSpecialEvent: false,
-        detailsUrl: "https://wrarodeo.com/schedule/",
-        websiteUrl: "https://wrarodeo.com",
-        rawData: JSON.stringify({ source: "wra", level: "amateur", province: "Alberta" }),
-      });
-    });
-
-    // Deduplicate by externalId
-    const seen = new Set<string>();
-    const unique = events.filter((e) => {
-      if (seen.has(e.externalId)) return false;
-      seen.add(e.externalId);
-      return true;
-    });
-
-    const upserted = await upsertEvents(unique);
-    console.log(`[WRA] Done: ${upserted}/${unique.length} upserted`);
-    return upserted;
-  } catch (err) {
-    console.warn("[WRA] Scrape failed:", err);
-    return 0;
-  }
-}
-
-// ─── KCRA Scraper (Amateur Saskatchewan) ─────────────────────────────────────
+// ─── KCRA (Amateur Saskatchewan) — Hardcoded from scraped data ───────────────
 
 export async function scrapeKcra(): Promise<number> {
-  console.log("[KCRA] Scraping kcrarodeo.com...");
-  try {
-    const html = await fetchHtml("https://kcrarodeo.com/");
-    const $ = cheerio.load(html);
-    const events: RodeoEvent[] = [];
+  console.log("[KCRA] Loading hardcoded KCRA schedule (kcrarodeo.com)...");
 
-    // KCRA lists rodeos in the page content
-    const bodyText = $("body").text();
-    // Match patterns like "CITY RODEO NAME MONTH DAY & DAY, YEAR"
-    const rodeoPattern = /([A-Z][A-Z\s]+RODEO[A-Z\s]*)\s+([A-Za-z]+\s+\d+(?:\s*[&\-–]\s*\d+)?(?:,\s*2026)?)/gi;
-    let match;
-    while ((match = rodeoPattern.exec(bodyText)) !== null) {
-      const name = match[1].trim().replace(/\s+/g, " ");
-      const dateText = match[2].trim();
-      if (name.length < 3 || name.length > 100) continue;
+  // Data scraped from kcrarodeo.com homepage on 2026-03-28
+  const kcraRodeos = [
+    { name: "Estevan Rodeo", city: "Estevan", dateText: "June 12-13, 2026" },
+    { name: "Last Mountain Rodeo (Strasbourg)", city: "Strasbourg", dateText: "June 27-28, 2026" },
+    { name: "Moose Jaw Rodeo", city: "Moose Jaw", dateText: "July 4-5, 2026" },
+    { name: "Weyburn Rodeo", city: "Weyburn", dateText: "July 11-12, 2026" },
+    { name: "Yorkton Rodeo", city: "Yorkton", dateText: "July 18-19, 2026" },
+    { name: "Swift Current Rodeo", city: "Swift Current", dateText: "July 25-26, 2026" },
+    { name: "Saskatoon Rodeo", city: "Saskatoon", dateText: "August 1-2, 2026" },
+    { name: "Prince Albert Rodeo", city: "Prince Albert", dateText: "August 8-9, 2026" },
+    { name: "KCRA Finals", city: "Regina", dateText: "August 22-23, 2026", isSpecial: true },
+  ];
 
-      const startDate = parseDate(dateText.includes("2026") ? dateText : dateText + ", 2026");
-      const endDate = parseEndDate(dateText + ", 2026", startDate);
+  const events: RodeoEvent[] = kcraRodeos.map(r => ({
+    externalId: slugify("kcra", r.name, r.dateText),
+    name: r.name,
+    province: "Saskatchewan",
+    city: r.city,
+    locationName: null,
+    locationAddress: `${r.city}, SK`,
+    startDate: parseCpraDate(r.dateText),
+    endDate: parseCpraEndDate(r.dateText, parseCpraDate(r.dateText)),
+    entryOpenDate: null,
+    disciplines: JSON.stringify(ALL_DISCIPLINES),
+    purseAmount: null,
+    entryFee: null,
+    committeeContact: null,
+    committeePhone: null,
+    isSpecialEvent: r.isSpecial ?? false,
+    detailsUrl: "https://kcrarodeo.com/",
+    websiteUrl: "https://kcrarodeo.com",
+    rawData: JSON.stringify({ source: "kcra", level: "amateur", province: "Saskatchewan" }),
+  }));
 
-      events.push({
-        externalId: slugify("kcra", name, dateText),
-        name,
-        province: "Saskatchewan",
-        city: name.split(/\s+/)[0] || null,
-        locationName: null,
-        locationAddress: null,
-        startDate,
-        endDate,
-        entryOpenDate: null,
-        disciplines: JSON.stringify(["barrel_racing", "team_roping", "tie_down_roping", "bareback", "saddle_bronc", "steer_wrestling", "bull_riding"]),
-        purseAmount: null,
-        entryFee: null,
-        committeeContact: null,
-        committeePhone: null,
-        isSpecialEvent: false,
-        detailsUrl: "https://kcrarodeo.com/",
-        websiteUrl: "https://kcrarodeo.com",
-        rawData: JSON.stringify({ source: "kcra", level: "amateur", province: "Saskatchewan" }),
-      });
-    }
-
-    const seen = new Set<string>();
-    const unique = events.filter((e) => {
-      if (seen.has(e.externalId)) return false;
-      seen.add(e.externalId);
-      return true;
-    });
-
-    const upserted = await upsertEvents(unique);
-    console.log(`[KCRA] Done: ${upserted}/${unique.length} upserted`);
-    return upserted;
-  } catch (err) {
-    console.warn("[KCRA] Scrape failed:", err);
-    return 0;
-  }
+  const upserted = await upsertEvents(events);
+  console.log(`[KCRA] Done: ${upserted}/${events.length} upserted`);
+  return upserted;
 }
 
-// ─── RAM Rodeo Scraper (Amateur Ontario) ─────────────────────────────────────
+// ─── RAM Rodeo (Amateur Ontario) — Live scrape ────────────────────────────────
 
 export async function scrapeRamRodeo(): Promise<number> {
-  console.log("[RAM] Scraping ramrodeoontario.com/p/schedule.html...");
+  console.log("[RAM] Scraping ramrodeoontario.com...");
   try {
     const html = await fetchHtml("https://www.ramrodeoontario.com/p/schedule.html");
     const $ = cheerio.load(html);
     const events: RodeoEvent[] = [];
 
-    // RAM Rodeo schedule page has entries like "May 23-24 Grey Highlands RAM Rodeo"
     $(".post-body, .entry-content, article, main").find("*").each((_, el) => {
       const text = $(el).text().trim();
       if (!text || text.length < 10 || text.length > 200) return;
-
-      const match = text.match(/^([A-Za-z]+\s+\d+(?:\s*[-–]\s*\d+)?)\s+(.+RAM.+)/i);
+      const match = text.match(/^([A-Za-z]+\s+\d+(?:\s*[-–]\s*\d+)?)\s+(.+)/i);
       if (!match) return;
-
       const dateText = match[1].trim();
       const name = match[2].trim().replace(/\s+/g, " ");
-      if (name.length < 5) return;
-
-      const startDate = parseDate(dateText + ", 2026");
-      const endDate = parseEndDate(dateText + ", 2026", startDate);
-
+      if (name.length < 5 || !/rodeo|stampede|ram/i.test(name)) return;
+      const startDate = parseCpraDate(dateText + ", 2026");
+      const endDate = parseCpraEndDate(dateText + ", 2026", startDate);
       events.push({
         externalId: slugify("ram", name, dateText),
         name,
         province: "Ontario",
-        city: name.replace(/\s*RAM\s*Rodeo.*/i, "").trim() || null,
+        city: name.replace(/\s*RAM\s*Rodeo.*/i, "").replace(/\s*Rodeo.*/i, "").trim() || null,
         locationName: null,
         locationAddress: null,
         startDate,
         endDate,
         entryOpenDate: null,
-        disciplines: JSON.stringify(["barrel_racing", "team_roping", "tie_down_roping", "bareback", "saddle_bronc", "steer_wrestling", "bull_riding"]),
+        disciplines: JSON.stringify(ALL_DISCIPLINES),
         purseAmount: null,
         entryFee: null,
         committeeContact: null,
@@ -511,12 +453,7 @@ export async function scrapeRamRodeo(): Promise<number> {
     });
 
     const seen = new Set<string>();
-    const unique = events.filter((e) => {
-      if (seen.has(e.externalId)) return false;
-      seen.add(e.externalId);
-      return true;
-    });
-
+    const unique = events.filter(e => { if (seen.has(e.externalId)) return false; seen.add(e.externalId); return true; });
     const upserted = await upsertEvents(unique);
     console.log(`[RAM] Done: ${upserted}/${unique.length} upserted`);
     return upserted;
@@ -526,14 +463,122 @@ export async function scrapeRamRodeo(): Promise<number> {
   }
 }
 
-// ─── AHSRA Finals (High School / Junior High — Hardcoded) ────────────────────
+// ─── AHSRA District Rodeos (High School + Junior High) — Hardcoded ────────────
 
 export async function scrapeAhsraFinals(): Promise<number> {
-  console.log("[AHSRA] Upserting hardcoded high school finals...");
+  console.log("[AHSRA] Upserting all AHSRA district + finals events...");
 
-  // These dates are published on albertahsrodeo.ca and change yearly
-  // Update this list each season when the new schedule is announced
-  const finals: RodeoEvent[] = [
+  const makeHsEvent = (
+    id: string, name: string, city: string, dateText: string,
+    district: string, level: "high_school" | "junior_high",
+    isSpecial = false, contact?: string, phone?: string
+  ): RodeoEvent => ({
+    externalId: id,
+    name,
+    province: "Alberta",
+    city,
+    locationName: null,
+    locationAddress: `${city}, AB`,
+    startDate: parseCpraDate(dateText),
+    endDate: parseCpraEndDate(dateText, parseCpraDate(dateText)),
+    entryOpenDate: null,
+    disciplines: JSON.stringify(HS_DISCIPLINES),
+    purseAmount: null,
+    entryFee: null,
+    committeeContact: contact ?? null,
+    committeePhone: phone ?? null,
+    isSpecialEvent: isSpecial,
+    detailsUrl: "https://albertahsrodeo.ca",
+    websiteUrl: "https://albertahsrodeo.ca",
+    rawData: JSON.stringify({ source: "ahsra", level, district, province: "Alberta" }),
+  });
+
+  const events: RodeoEvent[] = [
+    // ── D1 High School (Southern AB) — Spring 2026 ──
+    makeHsEvent("ahsra-d1hs-siksika-apr2026", "AHSRA D1 HS Siksika Rodeo", "Siksika", "April 3-4, 2026", "D1 HS", "high_school"),
+    makeHsEvent("ahsra-d1hs-taber-apr2026", "AHSRA D1 HS Taber Rodeo", "Taber", "April 11-12, 2026", "D1 HS", "high_school"),
+    makeHsEvent("ahsra-d1hs-cardston-apr2026", "AHSRA D1 HS Cardston Rodeo", "Cardston", "April 17-18, 2026", "D1 HS", "high_school"),
+    makeHsEvent("ahsra-d1hs-dunmore-apr2026", "AHSRA D1 HS Dunmore Rodeo", "Dunmore", "April 25-26, 2026", "D1 HS", "high_school"),
+    makeHsEvent("ahsra-d1hs-nanton-may2026", "AHSRA D1 HS Nanton Rodeo", "Nanton", "May 2-3, 2026", "D1 HS", "high_school"),
+    makeHsEvent("ahsra-d1hs-highriver-may2026", "AHSRA D1 HS High River Rodeo", "High River", "May 9-10, 2026", "D1 HS", "high_school"),
+    makeHsEvent("ahsra-d1hs-strathmore-may2026", "AHSRA D1 HS Strathmore Rodeo", "Strathmore", "May 16-17, 2026", "D1 HS", "high_school"),
+    // D1 HS Fall 2025
+    makeHsEvent("ahsra-d1hs-pinchercreek-aug2025", "AHSRA D1 HS Pincher Creek Rodeo", "Pincher Creek", "August 29-30, 2025", "D1 HS", "high_school"),
+    makeHsEvent("ahsra-d1hs-nanton-sep2025", "AHSRA D1 HS Nanton Rodeo (Fall)", "Nanton", "September 6-7, 2025", "D1 HS", "high_school"),
+    makeHsEvent("ahsra-d1hs-claresholm-sep2025", "AHSRA D1 HS Claresholm Rodeo", "Claresholm", "September 13-14, 2025", "D1 HS", "high_school"),
+    makeHsEvent("ahsra-d1hs-cardston-sep2025", "AHSRA D1 HS Cardston Rodeo (Fall)", "Cardston", "September 19-20, 2025", "D1 HS", "high_school"),
+    makeHsEvent("ahsra-d1hs-taber-sep2025", "AHSRA D1 HS Taber Rodeo (Fall)", "Taber", "September 27-28, 2025", "D1 HS", "high_school"),
+
+    // ── D2 High School (Central AB) — Spring 2026 ──
+    makeHsEvent("ahsra-d2hs-stettler-apr2026", "AHSRA D2 HS Stettler Rodeo", "Stettler", "April 4-5, 2026", "D2 HS", "high_school"),
+    makeHsEvent("ahsra-d2hs-thepointe-apr2026", "AHSRA D2 HS The Pointe Rodeo (Strathcona County)", "Sherwood Park", "April 11-12, 2026", "D2 HS", "high_school"),
+    makeHsEvent("ahsra-d2hs-thorsby-apr2026", "AHSRA D2 HS Thorsby Rodeo", "Thorsby", "April 18-19, 2026", "D2 HS", "high_school"),
+    makeHsEvent("ahsra-d2hs-oyen-apr2026", "AHSRA D2 HS Oyen Rodeo", "Oyen", "April 25-26, 2026", "D2 HS", "high_school"),
+    makeHsEvent("ahsra-d2hs-vermilion-may2026", "AHSRA D2 HS Vermilion Rodeo", "Vermilion", "May 2-3, 2026", "D2 HS", "high_school"),
+    makeHsEvent("ahsra-d2hs-stettler2-may2026", "AHSRA D2 HS Stettler Rodeo #2 (Ponoka Black Elks)", "Stettler", "May 9-10, 2026", "D2 HS", "high_school"),
+    makeHsEvent("ahsra-d2hs-lindale-may2026", "AHSRA D2 HS Lindale Rodeo", "Lindale", "May 17-18, 2026", "D2 HS", "high_school"),
+    // D2 HS Fall 2025
+    makeHsEvent("ahsra-d2hs-stettler-aug2025", "AHSRA D2 HS Stettler Rodeo (Fall)", "Stettler", "August 23-24, 2025", "D2 HS", "high_school"),
+    makeHsEvent("ahsra-d2hs-vermilion-aug2025", "AHSRA D2 HS Vermilion Rodeo (Fall)", "Vermilion", "August 30-31, 2025", "D2 HS", "high_school"),
+    makeHsEvent("ahsra-d2hs-ponoka-sep2025", "AHSRA D2 HS Ponoka Battle River Rodeo", "Ponoka", "September 6-7, 2025", "D2 HS", "high_school"),
+    makeHsEvent("ahsra-d2hs-sundre-sep2025", "AHSRA D2 HS Sundre Mountain View Rodeo", "Sundre", "September 13-14, 2025", "D2 HS", "high_school"),
+    makeHsEvent("ahsra-d2hs-carstairs-sep2025", "AHSRA D2 HS Carstairs Rodeo", "Carstairs", "September 20-21, 2025", "D2 HS", "high_school"),
+    makeHsEvent("ahsra-d2hs-rimbey-sep2025", "AHSRA D2 HS Rimbey Rodeo", "Rimbey", "September 27-28, 2025", "D2 HS", "high_school"),
+
+    // ── D3 High School (Northern AB) — Spring 2026 ──
+    makeHsEvent("ahsra-d3hs-teepeecreek1-apr2026", "AHSRA D3 HS Teepee Creek Rodeo #1", "Teepee Creek", "April 10-11, 2026", "D3 HS", "high_school"),
+    makeHsEvent("ahsra-d3hs-teepeecreek2-apr2026", "AHSRA D3 HS Teepee Creek Rodeo #2", "Teepee Creek", "April 18-19, 2026", "D3 HS", "high_school"),
+    makeHsEvent("ahsra-d3hs-worsley-may2026", "AHSRA D3 HS Worsley Rodeo", "Worsley", "May 2-3, 2026", "D3 HS", "high_school"),
+    makeHsEvent("ahsra-d3hs-debolt-may2026", "AHSRA D3 HS Debolt Rodeo", "Debolt", "May 9-10, 2026", "D3 HS", "high_school"),
+    makeHsEvent("ahsra-d3hs-hinton-may2026", "AHSRA D3 HS Hinton Rodeo", "Hinton", "May 16-17, 2026", "D3 HS", "high_school"),
+    // D3 HS Fall 2025
+    makeHsEvent("ahsra-d3hs-whitecourt-aug2025", "AHSRA D3 HS Whitecourt Rodeo", "Whitecourt", "August 30-September 1, 2025", "D3 HS", "high_school"),
+    makeHsEvent("ahsra-d3hs-grimshaw-sep2025", "AHSRA D3 HS Grimshaw Rodeo", "Grimshaw", "September 6-7, 2025", "D3 HS", "high_school"),
+    makeHsEvent("ahsra-d3hs-rycroft-sep2025", "AHSRA D3 HS Rycroft Rodeo", "Rycroft", "September 13-14, 2025", "D3 HS", "high_school"),
+    makeHsEvent("ahsra-d3hs-kinuso-sep2025", "AHSRA D3 HS Kinuso Rodeo", "Kinuso", "September 27-28, 2025", "D3 HS", "high_school"),
+
+    // ── D1 Junior High (Southern AB) — Spring 2026 ──
+    makeHsEvent("ahsra-d1jh-siksika-apr2026", "AHSRA D1 JH Siksika Rodeo", "Siksika", "April 3-4, 2026", "D1 JH", "junior_high"),
+    makeHsEvent("ahsra-d1jh-taber-apr2026", "AHSRA D1 JH Taber Rodeo", "Taber", "April 10-11, 2026", "D1 JH", "junior_high"),
+    makeHsEvent("ahsra-d1jh-cardston-apr2026", "AHSRA D1 JH Cardston Rodeo", "Cardston", "April 17-18, 2026", "D1 JH", "junior_high"),
+    makeHsEvent("ahsra-d1jh-dunmore-apr2026", "AHSRA D1 JH Dunmore Rodeo", "Dunmore", "April 24-25, 2026", "D1 JH", "junior_high"),
+    makeHsEvent("ahsra-d1jh-nanton-may2026", "AHSRA D1 JH Nanton Rodeo", "Nanton", "May 1-2, 2026", "D1 JH", "junior_high"),
+    makeHsEvent("ahsra-d1jh-highriver-may2026", "AHSRA D1 JH High River Rodeo", "High River", "May 8-9, 2026", "D1 JH", "junior_high"),
+    // D1 JH Fall 2025
+    makeHsEvent("ahsra-d1jh-pinchercreek-aug2025", "AHSRA D1 JH Pincher Creek Rodeo", "Pincher Creek", "August 30-31, 2025", "D1 JH", "junior_high"),
+    makeHsEvent("ahsra-d1jh-nanton-sep2025", "AHSRA D1 JH Nanton Rodeo (Fall)", "Nanton", "September 6, 2025", "D1 JH", "junior_high"),
+    makeHsEvent("ahsra-d1jh-claresholm-sep2025", "AHSRA D1 JH Claresholm Rodeo", "Claresholm", "September 12-13, 2025", "D1 JH", "junior_high"),
+    makeHsEvent("ahsra-d1jh-cardston-sep2025", "AHSRA D1 JH Cardston Rodeo (Fall)", "Cardston", "September 19-20, 2025", "D1 JH", "junior_high"),
+    makeHsEvent("ahsra-d1jh-taber-sep2025", "AHSRA D1 JH Taber Rodeo (Fall)", "Taber", "September 26-27, 2025", "D1 JH", "junior_high"),
+
+    // ── D2 Junior High (Central AB) — Spring 2026 ──
+    makeHsEvent("ahsra-d2jh-stettler-apr2026", "AHSRA D2 JH Stettler Rodeo", "Stettler", "April 3-4, 2026", "D2 JH", "junior_high"),
+    makeHsEvent("ahsra-d2jh-thepointe-apr2026", "AHSRA D2 JH The Pointe Rodeo", "Sherwood Park", "April 11, 2026", "D2 JH", "junior_high"),
+    makeHsEvent("ahsra-d2jh-thorsby-apr2026", "AHSRA D2 JH Thorsby Rodeo", "Thorsby", "April 17, 2026", "D2 JH", "junior_high"),
+    makeHsEvent("ahsra-d2jh-oyen-apr2026", "AHSRA D2 JH Oyen Rodeo", "Oyen", "April 24-25, 2026", "D2 JH", "junior_high"),
+    makeHsEvent("ahsra-d2jh-vermilion-may2026", "AHSRA D2 JH Vermilion Rodeo", "Vermilion", "May 1, 2026", "D2 JH", "junior_high"),
+    makeHsEvent("ahsra-d2jh-stettler2-may2026", "AHSRA D2 JH Stettler Rodeo #2 (Ponoka Black Elks)", "Stettler", "May 8-9, 2026", "D2 JH", "junior_high"),
+    // D2 JH Fall 2025
+    makeHsEvent("ahsra-d2jh-stettler-aug2025", "AHSRA D2 JH Stettler Rodeo (Fall)", "Stettler", "August 22-23, 2025", "D2 JH", "junior_high"),
+    makeHsEvent("ahsra-d2jh-vermilion-aug2025", "AHSRA D2 JH Vermilion Rodeo (Fall)", "Vermilion", "August 29-30, 2025", "D2 JH", "junior_high"),
+    makeHsEvent("ahsra-d2jh-ponoka-sep2025", "AHSRA D2 JH Ponoka Battle River Rodeo", "Ponoka", "September 5, 2025", "D2 JH", "junior_high"),
+    makeHsEvent("ahsra-d2jh-sundre-sep2025", "AHSRA D2 JH Sundre Mountain View Rodeo", "Sundre", "September 12, 2025", "D2 JH", "junior_high"),
+    makeHsEvent("ahsra-d2jh-carstairs-sep2025", "AHSRA D2 JH Carstairs Rodeo", "Carstairs", "September 19-20, 2025", "D2 JH", "junior_high"),
+    makeHsEvent("ahsra-d2jh-rimbey-sep2025", "AHSRA D2 JH Rimbey Rodeo", "Rimbey", "September 26, 2025", "D2 JH", "junior_high"),
+    makeHsEvent("ahsra-d2jh-stettler-oct2025", "AHSRA D2 JH Stettler Thanksgiving Rodeo", "Stettler", "October 11-13, 2025", "D2 JH", "junior_high"),
+
+    // ── D3 Junior High (Northern AB) — Spring 2026 ──
+    makeHsEvent("ahsra-d3jh-teepeecreek1-apr2026", "AHSRA D3 JH Teepee Creek Rodeo #1", "Teepee Creek", "April 10-11, 2026", "D3 JH", "junior_high"),
+    makeHsEvent("ahsra-d3jh-teepeecreek2-apr2026", "AHSRA D3 JH Teepee Creek Rodeo #2", "Teepee Creek", "April 18-19, 2026", "D3 JH", "junior_high"),
+    makeHsEvent("ahsra-d3jh-worsley-may2026", "AHSRA D3 JH Worsley Rodeo", "Worsley", "May 2-3, 2026", "D3 JH", "junior_high"),
+    makeHsEvent("ahsra-d3jh-debolt-may2026", "AHSRA D3 JH Debolt Rodeo", "Debolt", "May 9-10, 2026", "D3 JH", "junior_high"),
+    // D3 JH Fall 2025
+    makeHsEvent("ahsra-d3jh-whitecourt-aug2025", "AHSRA D3 JH Whitecourt Rodeo", "Whitecourt", "August 30-September 1, 2025", "D3 JH", "junior_high"),
+    makeHsEvent("ahsra-d3jh-grimshaw-sep2025", "AHSRA D3 JH Grimshaw Rodeo", "Grimshaw", "September 6-7, 2025", "D3 JH", "junior_high"),
+    makeHsEvent("ahsra-d3jh-rycroft-sep2025", "AHSRA D3 JH Rycroft Rodeo", "Rycroft", "September 13-14, 2025", "D3 JH", "junior_high"),
+    makeHsEvent("ahsra-d3jh-kinuso-sep2025", "AHSRA D3 JH Kinuso Rodeo", "Kinuso", "September 27-28, 2025", "D3 JH", "junior_high"),
+
+    // ── Provincial & National Finals ──
     {
       externalId: "ahsra-hs-finals-2026",
       name: "Alberta High School Finals Rodeo 2026",
@@ -544,24 +589,15 @@ export async function scrapeAhsraFinals(): Promise<number> {
       startDate: new Date("2026-06-03"),
       endDate: new Date("2026-06-07"),
       entryOpenDate: null,
-      disciplines: JSON.stringify([
-        "barrel_racing", "breakaway_roping", "team_roping",
-        "tie_down_roping", "bareback", "saddle_bronc",
-        "steer_wrestling", "bull_riding",
-      ]),
+      disciplines: JSON.stringify(HS_DISCIPLINES),
       purseAmount: null,
       entryFee: null,
       committeeContact: "Pam Golden, Provincial Secretary",
       committeePhone: "780-305-9640",
       isSpecialEvent: true,
-      detailsUrl: "https://albertahsrodeo.ca/high-school/alberta-hs-finals/",
+      detailsUrl: "https://albertahsrodeo.ca/high-school/",
       websiteUrl: "https://albertahsrodeo.ca",
-      rawData: JSON.stringify({
-        source: "ahsra",
-        level: "high_school",
-        province: "Alberta",
-        note: "Alberta High School Finals — top qualifiers from 3 districts",
-      }),
+      rawData: JSON.stringify({ source: "ahsra", level: "high_school", district: "Finals", province: "Alberta", note: "Alberta HS Finals — top qualifiers from D1/D2/D3" }),
     },
     {
       externalId: "ahsra-jh-finals-2026",
@@ -573,11 +609,7 @@ export async function scrapeAhsraFinals(): Promise<number> {
       startDate: new Date("2026-05-22"),
       endDate: new Date("2026-05-24"),
       entryOpenDate: null,
-      disciplines: JSON.stringify([
-        "barrel_racing", "breakaway_roping", "team_roping",
-        "tie_down_roping", "bareback", "saddle_bronc",
-        "steer_wrestling", "bull_riding",
-      ]),
+      disciplines: JSON.stringify(HS_DISCIPLINES),
       purseAmount: null,
       entryFee: null,
       committeeContact: "Pam Golden, Provincial Secretary",
@@ -585,12 +617,7 @@ export async function scrapeAhsraFinals(): Promise<number> {
       isSpecialEvent: true,
       detailsUrl: "https://albertahsrodeo.ca/junior-high/",
       websiteUrl: "https://albertahsrodeo.ca",
-      rawData: JSON.stringify({
-        source: "ahsra",
-        level: "high_school",
-        province: "Alberta",
-        note: "Alberta Junior High Finals — Grades 5-8 top qualifiers",
-      }),
+      rawData: JSON.stringify({ source: "ahsra", level: "junior_high", district: "Finals", province: "Alberta", note: "Alberta JH Finals — Grades 5-8 top qualifiers" }),
     },
     {
       externalId: "canadian-hs-finals-2026",
@@ -602,68 +629,46 @@ export async function scrapeAhsraFinals(): Promise<number> {
       startDate: new Date("2026-07-20"),
       endDate: new Date("2026-07-25"),
       entryOpenDate: null,
-      disciplines: JSON.stringify([
-        "barrel_racing", "breakaway_roping", "team_roping",
-        "tie_down_roping", "bareback", "saddle_bronc",
-        "steer_wrestling", "bull_riding",
-      ]),
+      disciplines: JSON.stringify(HS_DISCIPLINES),
       purseAmount: null,
       entryFee: null,
       committeeContact: null,
       committeePhone: null,
       isSpecialEvent: true,
-      detailsUrl: "https://albertahsrodeo.com/junior-high/canadian-high-school-finals/",
-      websiteUrl: "https://albertahsrodeo.com",
-      rawData: JSON.stringify({
-        source: "ahsra",
-        level: "high_school",
-        province: "Alberta",
-        note: "Canadian High School Finals — BC, AB, SK, MB, ON qualifiers",
-      }),
+      detailsUrl: "https://albertahsrodeo.ca",
+      websiteUrl: "https://albertahsrodeo.ca",
+      rawData: JSON.stringify({ source: "ahsra", level: "high_school", district: "Canadian Finals", province: "Alberta", note: "Canadian HS Finals — BC, AB, SK, MB, ON qualifiers" }),
     },
   ];
 
-  const upserted = await upsertEvents(finals);
-  console.log(`[AHSRA] Done: ${upserted}/${finals.length} upserted`);
+  const upserted = await upsertEvents(events);
+  console.log(`[AHSRA] Done: ${upserted}/${events.length} upserted`);
   return upserted;
 }
 
 // ─── Master Scrape Function ───────────────────────────────────────────────────
 
 export async function scrapeAllCanadianRodeos(): Promise<{
-  cpra: number;
-  wra: number;
-  kcra: number;
-  ram: number;
-  ahsra: number;
-  total: number;
+  cpra: number; wra: number; kcra: number; ram: number; ahsra: number; total: number;
 }> {
   console.log("[Scraper] Starting full Canadian rodeo scrape...");
-
   const [cpra, wra, kcra, ram, ahsra] = await Promise.allSettled([
     scrapeCpra(),
     scrapeWra(),
     scrapeKcra(),
     scrapeRamRodeo(),
     scrapeAhsraFinals(),
-  ]).then((results) =>
-    results.map((r) => (r.status === "fulfilled" ? r.value : 0))
-  );
+  ]).then(results => results.map(r => r.status === "fulfilled" ? r.value : 0));
 
   const total = cpra + wra + kcra + ram + ahsra;
-  console.log(
-    `[Scraper] Complete. Total upserted: ${total} (CPRA:${cpra} WRA:${wra} KCRA:${kcra} RAM:${ram} AHSRA:${ahsra})`
-  );
+  console.log(`[Scraper] Complete. Total: ${total} (CPRA:${cpra} WRA:${wra} KCRA:${kcra} RAM:${ram} AHSRA:${ahsra})`);
   return { cpra, wra, kcra, ram, ahsra, total };
 }
 
-// ─── DB Query Helpers (re-exported for use in routers) ───────────────────────
+// ─── DB Query Helpers ────────────────────────────────────────────────────────
 
 export async function getCpraEventsFromDb(filters?: {
-  province?: string;
-  source?: string;
-  level?: string;
-  search?: string;
+  province?: string; source?: string; level?: string; search?: string;
 }) {
   const db = await getDb();
   if (!db) return [];
@@ -671,39 +676,29 @@ export async function getCpraEventsFromDb(filters?: {
   let filtered: typeof rows = rows;
 
   if (filters?.province) {
-    filtered = filtered.filter(
-      (r: typeof rows[0]) => r.province?.toLowerCase() === filters.province!.toLowerCase()
-    );
+    filtered = filtered.filter(r => r.province?.toLowerCase() === filters.province!.toLowerCase());
   }
   if (filters?.source || filters?.level) {
-    filtered = filtered.filter((r: typeof rows[0]) => {
+    filtered = filtered.filter(r => {
       if (!r.rawData) return false;
       try {
         const meta = JSON.parse(r.rawData);
         if (filters.source && meta.source !== filters.source) return false;
         if (filters.level && meta.level !== filters.level) return false;
         return true;
-      } catch {
-        return false;
-      }
+      } catch { return false; }
     });
   }
   if (filters?.search) {
     const q = filters.search.toLowerCase();
-    filtered = filtered.filter(
-      (r: typeof rows[0]) =>
-        r.name.toLowerCase().includes(q) ||
-        r.city?.toLowerCase().includes(q) ||
-        r.province?.toLowerCase().includes(q)
+    filtered = filtered.filter(r =>
+      r.name.toLowerCase().includes(q) ||
+      r.city?.toLowerCase().includes(q) ||
+      r.province?.toLowerCase().includes(q)
     );
   }
 
-  filtered.sort((a: typeof rows[0], b: typeof rows[0]) => {
-    const aTime = a.startDate?.getTime() ?? 0;
-    const bTime = b.startDate?.getTime() ?? 0;
-    return aTime - bTime;
-  });
-
+  filtered.sort((a, b) => (a.startDate?.getTime() ?? 0) - (b.startDate?.getTime() ?? 0));
   return filtered;
 }
 

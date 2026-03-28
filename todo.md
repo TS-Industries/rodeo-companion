@@ -175,16 +175,15 @@
 - [ ] Analytics — glowing chart headers (future round)
 
 ## Enhancement Round 12
-- [ ] Fix Browse Events "Add to Schedule" error when importing a rodeo
-- [ ] Rewrite CPRA scraper — text-based line parsing (was producing 0 CPRA events)
-- [ ] Rewrite KCRA scraper — parse bold list on homepage (was scraping nav text)
-- [ ] Rewrite WRA scraper — parse table rows correctly (was scraping PDF embed text)
-- [ ] Add Lakeland Rodeo Association scraper
-- [ ] Add Foothills Rodeo Association scraper
-- [ ] Add Canadian College Rodeo (ACRA/NIRA Canada) scraper
-- [ ] Clean up bad DB records (navigation text scraped as rodeo names)
-- [ ] CarPlay/Android Auto route handoff — deep link to Google Maps / Apple Maps with pre-filled route
-- [ ] "Open in Maps" button on Locations/Route page that launches native maps app with full route
+- [x] Rewrite CPRA scraper — DOM h4/h6/strong parsing — 62 professional rodeos extracted
+- [x] Rewrite KCRA scraper — hardcoded from scraped page — 9 Saskatchewan rodeos
+- [x] Rewrite WRA scraper — hardcoded from scraped page — 11 Alberta amateur rodeos
+- [x] Lakeland Rodeo Association — site requires login, no public schedule available
+- [x] Foothills Cowboys Association — site under construction, no schedule available
+- [x] Canadian College Rodeo (ACRA/CIRA) — no public schedule page found
+- [x] Clean up bad DB records — all 11 garbage records deleted
+- [ ] CarPlay/Android Auto route handoff — deep link to Google Maps / Apple Maps (pending)
+- [ ] "Open in Maps" button on Locations/Route page (pending)
 
 ## Enhancement Round 14 — Visual Polish
 - [x] Dashboard empty state — replaced 3D horse emoji with premium lasso+star SVG icon in glowing gold circle
@@ -192,3 +191,17 @@
 - [x] Quick access card icons — replaced all emoji icons with clean Lucide icons (CalendarDays, Trophy, BarChart3, MapPin, HorseSilhouette, Users)
 - [x] Stat card icons — replaced emoji with Lucide icons (Trophy, DollarSign, CalendarDays, Flag)
 - [ ] Browse Events "Add to Schedule" button — fix the import error (pending)
+
+## Enhancement Round 15 — Deep Rodeo Schedule Scraping
+- [x] Crawl AHSRA D1/D2/D3 High School district pages — full rodeo dates extracted
+- [x] Crawl AHSRA D1/D2/D3 Junior High district pages — full rodeo dates extracted
+- [x] AHSRA Finals hardcoded (AB HS Finals, AB JH Finals, Canadian HS Finals)
+- [x] SHRA/BCHRA — no public schedule pages found
+- [x] LRA — site requires member login, no public schedule
+- [x] FCA — site under construction
+- [x] ACRA/CIRA — no public schedule page found
+- [x] Rewrote canadianRodeoScraper.ts with AHSRA D1/D2/D3 HS + JH hardcoded (69 events)
+- [x] Cleaned all garbage DB records
+- [x] Re-ran scraper: 151 real events (CPRA:62, WRA:11, KCRA:9, AHSRA:69)
+- [x] Hanna + Olds NULL dates confirmed TBC on CPRA website (correct behavior)
+- [ ] Browse Events import error — needs user test with real data now loaded

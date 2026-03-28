@@ -1,0 +1,9 @@
+{
+  "query": "DELETE FROM cpra_events WHERE name LIKE '%Home%' OR name LIKE '%About%' OR name LIKE '%Contact%' OR name LIKE '%Menu%' OR name LIKE '%Schedule%' OR name LIKE '%Login%' OR name LIKE '%Register%' OR name LIKE '%Search%' OR name LIKE '%Facebook%' OR name LIKE '%Instagram%' OR name LIKE '%Twitter%' OR name LIKE '%Copyright%' OR name LIKE '%Navigation%' OR name LIKE '%Header%' OR name LIKE '%Footer%' OR LENGTH(name) < 4 OR LENGTH(name) > 120;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2PYvEfQ4DSv7tRb.2d2e5dd58f47 --database C9GZTdmmkAQAM2QeyCH5WD --execute DELETE FROM cpra_events WHERE name LIKE '%Home%' OR name LIKE '%About%' OR name LIKE '%Contact%' OR name LIKE '%Menu%' OR name LIKE '%Schedule%' OR name LIKE '%Login%' OR name LIKE '%Register%' OR name LIKE '%Search%' OR name LIKE '%Facebook%' OR name LIKE '%Instagram%' OR name LIKE '%Twitter%' OR name LIKE '%Copyright%' OR name LIKE '%Navigation%' OR name LIKE '%Header%' OR name LIKE '%Footer%' OR LENGTH(name) < 4 OR LENGTH(name) > 120;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 979
+}

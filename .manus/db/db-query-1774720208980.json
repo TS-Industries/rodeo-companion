@@ -1,0 +1,74 @@
+{
+  "query": "SELECT id, name, province, city, startDate, rawData FROM cpra_events ORDER BY startDate LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2PYvEfQ4DSv7tRb.2d2e5dd58f47 --database C9GZTdmmkAQAM2QeyCH5WD --execute SELECT id, name, province, city, startDate, rawData FROM cpra_events ORDER BY startDate LIMIT 20;",
+  "rows": [
+    {
+      "id": "11",
+      "name": "Westlock & District Ag Society 110th Annual Fair",
+      "province": "Alberta",
+      "city": "Westlock",
+      "startDate": "NULL",
+      "rawData": "{\"source\":\"wra\",\"level\":\"amateur\",\"province\":\"Alberta\"}"
+    },
+    {
+      "id": "2",
+      "name": "Alberta Junior High Finals Rodeo 2026",
+      "province": "Alberta",
+      "city": "Rimbey",
+      "startDate": "2026-05-22 00:00:00",
+      "rawData": "{\"source\":\"ahsra\",\"level\":\"high_school\",\"province\":\"Alberta\",\"note\":\"Alberta Junior High Finals — Grades 5-8 top qualifiers\"}"
+    },
+    {
+      "id": "1",
+      "name": "Alberta High School Finals Rodeo 2026",
+      "province": "Alberta",
+      "city": "Claresholm",
+      "startDate": "2026-06-03 00:00:00",
+      "rawData": "{\"source\":\"ahsra\",\"level\":\"high_school\",\"province\":\"Alberta\",\"note\":\"Alberta High School Finals — top qualifiers from 3 districts\"}"
+    },
+    {
+      "id": "5",
+      "name": "KERROBERT RODEO",
+      "province": "Saskatchewan",
+      "city": "KERROBERT",
+      "startDate": "2026-07-04 00:00:00",
+      "rawData": "{\"source\":\"kcra\",\"level\":\"amateur\",\"province\":\"Saskatchewan\"}"
+    },
+    {
+      "id": "10",
+      "name": "Buck Lake StampedeWRASaturday July 11 1:00 pm",
+      "province": "Alberta",
+      "city": "Buck",
+      "startDate": "2026-07-11 00:00:00",
+      "rawData": "{\"source\":\"wra\",\"level\":\"amateur\",\"province\":\"Alberta\"}"
+    },
+    {
+      "id": "3",
+      "name": "Canadian High School Finals Rodeo 2026",
+      "province": "Alberta",
+      "city": "Vermilion",
+      "startDate": "2026-07-20 00:00:00",
+      "rawData": "{\"source\":\"ahsra\",\"level\":\"high_school\",\"province\":\"Alberta\",\"note\":\"Canadian High School Finals — BC, AB, SK, MB, ON qualifiers\"}"
+    },
+    {
+      "id": "6",
+      "name": "ROSTHERN AG SOCIETY RODEO",
+      "province": "Saskatchewan",
+      "city": "ROSTHERN",
+      "startDate": "2026-07-25 00:00:00",
+      "rawData": "{\"source\":\"kcra\",\"level\":\"amateur\",\"province\":\"Saskatchewan\"}"
+    },
+    {
+      "id": "7",
+      "name": "BUFFALO RODEO DAZE",
+      "province": "Saskatchewan",
+      "city": "BUFFALO",
+      "startDate": "2026-08-15 00:00:00",
+      "rawData": "{\"source\":\"kcra\",\"level\":\"amateur\",\"province\":\"Saskatchewan\"}"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tprovince\tcity\tstartDate\trawData\n11\tWestlock & District Ag Society 110th Annual Fair\tAlberta\tWestlock\tNULL\t{\"source\":\"wra\",\"level\":\"amateur\",\"province\":\"Alberta\"}\n2\tAlberta Junior High Finals Rodeo 2026\tAlberta\tRimbey\t2026-05-22 00:00:00\t{\"source\":\"ahsra\",\"level\":\"high_school\",\"province\":\"Alberta\",\"note\":\"Alberta Junior High Finals — Grades 5-8 top qualifiers\"}\n1\tAlberta High School Finals Rodeo 2026\tAlberta\tClaresholm\t2026-06-03 00:00:00\t{\"source\":\"ahsra\",\"level\":\"high_school\",\"province\":\"Alberta\",\"note\":\"Alberta High School Finals — top qualifiers from 3 districts\"}\n5\tKERROBERT RODEO\tSaskatchewan\tKERROBERT\t2026-07-04 00:00:00\t{\"source\":\"kcra\",\"level\":\"amateur\",\"province\":\"Saskatchewan\"}\n10\tBuck Lake StampedeWRASaturday July 11 1:00 pm\tAlberta\tBuck\t2026-07-11 00:00:00\t{\"source\":\"wra\",\"level\":\"amateur\",\"province\":\"Alberta\"}\n3\tCanadian High School Finals Rodeo 2026\tAlberta\tVermilion\t2026-07-20 00:00:00\t{\"source\":\"ahsra\",\"level\":\"high_school\",\"province\":\"Alberta\",\"note\":\"Canadian High School Finals — BC, AB, SK, MB, ON qualifiers\"}\n6\tROSTHERN AG SOCIETY RODEO\tSaskatchewan\tROSTHERN\t2026-07-25 00:00:00\t{\"source\":\"kcra\",\"level\":\"amateur\",\"province\":\"Saskatchewan\"}\n7\tBUFFALO RODEO DAZE\tSaskatchewan\tBUFFALO\t2026-08-15 00:00:00\t{\"source\":\"kcra\",\"level\":\"amateur\",\"province\":\"Saskatchewan\"}\n",
+  "stderr": "",
+  "execution_time_ms": 64
+}

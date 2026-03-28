@@ -1,0 +1,160 @@
+{
+  "query": "SELECT id, name, province, city, startDate, endDate, JSON_EXTRACT(rawData, '$.source') as source, JSON_EXTRACT(rawData, '$.level') as level FROM cpra_events ORDER BY startDate LIMIT 15;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2PYvEfQ4DSv7tRb.2d2e5dd58f47 --database C9GZTdmmkAQAM2QeyCH5WD --execute SELECT id, name, province, city, startDate, endDate, JSON_EXTRACT(rawData, '$.source') as source, JSON_EXTRACT(rawData, '$.level') as level FROM cpra_events ORDER BY startDate LIMIT 15;",
+  "rows": [
+    {
+      "id": "30147",
+      "name": "Hanna",
+      "province": "Alberta",
+      "city": "NULL",
+      "startDate": "NULL",
+      "endDate": "NULL",
+      "source": "\"cpra\"",
+      "level": "\"professional\""
+    },
+    {
+      "id": "30145",
+      "name": "Olds",
+      "province": "Alberta",
+      "city": "NULL",
+      "startDate": "NULL",
+      "endDate": "NULL",
+      "source": "\"cpra\"",
+      "level": "\"professional\""
+    },
+    {
+      "id": "30117",
+      "name": "AHSRA D2 JH Stettler Rodeo (Fall)",
+      "province": "Alberta",
+      "city": "Stettler",
+      "startDate": "2025-08-22 04:00:00",
+      "endDate": "2025-08-23 04:00:00",
+      "source": "\"ahsra\"",
+      "level": "\"junior_high\""
+    },
+    {
+      "id": "30055",
+      "name": "AHSRA D2 HS Stettler Rodeo (Fall)",
+      "province": "Alberta",
+      "city": "Stettler",
+      "startDate": "2025-08-23 04:00:00",
+      "endDate": "2025-08-24 04:00:00",
+      "source": "\"ahsra\"",
+      "level": "\"high_school\""
+    },
+    {
+      "id": "30119",
+      "name": "AHSRA D2 JH Vermilion Rodeo (Fall)",
+      "province": "Alberta",
+      "city": "Vermilion",
+      "startDate": "2025-08-29 04:00:00",
+      "endDate": "2025-08-30 04:00:00",
+      "source": "\"ahsra\"",
+      "level": "\"junior_high\""
+    },
+    {
+      "id": "30031",
+      "name": "AHSRA D1 HS Pincher Creek Rodeo",
+      "province": "Alberta",
+      "city": "Pincher Creek",
+      "startDate": "2025-08-29 04:00:00",
+      "endDate": "2025-08-30 04:00:00",
+      "source": "\"ahsra\"",
+      "level": "\"high_school\""
+    },
+    {
+      "id": "30095",
+      "name": "AHSRA D1 JH Pincher Creek Rodeo",
+      "province": "Alberta",
+      "city": "Pincher Creek",
+      "startDate": "2025-08-30 04:00:00",
+      "endDate": "2025-08-31 04:00:00",
+      "source": "\"ahsra\"",
+      "level": "\"junior_high\""
+    },
+    {
+      "id": "30056",
+      "name": "AHSRA D2 HS Vermilion Rodeo (Fall)",
+      "province": "Alberta",
+      "city": "Vermilion",
+      "startDate": "2025-08-30 04:00:00",
+      "endDate": "2025-08-31 04:00:00",
+      "source": "\"ahsra\"",
+      "level": "\"high_school\""
+    },
+    {
+      "id": "30076",
+      "name": "AHSRA D3 HS Whitecourt Rodeo",
+      "province": "Alberta",
+      "city": "Whitecourt",
+      "startDate": "2025-08-30 04:00:00",
+      "endDate": "2025-09-01 04:00:00",
+      "source": "\"ahsra\"",
+      "level": "\"high_school\""
+    },
+    {
+      "id": "30138",
+      "name": "AHSRA D3 JH Whitecourt Rodeo",
+      "province": "Alberta",
+      "city": "Whitecourt",
+      "startDate": "2025-08-30 04:00:00",
+      "endDate": "2025-09-01 04:00:00",
+      "source": "\"ahsra\"",
+      "level": "\"junior_high\""
+    },
+    {
+      "id": "30120",
+      "name": "AHSRA D2 JH Ponoka Battle River Rodeo",
+      "province": "Alberta",
+      "city": "Ponoka",
+      "startDate": "2025-09-05 04:00:00",
+      "endDate": "2025-09-05 04:00:00",
+      "source": "\"ahsra\"",
+      "level": "\"junior_high\""
+    },
+    {
+      "id": "30033",
+      "name": "AHSRA D1 HS Nanton Rodeo (Fall)",
+      "province": "Alberta",
+      "city": "Nanton",
+      "startDate": "2025-09-06 04:00:00",
+      "endDate": "2025-09-07 04:00:00",
+      "source": "\"ahsra\"",
+      "level": "\"high_school\""
+    },
+    {
+      "id": "30078",
+      "name": "AHSRA D3 HS Grimshaw Rodeo",
+      "province": "Alberta",
+      "city": "Grimshaw",
+      "startDate": "2025-09-06 04:00:00",
+      "endDate": "2025-09-07 04:00:00",
+      "source": "\"ahsra\"",
+      "level": "\"high_school\""
+    },
+    {
+      "id": "30140",
+      "name": "AHSRA D3 JH Grimshaw Rodeo",
+      "province": "Alberta",
+      "city": "Grimshaw",
+      "startDate": "2025-09-06 04:00:00",
+      "endDate": "2025-09-07 04:00:00",
+      "source": "\"ahsra\"",
+      "level": "\"junior_high\""
+    },
+    {
+      "id": "30058",
+      "name": "AHSRA D2 HS Ponoka Battle River Rodeo",
+      "province": "Alberta",
+      "city": "Ponoka",
+      "startDate": "2025-09-06 04:00:00",
+      "endDate": "2025-09-07 04:00:00",
+      "source": "\"ahsra\"",
+      "level": "\"high_school\""
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tprovince\tcity\tstartDate\tendDate\tsource\tlevel\n30147\tHanna\tAlberta\tNULL\tNULL\tNULL\t\"cpra\"\t\"professional\"\n30145\tOlds\tAlberta\tNULL\tNULL\tNULL\t\"cpra\"\t\"professional\"\n30117\tAHSRA D2 JH Stettler Rodeo (Fall)\tAlberta\tStettler\t2025-08-22 04:00:00\t2025-08-23 04:00:00\t\"ahsra\"\t\"junior_high\"\n30055\tAHSRA D2 HS Stettler Rodeo (Fall)\tAlberta\tStettler\t2025-08-23 04:00:00\t2025-08-24 04:00:00\t\"ahsra\"\t\"high_school\"\n30119\tAHSRA D2 JH Vermilion Rodeo (Fall)\tAlberta\tVermilion\t2025-08-29 04:00:00\t2025-08-30 04:00:00\t\"ahsra\"\t\"junior_high\"\n30031\tAHSRA D1 HS Pincher Creek Rodeo\tAlberta\tPincher Creek\t2025-08-29 04:00:00\t2025-08-30 04:00:00\t\"ahsra\"\t\"high_school\"\n30095\tAHSRA D1 JH Pincher Creek Rodeo\tAlberta\tPincher Creek\t2025-08-30 04:00:00\t2025-08-31 04:00:00\t\"ahsra\"\t\"junior_high\"\n30056\tAHSRA D2 HS Vermilion Rodeo (Fall)\tAlberta\tVermilion\t2025-08-30 04:00:00\t2025-08-31 04:00:00\t\"ahsra\"\t\"high_school\"\n30076\tAHSRA D3 HS Whitecourt Rodeo\tAlberta\tWhitecourt\t2025-08-30 04:00:00\t2025-09-01 04:00:00\t\"ahsra\"\t\"high_school\"\n30138\tAHSRA D3 JH Whitecourt Rodeo\tAlberta\tWhitecourt\t2025-08-30 04:00:00\t2025-09-01 04:00:00\t\"ahsra\"\t\"junior_high\"\n30120\tAHSRA D2 JH Ponoka Battle River Rodeo\tAlberta\tPonoka\t2025-09-05 04:00:00\t2025-09-05 04:00:00\t\"ahsra\"\t\"junior_high\"\n30033\tAHSRA D1 HS Nanton Rodeo (Fall)\tAlberta\tNanton\t2025-09-06 04:00:00\t2025-09-07 04:00:00\t\"ahsra\"\t\"high_school\"\n30078\tAHSRA D3 HS Grimshaw Rodeo\tAlberta\tGrimshaw\t2025-09-06 04:00:00\t2025-09-07 04:00:00\t\"ahsra\"\t\"high_school\"\n30140\tAHSRA D3 JH Grimshaw Rodeo\tAlberta\tGrimshaw\t2025-09-06 04:00:00\t2025-09-07 04:00:00\t\"ahsra\"\t\"junior_high\"\n30058\tAHSRA D2 HS Ponoka Battle River Rodeo\tAlberta\tPonoka\t2025-09-06 04:00:00\t2025-09-07 04:00:00\t\"ahsra\"\t\"high_school\"\n",
+  "stderr": "",
+  "execution_time_ms": 68
+}
