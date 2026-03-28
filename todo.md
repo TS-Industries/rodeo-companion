@@ -145,3 +145,16 @@
 - [x] Partner contacts — show linked partner on RodeoDetail page with phone tap-to-call
 - [x] PDF season report — "Download Report" button in Analytics P&L tab
 - [x] PDF report includes: season stats, total runs, P&L summary, per-rodeo breakdown, goal progress
+
+## Enhancement Round 11 — Multi-Source Canadian Rodeo Importer
+- [x] DB table for cached events (cpra_events) with source/level fields
+- [x] CPRA scraper (rodeocanada.com) — professional rodeos across Canada
+- [x] WRA scraper (wrarodeo.com) — amateur Alberta rodeos
+- [x] KCRA scraper (kcrarodeo.com) — amateur Saskatchewan rodeos
+- [x] RAM Rodeo scraper (ramrodeoontario.com) — amateur Ontario rodeos
+- [x] AHSRA Finals (hardcoded) — Alberta HS Finals, AB Jr High Finals, Canadian HS Finals
+- [x] tRPC events router: list (with province/level/search filters), count, scrape, import
+- [x] Browse Events UI page with level filter (Pro/Amateur/High School), province filter, search
+- [x] One-tap import with discipline selection dialog
+- [x] 🍁 Browse button on Schedule page header
+- [x] Auto-navigate to new rodeo detail after import

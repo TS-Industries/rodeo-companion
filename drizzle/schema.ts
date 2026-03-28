@@ -247,3 +247,32 @@ export const rodeoContacts = mysqlTable("rodeo_contacts", {
 
 export type RodeoContact = typeof rodeoContacts.$inferSelect;
 export type InsertRodeoContact = typeof rodeoContacts.$inferInsert;
+
+// Cached CPRA (Canadian Pro Rodeo Association) events scraped from rodeocanada.com
+export const cpraEvents = mysqlTable("cpra_events", {
+  id: int("id").autoincrement().primaryKey(),
+  externalId: varchar("externalId", { length: 256 }).notNull().unique(), // slug from CPRA URL or generated key
+  name: varchar("name", { length: 255 }).notNull(),
+  province: varchar("province", { length: 64 }),  // e.g. "Alberta", "British Columbia"
+  city: varchar("city", { length: 128 }),
+  locationName: varchar("locationName", { length: 255 }), // arena/venue name
+  locationAddress: varchar("locationAddress", { length: 512 }),
+  startDate: timestamp("startDate"),
+  endDate: timestamp("endDate"),
+  entryOpenDate: timestamp("entryOpenDate"),  // CRES entry opening date
+  disciplines: text("disciplines"),  // JSON array of Discipline[] codes
+  purseAmount: int("purseAmount"),   // prize purse in dollars
+  entryFee: int("entryFee"),         // entry fee in dollars
+  committeeContact: varchar("committeeContact", { length: 255 }),
+  committeePhone: varchar("committeePhone", { length: 64 }),
+  isSpecialEvent: boolean("isSpecialEvent").default(false).notNull(),
+  detailsUrl: varchar("detailsUrl", { length: 512 }),
+  websiteUrl: varchar("websiteUrl", { length: 512 }),
+  rawData: text("rawData"),  // JSON blob of full scraped data
+  scrapedAt: timestamp("scrapedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CpraEvent = typeof cpraEvents.$inferSelect;
+export type InsertCpraEvent = typeof cpraEvents.$inferInsert;

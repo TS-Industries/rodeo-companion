@@ -16,6 +16,7 @@ import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import Horses from "./pages/Horses";
 import Contacts from "./pages/Contacts";
+import BrowseEvents from "./pages/BrowseEvents";
 import {
   CalendarDays,
   Trophy,
@@ -128,6 +129,7 @@ function AppShell() {
         <Route path="/settings" component={Settings} />
         <Route path="/horses" component={Horses} />
         <Route path="/contacts" component={Contacts} />
+        <Route path="/browse-events" component={BrowseEvents} />
         <Route path="/help" component={Help} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />

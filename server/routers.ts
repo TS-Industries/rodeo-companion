@@ -44,6 +44,7 @@ import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
 import { invokeLLM } from "./_core/llm";
 import { notifyOwner } from "./_core/notification";
+import { scrapeAllCanadianRodeos, getCpraEventsFromDb, getCpraEventById, getCpraEventCount } from "./canadianRodeoScraper";
 import { DISCIPLINES, DISCIPLINE_LABELS, EXPENSE_CATEGORIES, ROUND_TYPES, PARTNER_ROLES, type Discipline } from "../drizzle/schema";
 
 const disciplineEnum = z.enum(DISCIPLINES);
@@ -690,6 +691,99 @@ const contactsRouter = router({
     }),
 });
 
+// ─── Canadian Rodeo Events (Browse & Import) ────────────────────────────────
+const eventsRouter = router({
+  // Get all cached Canadian rodeo events with optional filters
+  list: publicProcedure
+    .input(z.object({
+      province: z.string().optional(),
+      source: z.string().optional(), // 'cpra' | 'wra' | 'kcra' | 'ram' | 'ahsra'
+      level: z.string().optional(),  // 'professional' | 'amateur' | 'high_school'
+      search: z.string().optional(),
+    }).optional())
+    .query(async ({ input }) => {
+      const events = await getCpraEventsFromDb(input ?? {});
+      // Parse disciplines and rawData for each event
+      return events.map((e) => ({
+        ...e,
+        disciplines: e.disciplines ? JSON.parse(e.disciplines) as string[] : [],
+        meta: e.rawData ? (() => { try { return JSON.parse(e.rawData); } catch { return {}; } })() : {},
+      }));
+    }),
+
+  // Get count of cached events
+  count: publicProcedure.query(() => getCpraEventCount()),
+
+  // Trigger a fresh scrape (protected — only logged-in users can trigger)
+  scrape: protectedProcedure.mutation(async () => {
+    const result = await scrapeAllCanadianRodeos();
+    return result;
+  }),
+
+  // Import a CPRA event into the user's rodeo schedule
+  import: protectedProcedure
+    .input(z.object({
+      eventId: z.number(),
+      discipline: z.enum(DISCIPLINES).optional(),
+      disciplines: z.array(z.enum(DISCIPLINES)).optional(),
+      rodeotype: z.enum(["jackpot", "amateur", "professional"]).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const event = await getCpraEventById(input.eventId);
+      if (!event) throw new Error("Event not found");
+
+      // Determine disciplines
+      let disciplines: Discipline[] = [];
+      if (input.disciplines && input.disciplines.length > 0) {
+        disciplines = input.disciplines as Discipline[];
+      } else if (input.discipline) {
+        disciplines = [input.discipline as Discipline];
+      } else if (event.disciplines) {
+        try { disciplines = JSON.parse(event.disciplines) as Discipline[]; } catch { /* ignore */ }
+      }
+      const primaryDiscipline = disciplines[0] ?? "barrel_racing";
+
+      // Determine rodeo type from source level
+      let rodeotype: "jackpot" | "amateur" | "professional" = "professional";
+      if (input.rodeotype) {
+        rodeotype = input.rodeotype;
+      } else if (event.rawData) {
+        try {
+          const meta = JSON.parse(event.rawData);
+          if (meta.level === "amateur" || meta.level === "high_school") rodeotype = "amateur";
+        } catch { /* ignore */ }
+      }
+
+      // Default entry deadline: 14 days before start
+      const rodeoDate = event.startDate ?? new Date();
+      const entryDeadline = new Date(rodeoDate.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+      const { createRodeo } = await import("./db");
+      const newRodeo = await createRodeo({
+        userId: ctx.user.id,
+        name: event.name,
+        discipline: primaryDiscipline as Discipline,
+        disciplines: disciplines.length > 0 ? JSON.stringify(disciplines) : null,
+        rodeotype,
+        rodeoDate,
+        entryDeadline,
+        locationName: event.locationName ?? event.name,
+        locationAddress: event.locationAddress ?? (event.city ? `${event.city}, ${event.province ?? "Canada"}` : null),
+        locationLat: null,
+        locationLng: null,
+        locationPlaceId: null,
+        parkingNotes: null,
+        countryCode: "CA",
+        notes: event.committeeContact ? `Committee: ${event.committeeContact}${event.committeePhone ? ` — ${event.committeePhone}` : ""}` : null,
+        isEntered: false,
+        notifyDaysBefore: 14,
+        notificationSent: false,
+      });
+
+      return { success: true, rodeoId: (newRodeo as { insertId?: number })?.insertId ?? null };
+    }),
+});
+
 // ─── App Router ─────────────────────────────────────────────────────────────────
 export const appRouter = router({
   system: systemRouter,
@@ -704,5 +798,6 @@ export const appRouter = router({
   horses: horsesRouter,
   seasonGoals: seasonGoalsRouter,
   contacts: contactsRouter,
+  events: eventsRouter,
 });
 export type AppRouter = typeof appRouter;

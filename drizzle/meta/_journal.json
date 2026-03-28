@@ -71,6 +71,13 @@
       "when": 1774671171092,
       "tag": "0009_simple_violations",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1774703214777,
+      "tag": "0010_lame_starbolt",
+      "breakpoints": true
     }
   ]
 }

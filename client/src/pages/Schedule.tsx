@@ -531,6 +531,11 @@ export default function Schedule() {
               onClick={() => checkDeadlines.mutate()} disabled={checkDeadlines.isPending}>
               <Bell className="w-4 h-4" />
             </Button>
+            <Button variant="ghost" size="sm" className="gap-1 rounded-full px-3 text-xs font-bold"
+              style={{ border: "1px solid oklch(0.72 0.16 75 / 30%)", color: "oklch(0.72 0.16 75)" }}
+              onClick={() => navigate("/browse-events")}>
+              🍁 Browse
+            </Button>
             <Button size="sm" onClick={() => setShowAdd(true)} className="btn-gold gap-1.5 rounded-full px-4">
               <Plus className="w-4 h-4" /> Add
             </Button>
