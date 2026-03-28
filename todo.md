@@ -158,3 +158,30 @@
 - [x] One-tap import with discipline selection dialog
 - [x] 🍁 Browse button on Schedule page header
 - [x] Auto-navigate to new rodeo detail after import
+
+## Enhancement Round 13 — Premium Visual Overhaul
+- [x] Generate 3 premium Western hero images (AI-generated: dashboard, arena, bull rider)
+- [x] Upload hero images to CDN
+- [x] Add Cinzel + Oswald premium fonts to index.html
+- [x] Overhaul global CSS — rope-divider, card-glass, hero-cinematic, quote-animate, nav-premium, sparkle, particle, borderGlow animations
+- [x] Dashboard — full-bleed cinematic hero image, rotating Western quotes (20 quotes), Cinzel/Oswald typography, glass morphism quote card
+- [x] Bottom nav — glass morphism background, glow pill on active item, Cinzel font, glowing icon drop-shadow
+- [x] Card hover effects — dynamic border glow on mouse enter/leave
+- [x] Season goal card — animated pulsing gold border (card-glow-pulse)
+- [x] Rope divider sections replacing plain spur-dividers
+- [x] Stat cards — Oswald font for numbers, per-color glow, accent top line
+- [x] Quick action cards — dynamic hover glow effect
+- [ ] Schedule page — premium rodeo cards (future round)
+- [ ] Analytics — glowing chart headers (future round)
+
+## Enhancement Round 12
+- [ ] Fix Browse Events "Add to Schedule" error when importing a rodeo
+- [ ] Rewrite CPRA scraper — text-based line parsing (was producing 0 CPRA events)
+- [ ] Rewrite KCRA scraper — parse bold list on homepage (was scraping nav text)
+- [ ] Rewrite WRA scraper — parse table rows correctly (was scraping PDF embed text)
+- [ ] Add Lakeland Rodeo Association scraper
+- [ ] Add Foothills Rodeo Association scraper
+- [ ] Add Canadian College Rodeo (ACRA/NIRA Canada) scraper
+- [ ] Clean up bad DB records (navigation text scraped as rodeo names)
+- [ ] CarPlay/Android Auto route handoff — deep link to Google Maps / Apple Maps with pre-filled route
+- [ ] "Open in Maps" button on Locations/Route page that launches native maps app with full route

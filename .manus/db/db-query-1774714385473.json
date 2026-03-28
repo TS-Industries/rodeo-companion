@@ -1,0 +1,45 @@
+{
+  "query": "SELECT id, name, province, startDate, rawData FROM cpra_events LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2PYvEfQ4DSv7tRb.2d2e5dd58f47 --database C9GZTdmmkAQAM2QeyCH5WD --execute SELECT id, name, province, startDate, rawData FROM cpra_events LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Alberta High School Finals Rodeo 2026",
+      "province": "Alberta",
+      "startDate": "2026-06-03 00:00:00",
+      "rawData": "{\"source\":\"ahsra\",\"level\":\"high_school\",\"province\":\"Alberta\",\"note\":\"Alberta High School Finals — top qualifiers from 3 districts\"}"
+    },
+    {
+      "id": "2",
+      "name": "Alberta Junior High Finals Rodeo 2026",
+      "province": "Alberta",
+      "startDate": "2026-05-22 00:00:00",
+      "rawData": "{\"source\":\"ahsra\",\"level\":\"high_school\",\"province\":\"Alberta\",\"note\":\"Alberta Junior High Finals — Grades 5-8 top qualifiers\"}"
+    },
+    {
+      "id": "3",
+      "name": "Canadian High School Finals Rodeo 2026",
+      "province": "Alberta",
+      "startDate": "2026-07-20 00:00:00",
+      "rawData": "{\"source\":\"ahsra\",\"level\":\"high_school\",\"province\":\"Alberta\",\"note\":\"Canadian High School Finals — BC, AB, SK, MB, ON qualifiers\"}"
+    },
+    {
+      "id": "4",
+      "name": "Skip to Main Content Home Rodeos Sponsors Forms Results Leaderboard",
+      "province": "Saskatchewan",
+      "startDate": "2026-01-01 00:00:00",
+      "rawData": "{\"source\":\"kcra\",\"level\":\"amateur\",\"province\":\"Saskatchewan\"}"
+    },
+    {
+      "id": "5",
+      "name": "KERROBERT RODEO",
+      "province": "Saskatchewan",
+      "startDate": "2026-07-04 00:00:00",
+      "rawData": "{\"source\":\"kcra\",\"level\":\"amateur\",\"province\":\"Saskatchewan\"}"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tprovince\tstartDate\trawData\n1\tAlberta High School Finals Rodeo 2026\tAlberta\t2026-06-03 00:00:00\t{\"source\":\"ahsra\",\"level\":\"high_school\",\"province\":\"Alberta\",\"note\":\"Alberta High School Finals — top qualifiers from 3 districts\"}\n2\tAlberta Junior High Finals Rodeo 2026\tAlberta\t2026-05-22 00:00:00\t{\"source\":\"ahsra\",\"level\":\"high_school\",\"province\":\"Alberta\",\"note\":\"Alberta Junior High Finals — Grades 5-8 top qualifiers\"}\n3\tCanadian High School Finals Rodeo 2026\tAlberta\t2026-07-20 00:00:00\t{\"source\":\"ahsra\",\"level\":\"high_school\",\"province\":\"Alberta\",\"note\":\"Canadian High School Finals — BC, AB, SK, MB, ON qualifiers\"}\n4\tSkip to Main Content Home Rodeos Sponsors Forms Results Leaderboard\tSaskatchewan\t2026-01-01 00:00:00\t{\"source\":\"kcra\",\"level\":\"amateur\",\"province\":\"Saskatchewan\"}\n5\tKERROBERT RODEO\tSaskatchewan\t2026-07-04 00:00:00\t{\"source\":\"kcra\",\"level\":\"amateur\",\"province\":\"Saskatchewan\"}\n",
+  "stderr": "",
+  "execution_time_ms": 61
+}

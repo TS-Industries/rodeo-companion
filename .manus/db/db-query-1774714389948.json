@@ -1,0 +1,87 @@
+{
+  "query": "SELECT id, name, province, startDate, disciplines FROM cpra_events ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2PYvEfQ4DSv7tRb.2d2e5dd58f47 --database C9GZTdmmkAQAM2QeyCH5WD --execute SELECT id, name, province, startDate, disciplines FROM cpra_events ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Alberta High School Finals Rodeo 2026",
+      "province": "Alberta",
+      "startDate": "2026-06-03 00:00:00",
+      "disciplines": "[\"barrel_racing\",\"breakaway_roping\",\"team_roping\",\"tie_down_roping\",\"bareback\",\"saddle_bronc\",\"steer_wrestling\",\"bull_riding\"]"
+    },
+    {
+      "id": "2",
+      "name": "Alberta Junior High Finals Rodeo 2026",
+      "province": "Alberta",
+      "startDate": "2026-05-22 00:00:00",
+      "disciplines": "[\"barrel_racing\",\"breakaway_roping\",\"team_roping\",\"tie_down_roping\",\"bareback\",\"saddle_bronc\",\"steer_wrestling\",\"bull_riding\"]"
+    },
+    {
+      "id": "3",
+      "name": "Canadian High School Finals Rodeo 2026",
+      "province": "Alberta",
+      "startDate": "2026-07-20 00:00:00",
+      "disciplines": "[\"barrel_racing\",\"breakaway_roping\",\"team_roping\",\"tie_down_roping\",\"bareback\",\"saddle_bronc\",\"steer_wrestling\",\"bull_riding\"]"
+    },
+    {
+      "id": "4",
+      "name": "Skip to Main Content Home Rodeos Sponsors Forms Results Leaderboard",
+      "province": "Saskatchewan",
+      "startDate": "2026-01-01 00:00:00",
+      "disciplines": "[\"barrel_racing\",\"team_roping\",\"tie_down_roping\",\"bareback\",\"saddle_bronc\",\"steer_wrestling\",\"bull_riding\"]"
+    },
+    {
+      "id": "5",
+      "name": "KERROBERT RODEO",
+      "province": "Saskatchewan",
+      "startDate": "2026-07-04 00:00:00",
+      "disciplines": "[\"barrel_racing\",\"team_roping\",\"tie_down_roping\",\"bareback\",\"saddle_bronc\",\"steer_wrestling\",\"bull_riding\"]"
+    },
+    {
+      "id": "6",
+      "name": "ROSTHERN AG SOCIETY RODEO",
+      "province": "Saskatchewan",
+      "startDate": "2026-07-25 00:00:00",
+      "disciplines": "[\"barrel_racing\",\"team_roping\",\"tie_down_roping\",\"bareback\",\"saddle_bronc\",\"steer_wrestling\",\"bull_riding\"]"
+    },
+    {
+      "id": "7",
+      "name": "BUFFALO RODEO DAZE",
+      "province": "Saskatchewan",
+      "startDate": "2026-08-15 00:00:00",
+      "disciplines": "[\"barrel_racing\",\"team_roping\",\"tie_down_roping\",\"bareback\",\"saddle_bronc\",\"steer_wrestling\",\"bull_riding\"]"
+    },
+    {
+      "id": "8",
+      "name": "THE KCRA DOES NOT OFFER PREFERENCES IN PERFORMANCES Home Rodeos Sponsors Forms Results Leaderboard",
+      "province": "Saskatchewan",
+      "startDate": "2026-01-01 00:00:00",
+      "disciplines": "[\"barrel_racing\",\"team_roping\",\"tie_down_roping\",\"bareback\",\"saddle_bronc\",\"steer_wrestling\",\"bull_riding\"]"
+    },
+    {
+      "id": "9",
+      "name": "Updated Rodeo Schedule Feb 10 2026Download",
+      "province": "Alberta",
+      "startDate": "2026-02-10 00:00:00",
+      "disciplines": "[\"barrel_racing\",\"team_roping\",\"tie_down_roping\",\"bareback\",\"saddle_bronc\",\"steer_wrestling\",\"bull_riding\"]"
+    },
+    {
+      "id": "10",
+      "name": "Buck Lake StampedeWRASaturday July 11 1:00 pm",
+      "province": "Alberta",
+      "startDate": "2026-07-11 00:00:00",
+      "disciplines": "[\"barrel_racing\",\"team_roping\",\"tie_down_roping\",\"bareback\",\"saddle_bronc\",\"steer_wrestling\",\"bull_riding\"]"
+    },
+    {
+      "id": "11",
+      "name": "Westlock & District Ag Society 110th Annual Fair",
+      "province": "Alberta",
+      "startDate": "NULL",
+      "disciplines": "[\"barrel_racing\",\"team_roping\",\"tie_down_roping\",\"bareback\",\"saddle_bronc\",\"steer_wrestling\",\"bull_riding\"]"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tprovince\tstartDate\tdisciplines\n1\tAlberta High School Finals Rodeo 2026\tAlberta\t2026-06-03 00:00:00\t[\"barrel_racing\",\"breakaway_roping\",\"team_roping\",\"tie_down_roping\",\"bareback\",\"saddle_bronc\",\"steer_wrestling\",\"bull_riding\"]\n2\tAlberta Junior High Finals Rodeo 2026\tAlberta\t2026-05-22 00:00:00\t[\"barrel_racing\",\"breakaway_roping\",\"team_roping\",\"tie_down_roping\",\"bareback\",\"saddle_bronc\",\"steer_wrestling\",\"bull_riding\"]\n3\tCanadian High School Finals Rodeo 2026\tAlberta\t2026-07-20 00:00:00\t[\"barrel_racing\",\"breakaway_roping\",\"team_roping\",\"tie_down_roping\",\"bareback\",\"saddle_bronc\",\"steer_wrestling\",\"bull_riding\"]\n4\tSkip to Main Content Home Rodeos Sponsors Forms Results Leaderboard\tSaskatchewan\t2026-01-01 00:00:00\t[\"barrel_racing\",\"team_roping\",\"tie_down_roping\",\"bareback\",\"saddle_bronc\",\"steer_wrestling\",\"bull_riding\"]\n5\tKERROBERT RODEO\tSaskatchewan\t2026-07-04 00:00:00\t[\"barrel_racing\",\"team_roping\",\"tie_down_roping\",\"bareback\",\"saddle_bronc\",\"steer_wrestling\",\"bull_riding\"]\n6\tROSTHERN AG SOCIETY RODEO\tSaskatchewan\t2026-07-25 00:00:00\t[\"barrel_racing\",\"team_roping\",\"tie_down_roping\",\"bareback\",\"saddle_bronc\",\"steer_wrestling\",\"bull_riding\"]\n7\tBUFFALO RODEO DAZE\tSaskatchewan\t2026-08-15 00:00:00\t[\"barrel_racing\",\"team_roping\",\"tie_down_roping\",\"bareback\",\"saddle_bronc\",\"steer_wrestling\",\"bull_riding\"]\n8\tTHE KCRA DOES NOT OFFER PREFERENCES IN PERFORMANCES Home Rodeos Sponsors Forms Results Leaderboard\tSaskatchewan\t2026-01-01 00:00:00\t[\"barrel_racing\",\"team_roping\",\"tie_down_roping\",\"bareback\",\"saddle_bronc\",\"steer_wrestling\",\"bull_riding\"]\n9\tUpdated Rodeo Schedule Feb 10 2026Download\tAlberta\t2026-02-10 00:00:00\t[\"barrel_racing\",\"team_roping\",\"tie_down_roping\",\"bareback\",\"saddle_bronc\",\"steer_wrestling\",\"bull_riding\"]\n10\tBuck Lake StampedeWRASaturday July 11 1:00 pm\tAlberta\t2026-07-11 00:00:00\t[\"barrel_racing\",\"team_roping\",\"tie_down_roping\",\"bareback\",\"saddle_bronc\",\"steer_wrestling\",\"bull_riding\"]\n11\tWestlock & District Ag Society 110th Annual Fair\tAlberta\tNULL\t[\"barrel_racing\",\"team_roping\",\"tie_down_roping\",\"bareback\",\"saddle_bronc\",\"steer_wrestling\",\"bull_riding\"]\n",
+  "stderr": "",
+  "execution_time_ms": 182
+}

@@ -54,33 +54,56 @@ function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 border-t"
+      className="fixed bottom-0 left-0 right-0 z-50"
       style={{
-        background: "linear-gradient(180deg, oklch(0.14 0.04 45) 0%, oklch(0.11 0.03 44) 100%)",
-        borderTopColor: "oklch(0.72 0.16 75 / 30%)",
-        boxShadow: "0 -4px 24px oklch(0 0 0 / 60%), 0 -1px 0 oklch(0.72 0.16 75 / 15%)",
+        background: "linear-gradient(180deg, oklch(0.13 0.05 46 / 96%) 0%, oklch(0.10 0.04 44 / 98%) 100%)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        borderTop: "1px solid oklch(0.72 0.16 75 / 20%)",
+        boxShadow: "0 -8px 32px oklch(0 0 0 / 60%), 0 -1px 0 oklch(0.72 0.16 75 / 10%)",
       }}
     >
-      <div className="flex items-stretch justify-around max-w-lg mx-auto">
+      <div className="flex items-stretch justify-around max-w-lg mx-auto px-1">
         {NAV_ITEMS.map(({ path, label, icon: Icon, exact }) => {
           const active = exact ? location === path : (location === path || location.startsWith(path + "/"));
           return (
             <button
               key={path}
               onClick={() => navigate(path)}
-              className={cn(
-                "flex flex-col items-center justify-center gap-0.5 flex-1 py-2.5 px-1 text-xs font-semibold transition-all duration-200",
-                active ? "nav-active" : "text-muted-foreground hover:text-foreground"
-              )}
+              className="flex flex-col items-center justify-center gap-0.5 flex-1 py-2 px-0.5 text-[10px] font-semibold transition-all duration-200 relative"
+              style={{ color: active ? "oklch(0.82 0.18 80)" : "oklch(0.45 0.04 60)" }}
             >
-              <Icon className={cn("w-5 h-5 transition-all", active && "scale-110")} />
-              <span className={cn("transition-all", active && "font-bold")}>{label}</span>
+              {/* Active glow pill background */}
               {active && (
                 <span
-                  className="absolute bottom-0 w-8 h-0.5 rounded-full"
-                  style={{ background: "oklch(0.72 0.16 75)", boxShadow: "0 0 8px oklch(0.72 0.16 75)" }}
+                  className="absolute inset-x-1 inset-y-1 rounded-xl pointer-events-none"
+                  style={{
+                    background: "linear-gradient(135deg, oklch(0.72 0.16 75 / 18%), oklch(0.65 0.14 70 / 12%))",
+                    boxShadow: "0 0 12px oklch(0.72 0.16 75 / 25%)",
+                    border: "1px solid oklch(0.72 0.16 75 / 20%)",
+                  }}
                 />
               )}
+              <Icon
+                className="relative z-10 transition-all duration-200"
+                style={{
+                  width: active ? "1.35rem" : "1.2rem",
+                  height: active ? "1.35rem" : "1.2rem",
+                  filter: active ? "drop-shadow(0 0 6px oklch(0.72 0.16 75 / 70%))" : "none",
+                }}
+              />
+              <span
+                className="relative z-10 transition-all duration-200"
+                style={{
+                  fontFamily: active ? "'Cinzel', serif" : "'Inter', sans-serif",
+                  fontSize: active ? "0.6rem" : "0.6rem",
+                  fontWeight: active ? 700 : 500,
+                  letterSpacing: active ? "0.05em" : "0",
+                  textShadow: active ? "0 0 8px oklch(0.72 0.16 75 / 50%)" : "none",
+                }}
+              >
+                {label}
+              </span>
             </button>
           );
         })}

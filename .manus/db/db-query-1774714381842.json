@@ -1,0 +1,82 @@
+{
+  "query": "SELECT COUNT(*) as total FROM cpra_events; DESCRIBE cpra_events;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2PYvEfQ4DSv7tRb.2d2e5dd58f47 --database C9GZTdmmkAQAM2QeyCH5WD --execute SELECT COUNT(*) as total FROM cpra_events; DESCRIBE cpra_events;",
+  "rows": [
+    {
+      "total": "11"
+    },
+    {
+      "total": "Field\tType\tNull\tKey\tDefault\tExtra"
+    },
+    {
+      "total": "id\tint\tNO\tPRI\tNULL\tauto_increment"
+    },
+    {
+      "total": "externalId\tvarchar(256)\tNO\tUNI\tNULL\t"
+    },
+    {
+      "total": "name\tvarchar(255)\tNO\t\tNULL\t"
+    },
+    {
+      "total": "province\tvarchar(64)\tYES\t\tNULL\t"
+    },
+    {
+      "total": "city\tvarchar(128)\tYES\t\tNULL\t"
+    },
+    {
+      "total": "locationName\tvarchar(255)\tYES\t\tNULL\t"
+    },
+    {
+      "total": "locationAddress\tvarchar(512)\tYES\t\tNULL\t"
+    },
+    {
+      "total": "startDate\ttimestamp\tYES\t\tNULL\t"
+    },
+    {
+      "total": "endDate\ttimestamp\tYES\t\tNULL\t"
+    },
+    {
+      "total": "entryOpenDate\ttimestamp\tYES\t\tNULL\t"
+    },
+    {
+      "total": "disciplines\ttext\tYES\t\tNULL\t"
+    },
+    {
+      "total": "purseAmount\tint\tYES\t\tNULL\t"
+    },
+    {
+      "total": "entryFee\tint\tYES\t\tNULL\t"
+    },
+    {
+      "total": "committeeContact\tvarchar(255)\tYES\t\tNULL\t"
+    },
+    {
+      "total": "committeePhone\tvarchar(64)\tYES\t\tNULL\t"
+    },
+    {
+      "total": "isSpecialEvent\ttinyint(1)\tNO\t\t0\t"
+    },
+    {
+      "total": "detailsUrl\tvarchar(512)\tYES\t\tNULL\t"
+    },
+    {
+      "total": "websiteUrl\tvarchar(512)\tYES\t\tNULL\t"
+    },
+    {
+      "total": "rawData\ttext\tYES\t\tNULL\t"
+    },
+    {
+      "total": "scrapedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t"
+    },
+    {
+      "total": "createdAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t"
+    },
+    {
+      "total": "updatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\n11\nField\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\nexternalId\tvarchar(256)\tNO\tUNI\tNULL\t\nname\tvarchar(255)\tNO\t\tNULL\t\nprovince\tvarchar(64)\tYES\t\tNULL\t\ncity\tvarchar(128)\tYES\t\tNULL\t\nlocationName\tvarchar(255)\tYES\t\tNULL\t\nlocationAddress\tvarchar(512)\tYES\t\tNULL\t\nstartDate\ttimestamp\tYES\t\tNULL\t\nendDate\ttimestamp\tYES\t\tNULL\t\nentryOpenDate\ttimestamp\tYES\t\tNULL\t\ndisciplines\ttext\tYES\t\tNULL\t\npurseAmount\tint\tYES\t\tNULL\t\nentryFee\tint\tYES\t\tNULL\t\ncommitteeContact\tvarchar(255)\tYES\t\tNULL\t\ncommitteePhone\tvarchar(64)\tYES\t\tNULL\t\nisSpecialEvent\ttinyint(1)\tNO\t\t0\t\ndetailsUrl\tvarchar(512)\tYES\t\tNULL\t\nwebsiteUrl\tvarchar(512)\tYES\t\tNULL\t\nrawData\ttext\tYES\t\tNULL\t\nscrapedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t\ncreatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t\nupdatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED on update CURRENT_TIMESTAMP\n",
+  "stderr": "",
+  "execution_time_ms": 66
+}

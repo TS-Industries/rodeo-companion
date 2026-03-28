@@ -141,6 +141,12 @@
   h1, h2, h3, .font-display {
     font-family: 'Playfair Display', 'Georgia', serif;
   }
+  .font-cinzel {
+    font-family: 'Cinzel', 'Georgia', serif;
+  }
+  .font-oswald {
+    font-family: 'Oswald', 'Arial Narrow', sans-serif;
+  }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
   [type="button"]:not(:disabled),
@@ -481,3 +487,180 @@
     border-bottom: 2px solid oklch(0.72 0.16 75);
   }
 }
+
+  /* ── Premium hero with full-bleed image ── */
+  .hero-cinematic {
+    position: relative;
+    overflow: hidden;
+    min-height: 280px;
+  }
+  .hero-cinematic::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      oklch(0.10 0.04 45 / 30%) 0%,
+      oklch(0.10 0.04 45 / 55%) 50%,
+      oklch(0.12 0.04 45 / 90%) 85%,
+      oklch(0.14 0.04 45) 100%
+    );
+    pointer-events: none;
+  }
+
+  /* ── Quote fade animation ── */
+  @keyframes quoteFadeIn {
+    0%   { opacity: 0; transform: translateY(12px); }
+    15%  { opacity: 1; transform: translateY(0); }
+    80%  { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-8px); }
+  }
+  .quote-animate {
+    animation: quoteFadeIn 6s ease-in-out forwards;
+  }
+
+  /* ── Cinzel title glow ── */
+  .title-cinzel-glow {
+    font-family: 'Cinzel', 'Georgia', serif;
+    font-weight: 900;
+    color: oklch(0.88 0.16 80);
+    text-shadow:
+      0 0 20px oklch(0.72 0.16 75 / 80%),
+      0 0 60px oklch(0.72 0.16 75 / 40%),
+      0 2px 4px oklch(0 0 0 / 60%);
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Oswald stat number ── */
+  .stat-oswald {
+    font-family: 'Oswald', 'Arial Narrow', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  /* ── Glass card ── */
+  .card-glass {
+    background: oklch(0.18 0.05 48 / 80%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid oklch(0.72 0.16 75 / 25%);
+    box-shadow:
+      0 8px 32px oklch(0 0 0 / 50%),
+      inset 0 1px 0 oklch(0.72 0.16 75 / 20%),
+      inset 0 -1px 0 oklch(0 0 0 / 20%);
+  }
+
+  /* ── Animated gold border ── */
+  @keyframes borderGlow {
+    0%, 100% { box-shadow: 0 0 8px oklch(0.72 0.16 75 / 40%), 0 4px 20px oklch(0 0 0 / 40%); }
+    50%       { box-shadow: 0 0 20px oklch(0.72 0.16 75 / 70%), 0 4px 20px oklch(0 0 0 / 40%); }
+  }
+  .card-glow-pulse {
+    animation: borderGlow 3s ease-in-out infinite;
+  }
+
+  /* ── Floating particle dots ── */
+  @keyframes floatUp {
+    0%   { transform: translateY(0) scale(1); opacity: 0.6; }
+    100% { transform: translateY(-60px) scale(0.5); opacity: 0; }
+  }
+  .particle {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: oklch(0.72 0.16 75 / 60%);
+    animation: floatUp 4s ease-out infinite;
+    pointer-events: none;
+  }
+
+  /* ── Horizontal scroll snap ── */
+  .scroll-snap-x {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  .snap-start { scroll-snap-align: start; }
+
+  /* ── Premium bottom nav ── */
+  .nav-premium {
+    background: linear-gradient(180deg,
+      oklch(0.13 0.05 46 / 95%) 0%,
+      oklch(0.10 0.04 44 / 98%) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid oklch(0.72 0.16 75 / 20%);
+    box-shadow:
+      0 -8px 32px oklch(0 0 0 / 60%),
+      0 -1px 0 oklch(0.72 0.16 75 / 10%);
+  }
+
+  /* ── Active nav item glow pill ── */
+  .nav-pill-active {
+    background: linear-gradient(135deg, oklch(0.72 0.16 75 / 20%), oklch(0.65 0.14 70 / 15%));
+    border-radius: 12px;
+    box-shadow: 0 0 12px oklch(0.72 0.16 75 / 30%);
+  }
+
+  /* ── Discipline header banner ── */
+  .discipline-header {
+    position: relative;
+    overflow: hidden;
+    padding: 1.5rem 1rem 1rem;
+  }
+  .discipline-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg,
+      oklch(0.14 0.05 48) 0%,
+      oklch(0.20 0.08 58) 50%,
+      oklch(0.14 0.05 48) 100%);
+  }
+
+  /* ── Sparkle animation ── */
+  @keyframes sparkle {
+    0%, 100% { opacity: 0; transform: scale(0.5) rotate(0deg); }
+    50%       { opacity: 1; transform: scale(1) rotate(180deg); }
+  }
+  .sparkle {
+    animation: sparkle 2s ease-in-out infinite;
+  }
+
+  /* ── Number count-up flash ── */
+  @keyframes numFlash {
+    0%   { transform: scale(1.3); color: oklch(0.88 0.20 80); }
+    100% { transform: scale(1);   color: inherit; }
+  }
+  .num-flash {
+    animation: numFlash 0.4s ease-out;
+  }
+
+  /* ── Rope divider ── */
+  .rope-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1.25rem 0 0.75rem;
+  }
+  .rope-divider::before,
+  .rope-divider::after {
+    content: '';
+    flex: 1;
+    height: 2px;
+    background: repeating-linear-gradient(
+      90deg,
+      oklch(0.72 0.16 75 / 50%) 0px,
+      oklch(0.72 0.16 75 / 50%) 4px,
+      transparent 4px,
+      transparent 8px
+    );
+  }
+  .rope-divider span {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: oklch(0.72 0.16 75);
+    white-space: nowrap;
+  }
