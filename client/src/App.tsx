@@ -19,7 +19,7 @@ import {
   Trophy,
   BarChart3,
   MapPin,
-  BookOpen,
+  Settings as SettingsIcon,
   Home as HomeIcon,
 } from "lucide-react";
 import { cn } from "./lib/utils";
@@ -30,6 +30,7 @@ const NAV_ITEMS = [
   { path: "/performance", label: "Runs", icon: Trophy },
   { path: "/analytics", label: "Progress", icon: BarChart3 },
   { path: "/locations", label: "Map", icon: MapPin },
+  { path: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
 function BottomNav() {

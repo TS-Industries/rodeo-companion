@@ -123,3 +123,6 @@
 - [ ] Prominent Canada/USA toggle in Settings (clearly labeled, visually obvious)
 - [ ] Propagate units to RodeoDetail trip budget calculator (L/100km vs MPG, $/L vs $/gal)
 - [ ] Propagate units to Locations trip planner fuel cost estimate
+
+## Bug Fixes
+- [x] Settings gear icon missing from bottom navigation bar
