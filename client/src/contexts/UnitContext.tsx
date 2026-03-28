@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState } from "react";
 
 export type UnitSystem = "US" | "CA";
 
@@ -12,38 +12,51 @@ interface UnitContextValue {
   fuelEconomyLabel: string;
   /** Fuel volume label: "gal" or "L" */
   fuelVolumeLabel: string;
-  /** Currency label */
+  /** Currency symbol */
+  currencySymbol: string;
+  /** Currency label: "USD" or "CAD" */
   currencyLabel: string;
-  /** Convert km to display distance (km stays km for CA, converts to mi for US) */
+  /** Convert km to display distance string */
   formatDistance: (km: number) => string;
-  /** Default fuel economy value for the unit system */
+  /**
+   * Default fuel economy value for the active unit system.
+   * Canada: 12 L/100km  |  US: 20 MPG
+   */
   defaultFuelEconomy: number;
+  /**
+   * Default fuel price for the active unit system.
+   * Canada: 1.65 CAD/L  |  US: 3.50 USD/gal
+   */
+  defaultFuelPrice: number;
 }
 
 const UnitContext = createContext<UnitContextValue | null>(null);
 
 const STORAGE_KEY = "rodeo_unit_system";
 
+function readStoredSystem(): UnitSystem {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === "US" || stored === "CA") return stored;
+  } catch {}
+  return "US";
+}
+
 export function UnitProvider({ children }: { children: React.ReactNode }) {
-  const [unitSystem, setUnitSystemState] = useState<UnitSystem>(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored === "US" || stored === "CA") return stored;
-    } catch {}
-    return "US";
-  });
+  const [unitSystem, setUnitSystemState] = useState<UnitSystem>(readStoredSystem);
 
   const setUnitSystem = (system: UnitSystem) => {
     setUnitSystemState(system);
-    try { localStorage.setItem(STORAGE_KEY, system); } catch {}
+    try {
+      localStorage.setItem(STORAGE_KEY, system);
+    } catch {}
   };
 
   const isCanada = unitSystem === "CA";
 
   const formatDistance = (km: number): string => {
     if (isCanada) return `${km.toFixed(1)} km`;
-    const miles = km * 0.621371;
-    return `${miles.toFixed(1)} mi`;
+    return `${(km * 0.621371).toFixed(1)} mi`;
   };
 
   const value: UnitContextValue = {
@@ -53,9 +66,14 @@ export function UnitProvider({ children }: { children: React.ReactNode }) {
     distanceLabel: isCanada ? "km" : "mi",
     fuelEconomyLabel: isCanada ? "L/100km" : "MPG",
     fuelVolumeLabel: isCanada ? "L" : "gal",
+    currencySymbol: isCanada ? "CA$" : "$",
     currencyLabel: isCanada ? "CAD" : "USD",
     formatDistance,
-    defaultFuelEconomy: isCanada ? 12 : 20, // 12 L/100km or 20 MPG
+    // Canada: 12 L/100km is a typical truck/trailer combo
+    // US: 10 MPG is a typical truck/trailer combo
+    defaultFuelEconomy: isCanada ? 12 : 10,
+    // Canada: ~1.65 CAD/L  |  US: ~3.50 USD/gal
+    defaultFuelPrice: isCanada ? 1.65 : 3.50,
   };
 
   return <UnitContext.Provider value={value}>{children}</UnitContext.Provider>;

@@ -117,3 +117,9 @@
 - [ ] Fix: mobile navigation after saving a rodeo redirects to schedule list
 - [ ] Fix: budget calculator uses global UnitContext (CA = L/100km + CAD/L, US = MPG + USD/gal)
 - [ ] Flashier pages: hero banners, animated stat cards, glowing discipline headers
+
+## Enhancement Round 8 — Unit System Fix
+- [ ] Rewrite UnitContext with robust localStorage persistence
+- [ ] Prominent Canada/USA toggle in Settings (clearly labeled, visually obvious)
+- [ ] Propagate units to RodeoDetail trip budget calculator (L/100km vs MPG, $/L vs $/gal)
+- [ ] Propagate units to Locations trip planner fuel cost estimate

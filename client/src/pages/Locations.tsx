@@ -160,10 +160,16 @@ export default function Locations() {
   const [fuelStations, setFuelStations] = useState<FuelStation[]>([]);
   const [loadingFuel, setLoadingFuel] = useState(false);
   const [expandedLeg, setExpandedLeg] = useState<number | null>(null);
-  const { isCanada, distanceLabel, fuelEconomyLabel, fuelVolumeLabel, currencyLabel, defaultFuelEconomy } = useUnits();
-  const [fuelPrice, setFuelPrice] = useState(isCanada ? 1.65 : 3.50);
+  const { isCanada, distanceLabel, fuelEconomyLabel, fuelVolumeLabel, currencyLabel, currencySymbol, defaultFuelEconomy, defaultFuelPrice } = useUnits();
+  const [fuelPrice, setFuelPrice] = useState(defaultFuelPrice);
   const [fuelEconomy, setFuelEconomy] = useState(defaultFuelEconomy); // MPG or L/100km
   const [routeBuilt, setRouteBuilt] = useState(false);
+
+  // Sync fuel inputs when unit system changes in Settings
+  useEffect(() => {
+    setFuelPrice(defaultFuelPrice);
+    setFuelEconomy(defaultFuelEconomy);
+  }, [isCanada, defaultFuelPrice, defaultFuelEconomy]);
 
   // Clear map markers
   const clearMarkers = useCallback(() => {
@@ -585,7 +591,7 @@ export default function Locations() {
                 {[
                   { icon: Route, label: "Distance", value: totalDistance },
                   { icon: Clock, label: "Drive Time", value: totalDuration },
-                  { icon: Fuel, label: "Est. Fuel", value: `$${estimatedFuelCost}` },
+                  { icon: Fuel, label: "Est. Fuel", value: `${currencySymbol}${estimatedFuelCost}` },
                 ].map(({ icon: Icon, label, value }) => (
                   <div
                     key={label}
@@ -607,7 +613,7 @@ export default function Locations() {
               <div className="flex gap-3 mb-4">
                 <div className="flex-1">
                   <label className="text-xs font-medium block mb-1" style={{ color: "oklch(0.62 0.05 65)" }}>
-                    {isCanada ? `$/L (fuel price)` : `$/gal (fuel price)`}
+                    {isCanada ? `${currencySymbol}/L (fuel price)` : `${currencySymbol}/gal (fuel price)`}
                   </label>
                   <input
                     type="number"

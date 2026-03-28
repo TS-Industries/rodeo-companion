@@ -34,15 +34,15 @@ import { useUnits } from "@/contexts/UnitContext";
 
 // ─── Trip Budget Calculator ───────────────────────────────────────────────────
 function TripBudgetCalc({ distanceKm }: { distanceKm?: number | null; countryCode?: string | null }) {
-  const { isCanada, fuelEconomyLabel, fuelVolumeLabel, currencyLabel } = useUnits();
-  const [fuelPrice, setFuelPrice] = useState(isCanada ? "1.65" : "3.50"); // CAD/L or USD/gal
-  const [economy, setEconomy] = useState(isCanada ? "15" : "12"); // L/100km or MPG
+  const { isCanada, fuelEconomyLabel, fuelVolumeLabel, currencyLabel, currencySymbol, defaultFuelEconomy, defaultFuelPrice } = useUnits();
+  const [fuelPrice, setFuelPrice] = useState(() => String(defaultFuelPrice));
+  const [economy, setEconomy] = useState(() => String(defaultFuelEconomy));
 
   // Sync defaults when unit system changes
   useEffect(() => {
-    setFuelPrice(isCanada ? "1.65" : "3.50");
-    setEconomy(isCanada ? "15" : "12");
-  }, [isCanada]);
+    setFuelPrice(String(defaultFuelPrice));
+    setEconomy(String(defaultFuelEconomy));
+  }, [isCanada, defaultFuelPrice, defaultFuelEconomy]);
 
   const distance = distanceKm ?? 0;
   let fuelCost = 0;
@@ -95,7 +95,7 @@ function TripBudgetCalc({ distanceKm }: { distanceKm?: number | null; countryCod
           <div className="text-center p-2 rounded-lg" style={{ background: "oklch(0.16 0.04 48)" }}>
             <p className="text-xs" style={{ color: "oklch(0.52 0.05 60)" }}>Est. Cost</p>
             <p className="text-sm font-bold" style={{ color: "oklch(0.72 0.16 75)" }}>
-              {currencyLabel === "CAD" ? `C$${fuelCost.toFixed(2)}` : `$${fuelCost.toFixed(2)}`}
+              {`${currencySymbol}${fuelCost.toFixed(2)}`}
             </p>
           </div>
         </div>
