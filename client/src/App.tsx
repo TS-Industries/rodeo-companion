@@ -28,12 +28,12 @@ import {
 } from "lucide-react";
 import { cn } from "./lib/utils";
 
-// Custom horse icon as SVG component
-function HorseNavIcon({ className }: { className?: string }) {
+// Clean horse silhouette nav icon
+function HorseNavIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M19 3c-1 0-2 .5-2.5 1.5L15 7l-2-1-1.5 1.5L10 6l-2 1-1 3H5l-1 2 2 1v3l2 2h2l1-2h4l1 2h2l2-2v-3l2-1-1-2h-2l-1-3z" />
-      <circle cx="8" cy="9" r="0.5" fill="currentColor" />
+    <svg className={className} style={style} viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      {/* Horse side profile silhouette — galloping pose */}
+      <path d="M52 8c-2 0-3.5 1-4.5 2.5L45 14l-3-1.5c-.8-.4-1.7-.4-2.5 0L37 14l-2-3C34 9.2 32.2 8 30 8c-3 0-5.5 1.8-6.5 4.5l-.5 1.5-4-1C16 12.2 13 14.5 12.5 17.5L11.5 22H9C7.3 22 6 23.3 6 25v2c0 1.7 1.3 3 3 3h1.5v5L8 42c-.4 1.4.4 2.8 1.8 3.2 1.4.4 2.8-.4 3.2-1.8L15 37h1.5v7c0 1.7 1.3 3 3 3s3-1.3 3-3v-7h9v7c0 1.7 1.3 3 3 3s3-1.3 3-3v-7l4 1v6c0 1.7 1.3 3 3 3s3-1.3 3-3v-7l2-2c1.2-1.2 2-2.8 2-4.5V27c0-1.5-.5-3-1.5-4L49 20l2.5-2.5c.8-.8 1.5-2 1.5-3.5V11c0-1.7-1.3-3-3-3zm-16 10c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3z"/>
     </svg>
   );
 }

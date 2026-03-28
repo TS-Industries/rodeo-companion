@@ -185,3 +185,10 @@
 - [ ] Clean up bad DB records (navigation text scraped as rodeo names)
 - [ ] CarPlay/Android Auto route handoff — deep link to Google Maps / Apple Maps with pre-filled route
 - [ ] "Open in Maps" button on Locations/Route page that launches native maps app with full route
+
+## Enhancement Round 14 — Visual Polish
+- [x] Dashboard empty state — replaced 3D horse emoji with premium lasso+star SVG icon in glowing gold circle
+- [x] Horses nav icon — replaced blob SVG with clean horse side-profile silhouette SVG
+- [x] Quick access card icons — replaced all emoji icons with clean Lucide icons (CalendarDays, Trophy, BarChart3, MapPin, HorseSilhouette, Users)
+- [x] Stat card icons — replaced emoji with Lucide icons (Trophy, DollarSign, CalendarDays, Flag)
+- [ ] Browse Events "Add to Schedule" button — fix the import error (pending)

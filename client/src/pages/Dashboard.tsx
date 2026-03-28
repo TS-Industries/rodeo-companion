@@ -5,13 +5,23 @@ import { useState, useEffect, useCallback } from "react";
 import {
   CalendarDays, Trophy, BarChart3, MapPin,
   Settings, Bell, Plus, ChevronRight, Clock, DollarSign,
-  TrendingUp, Star, Flame, Zap, Target, Users,
+  TrendingUp, Star, Flame, Zap, Target, Users, Flag,
 } from "lucide-react";
 import { format, differenceInDays, differenceInHours } from "date-fns";
 import {
   DISCIPLINE_LABELS, DISCIPLINE_ICONS, DISCIPLINE_COLORS, type Discipline,
 } from "@/lib/disciplines";
 import { cn } from "@/lib/utils";
+
+// ─── Horse Silhouette Icon ───────────────────────────────────────────────────
+function HorseSilhouette({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg className={className} style={style} viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      {/* Clean horse side profile silhouette */}
+      <path d="M54 10c-1.5 0-3 .6-4 1.8l-2.5 3-2.5-1.2c-.6-.3-1.3-.3-1.9 0L40 15l-1.8-2.8C37.3 11 35.8 10 34 10c-2.5 0-4.7 1.4-5.8 3.5l-.7 1.4-3.5-.9C21.5 13.3 19 15 18.2 17.5L17 21h-2.5C12.6 21 11 22.6 11 24.5v1.5c0 1.9 1.6 3.5 3.5 3.5H16v4l-2.5 9c-.3 1.2.4 2.4 1.6 2.7 1.2.3 2.4-.4 2.7-1.6L20 35h1v6.5c0 1.4 1.1 2.5 2.5 2.5S26 42.9 26 41.5V35h8v6.5c0 1.4 1.1 2.5 2.5 2.5S39 42.9 39 41.5V35l3.5.8v5.2c0 1.4 1.1 2.5 2.5 2.5S47.5 42.4 47.5 41V35.5l1.8-1.8c1-1 1.7-2.4 1.7-3.8V24c0-1.3-.4-2.5-1.1-3.5L47 18l2.2-2.2c.5-.5.8-1.2.8-1.8v-2c0-1.1-.9-2-2-2zm-15 8c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
+    </svg>
+  );
+}
 
 // ─── Western Quotes ───────────────────────────────────────────────────────────
 const WESTERN_QUOTES = [
@@ -90,8 +100,8 @@ function RotatingQuote() {
 }
 
 // ─── Premium Stat Card ────────────────────────────────────────────────────────
-function StatCard({ emoji, value, label, color, sub }: {
-  emoji: string; value: string | number; label: string; color: string; sub?: string;
+function StatCard({ icon: Icon, value, label, color, sub }: {
+  icon: React.ElementType; value: string | number; label: string; color: string; sub?: string;
 }) {
   return (
     <div
@@ -105,7 +115,7 @@ function StatCard({ emoji, value, label, color, sub }: {
       {/* Top accent line */}
       <div className="absolute top-0 left-0 right-0 h-0.5 rounded-t-2xl"
         style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }} />
-      <span className="text-xl">{emoji}</span>
+      <Icon className="w-5 h-5" style={{ color, filter: `drop-shadow(0 0 6px ${color}80)` }} />
       <p
         className="text-xl font-black leading-none"
         style={{
@@ -128,9 +138,9 @@ function StatCard({ emoji, value, label, color, sub }: {
 
 // ─── Quick Action Card ────────────────────────────────────────────────────────
 function QuickCard({
-  emoji, label, sub, accent, onClick, badge,
+  icon: Icon, label, sub, accent, onClick, badge,
 }: {
-  emoji: string; label: string; sub?: string; accent: string; onClick: () => void; badge?: string | number;
+  icon: React.ElementType; label: string; sub?: string; accent: string; onClick: () => void; badge?: string | number;
 }) {
   return (
     <button
@@ -155,9 +165,9 @@ function QuickCard({
       <div className="absolute top-0 left-0 right-0 h-0.5 rounded-t-2xl"
         style={{ background: `linear-gradient(90deg, ${accent}80, ${accent}30, transparent)` }} />
       {/* Icon */}
-      <div className="w-11 h-11 rounded-xl flex items-center justify-center text-xl"
+      <div className="w-11 h-11 rounded-xl flex items-center justify-center"
         style={{ background: `${accent}18`, border: `1px solid ${accent}30` }}>
-        {emoji}
+        <Icon className="w-5 h-5" style={{ color: accent, filter: `drop-shadow(0 0 4px ${accent}60)` }} />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-bold" style={{ color: "oklch(0.93 0.03 75)", fontFamily: "'Oswald', sans-serif", letterSpacing: "0.03em" }}>{label}</p>
@@ -356,10 +366,10 @@ export default function Dashboard() {
 
           {/* Stat cards */}
           <div className="flex gap-2">
-            <StatCard emoji="🏆" value={totalRuns} label="Total Runs" color="oklch(0.72 0.16 75)" />
-            <StatCard emoji="💰" value={`$${(totalWinnings / 100).toFixed(0)}`} label="Winnings" color="oklch(0.65 0.14 145)" />
-            <StatCard emoji="📅" value={upcomingCount} label="Upcoming" color="oklch(0.65 0.14 195)" />
-            <StatCard emoji="🐎" value={totalRodeos} label="Rodeos" color="oklch(0.65 0.18 25)" />
+            <StatCard icon={Trophy} value={totalRuns} label="Total Runs" color="oklch(0.72 0.16 75)" />
+            <StatCard icon={DollarSign} value={`$${(totalWinnings / 100).toFixed(0)}`} label="Winnings" color="oklch(0.65 0.14 145)" />
+            <StatCard icon={CalendarDays} value={upcomingCount} label="Upcoming" color="oklch(0.65 0.14 195)" />
+            <StatCard icon={Flag} value={totalRodeos} label="Rodeos" color="oklch(0.65 0.18 25)" />
           </div>
         </div>
       </div>
@@ -470,10 +480,30 @@ export default function Dashboard() {
           ) : (
             <div className="rounded-2xl p-6 text-center border-rope"
               style={{ background: "linear-gradient(145deg, oklch(0.20 0.05 48), oklch(0.17 0.04 46))" }}>
-              <div className="text-5xl mb-3">🐎</div>
+              {/* Premium Western lasso icon */}
+              <div className="flex items-center justify-center mb-4">
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center"
+                    style={{
+                      background: "linear-gradient(135deg, oklch(0.72 0.16 75 / 15%), oklch(0.65 0.14 70 / 8%))",
+                      border: "1.5px solid oklch(0.72 0.16 75 / 30%)",
+                      boxShadow: "0 0 24px oklch(0.72 0.16 75 / 20%)",
+                    }}>
+                    <svg viewBox="0 0 48 48" className="w-9 h-9" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      {/* Lasso / rope loop */}
+                      <circle cx="22" cy="22" r="13" stroke="oklch(0.72 0.16 75)" strokeWidth="2.5" strokeDasharray="4 3" fill="none" opacity="0.7"/>
+                      <circle cx="22" cy="22" r="7" stroke="oklch(0.72 0.16 75)" strokeWidth="2" fill="none"/>
+                      {/* Rope tail */}
+                      <path d="M31 31 Q37 36 38 42" stroke="oklch(0.72 0.16 75)" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+                      {/* Star center */}
+                      <path d="M22 17l1.5 4.5H28l-3.7 2.7 1.4 4.3L22 26l-3.7 2.5 1.4-4.3L16 21.5h4.5z" fill="oklch(0.82 0.18 80)" opacity="0.9"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
               <p className="font-black text-lg mb-1"
                 style={{ color: "oklch(0.78 0.18 80)", fontFamily: "'Cinzel', serif", textShadow: "0 0 20px oklch(0.72 0.16 75 / 40%)" }}>
-                No upcoming rodeos
+                No Upcoming Rodeos
               </p>
               <p className="text-xs mb-4" style={{ color: "oklch(0.52 0.05 60)" }}>Add your first rodeo to get started</p>
               <button onClick={() => navigate("/schedule")}
@@ -490,18 +520,18 @@ export default function Dashboard() {
             <span><Star className="w-3 h-3 inline mr-1" style={{ color: "oklch(0.72 0.16 75)" }} />Quick Access</span>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <QuickCard emoji="📅" label="Schedule" sub={`${upcomingCount} upcoming`}
+            <QuickCard icon={CalendarDays} label="Schedule" sub={`${upcomingCount} upcoming`}
               accent="oklch(0.72 0.16 75)" onClick={() => navigate("/schedule")}
               badge={deadlineAlerts.length > 0 ? deadlineAlerts.length : undefined} />
-            <QuickCard emoji="🏆" label="My Runs" sub={`${totalRuns} runs logged`}
+            <QuickCard icon={Trophy} label="My Runs" sub={`${totalRuns} runs logged`}
               accent="oklch(0.65 0.18 25)" onClick={() => navigate("/performance")} />
-            <QuickCard emoji="📊" label="Progress" sub="Charts & analytics"
+            <QuickCard icon={BarChart3} label="Progress" sub="Charts & analytics"
               accent="oklch(0.65 0.14 145)" onClick={() => navigate("/analytics")} />
-            <QuickCard emoji="🗺️" label="Trip Planner" sub="Maps & fuel stations"
+            <QuickCard icon={MapPin} label="Trip Planner" sub="Maps & fuel stations"
               accent="oklch(0.65 0.14 195)" onClick={() => navigate("/locations")} />
-            <QuickCard emoji="🐴" label="My Horses" sub="Manage your horses"
+            <QuickCard icon={HorseSilhouette} label="My Horses" sub="Manage your horses"
               accent="oklch(0.65 0.12 55)" onClick={() => navigate("/horses")} />
-            <QuickCard emoji="🤝" label="Contacts" sub="Partners & team"
+            <QuickCard icon={Users} label="Contacts" sub="Partners & team"
               accent="oklch(0.60 0.12 280)" onClick={() => navigate("/contacts")} />
           </div>
         </div>
