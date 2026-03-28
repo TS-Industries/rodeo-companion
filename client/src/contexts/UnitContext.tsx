@@ -39,7 +39,7 @@ function readStoredSystem(): UnitSystem {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored === "US" || stored === "CA") return stored;
   } catch {}
-  return "US";
+  return "CA"; // Default to Canada
 }
 
 export function UnitProvider({ children }: { children: React.ReactNode }) {

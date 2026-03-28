@@ -270,3 +270,28 @@ export async function deleteExpense(id: number, userId: number) {
   if (!db) throw new Error("DB not available");
   await db.delete(expenses).where(and(eq(expenses.id, id), eq(expenses.userId, userId)));
 }
+
+// ─── Horses ───────────────────────────────────────────────────────────────────
+import { horses, InsertHorse } from "../drizzle/schema";
+
+export async function listHorses(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(horses).where(eq(horses.userId, userId)).orderBy(horses.name);
+}
+export async function createHorse(data: InsertHorse) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const [result] = await db.insert(horses).values(data).$returningId();
+  return result;
+}
+export async function updateHorse(id: number, userId: number, data: Partial<InsertHorse>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(horses).set(data).where(and(eq(horses.id, id), eq(horses.userId, userId)));
+}
+export async function deleteHorse(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(horses).where(and(eq(horses.id, id), eq(horses.userId, userId)));
+}

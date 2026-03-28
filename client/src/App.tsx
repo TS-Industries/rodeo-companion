@@ -14,6 +14,7 @@ import Settings from "./pages/Settings";
 import Help from "./pages/Help";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
+import Horses from "./pages/Horses";
 import {
   CalendarDays,
   Trophy,
@@ -24,12 +25,23 @@ import {
 } from "lucide-react";
 import { cn } from "./lib/utils";
 
+// Custom horse icon as SVG component
+function HorseNavIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 3c-1 0-2 .5-2.5 1.5L15 7l-2-1-1.5 1.5L10 6l-2 1-1 3H5l-1 2 2 1v3l2 2h2l1-2h4l1 2h2l2-2v-3l2-1-1-2h-2l-1-3z" />
+      <circle cx="8" cy="9" r="0.5" fill="currentColor" />
+    </svg>
+  );
+}
+
 const NAV_ITEMS = [
   { path: "/", label: "Home", icon: HomeIcon, exact: true },
   { path: "/schedule", label: "Schedule", icon: CalendarDays },
   { path: "/performance", label: "Runs", icon: Trophy },
   { path: "/analytics", label: "Progress", icon: BarChart3 },
   { path: "/locations", label: "Map", icon: MapPin },
+  { path: "/horses", label: "Horses", icon: HorseNavIcon },
   { path: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
@@ -111,6 +123,7 @@ function AppShell() {
         <Route path="/analytics" component={Analytics} />
         <Route path="/locations" component={Locations} />
         <Route path="/settings" component={Settings} />
+        <Route path="/horses" component={Horses} />
         <Route path="/help" component={Help} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />

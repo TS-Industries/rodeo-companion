@@ -177,3 +177,20 @@ export const expenses = mysqlTable("expenses", {
 
 export type Expense = typeof expenses.$inferSelect;
 export type InsertExpense = typeof expenses.$inferInsert;
+
+// Horses owned by a user, associated with disciplines
+export const horses = mysqlTable("horses", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  name: varchar("name", { length: 128 }).notNull(),
+  disciplines: text("disciplines"), // JSON array of Discipline[] this horse competes in
+  breed: varchar("breed", { length: 128 }),
+  color: varchar("color", { length: 64 }),
+  age: int("age"),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Horse = typeof horses.$inferSelect;
+export type InsertHorse = typeof horses.$inferInsert;

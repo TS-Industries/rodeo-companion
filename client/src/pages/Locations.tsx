@@ -161,14 +161,16 @@ export default function Locations() {
   const [loadingFuel, setLoadingFuel] = useState(false);
   const [expandedLeg, setExpandedLeg] = useState<number | null>(null);
   const { isCanada, distanceLabel, fuelEconomyLabel, fuelVolumeLabel, currencyLabel, currencySymbol, defaultFuelEconomy, defaultFuelPrice } = useUnits();
-  const [fuelPrice, setFuelPrice] = useState(defaultFuelPrice);
-  const [fuelEconomy, setFuelEconomy] = useState(defaultFuelEconomy); // MPG or L/100km
+  const [fuelPriceStr, setFuelPriceStr] = useState(String(defaultFuelPrice));
+  const [fuelEconomyStr, setFuelEconomyStr] = useState(String(defaultFuelEconomy));
+  const fuelPrice = parseFloat(fuelPriceStr) || defaultFuelPrice;
+  const fuelEconomy = parseFloat(fuelEconomyStr) || defaultFuelEconomy;
   const [routeBuilt, setRouteBuilt] = useState(false);
 
   // Sync fuel inputs when unit system changes in Settings
   useEffect(() => {
-    setFuelPrice(defaultFuelPrice);
-    setFuelEconomy(defaultFuelEconomy);
+    setFuelPriceStr(String(defaultFuelPrice));
+    setFuelEconomyStr(String(defaultFuelEconomy));
   }, [isCanada, defaultFuelPrice, defaultFuelEconomy]);
 
   // Clear map markers
@@ -616,11 +618,12 @@ export default function Locations() {
                     {isCanada ? `${currencySymbol}/L (fuel price)` : `${currencySymbol}/gal (fuel price)`}
                   </label>
                   <input
-                    type="number"
-                    step="0.01"
-                    min="0.1"
-                    value={fuelPrice}
-                    onChange={e => setFuelPrice(parseFloat(e.target.value) || (isCanada ? 1.65 : 3.5))}
+                    type="text"
+                    inputMode="decimal"
+                    placeholder={String(defaultFuelPrice)}
+                    value={fuelPriceStr}
+                    onChange={e => setFuelPriceStr(e.target.value)}
+                    onFocus={e => e.target.select()}
                     className="w-full h-8 px-2 text-sm rounded-lg"
                     style={{ background: "oklch(0.22 0.05 48)", border: "1px solid oklch(0.30 0.06 50)", color: "oklch(0.93 0.03 75)" }}
                   />
@@ -630,11 +633,12 @@ export default function Locations() {
                     {fuelEconomyLabel} (vehicle)
                   </label>
                   <input
-                    type="number"
-                    step="0.1"
-                    min="1"
-                    value={fuelEconomy}
-                    onChange={e => setFuelEconomy(parseFloat(e.target.value) || defaultFuelEconomy)}
+                    type="text"
+                    inputMode="decimal"
+                    placeholder={String(defaultFuelEconomy)}
+                    value={fuelEconomyStr}
+                    onChange={e => setFuelEconomyStr(e.target.value)}
+                    onFocus={e => e.target.select()}
                     className="w-full h-8 px-2 text-sm rounded-lg"
                     style={{ background: "oklch(0.22 0.05 48)", border: "1px solid oklch(0.30 0.06 50)", color: "oklch(0.93 0.03 75)" }}
                   />

@@ -26,6 +26,10 @@ import {
   createExpense,
   updateExpense,
   deleteExpense,
+  listHorses,
+  createHorse,
+  updateHorse,
+  deleteHorse,
 } from "./db";
 import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
@@ -540,8 +544,58 @@ const expensesRouter = router({
     }),
 });
 
-// ─── App Router ─────────────────────────────────────────────────────────────────
+// ─── Horses Router ───────────────────────────────────────────────────────────
+const horsesRouter = router({
+  list: protectedProcedure.query(async ({ ctx }) => {
+    return listHorses(ctx.user.id);
+  }),
+  create: protectedProcedure
+    .input(z.object({
+      name: z.string().min(1).max(128),
+      disciplines: z.array(disciplineEnum).optional(),
+      breed: z.string().max(128).optional(),
+      color: z.string().max(64).optional(),
+      age: z.number().int().min(0).max(40).optional(),
+      notes: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const result = await createHorse({
+        userId: ctx.user.id,
+        name: input.name,
+        disciplines: input.disciplines ? JSON.stringify(input.disciplines) : null,
+        breed: input.breed ?? null,
+        color: input.color ?? null,
+        age: input.age ?? null,
+        notes: input.notes ?? null,
+      });
+      return result;
+    }),
+  update: protectedProcedure
+    .input(z.object({
+      id: z.number(),
+      name: z.string().min(1).max(128).optional(),
+      disciplines: z.array(disciplineEnum).optional(),
+      breed: z.string().max(128).optional().nullable(),
+      color: z.string().max(64).optional().nullable(),
+      age: z.number().int().min(0).max(40).optional().nullable(),
+      notes: z.string().optional().nullable(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { id, disciplines, ...rest } = input;
+      const data: Record<string, unknown> = { ...rest };
+      if (disciplines !== undefined) data.disciplines = JSON.stringify(disciplines);
+      await updateHorse(id, ctx.user.id, data as Parameters<typeof updateHorse>[2]);
+      return { success: true };
+    }),
+  delete: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await deleteHorse(input.id, ctx.user.id);
+      return { success: true };
+    }),
+});
 
+// ─── App Router ─────────────────────────────────────────────────────────────────
 export const appRouter = router({
   system: systemRouter,
   auth: authRouter,
@@ -551,7 +605,7 @@ export const appRouter = router({
   analytics: analyticsRouter,
   drills: drillsRouter,
   notifications: notificationsRouter,
-  expenses: expensesRouter,
+   expenses: expensesRouter,
+  horses: horsesRouter,
 });
-
 export type AppRouter = typeof appRouter;

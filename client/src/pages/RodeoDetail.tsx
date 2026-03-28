@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import {
-  DISCIPLINE_LABELS, DISCIPLINE_ICONS, DISCIPLINE_COLORS,
+  DISCIPLINE_LABELS, DISCIPLINE_ICONS, DISCIPLINE_IMAGES, DISCIPLINE_COLORS,
   RODEO_TYPE_LABELS, isTimedDiscipline, formatTime, formatScore,
   type Discipline, type RodeoType,
 } from "@/lib/disciplines";
@@ -71,13 +71,29 @@ function TripBudgetCalc({ distanceKm }: { distanceKm?: number | null; countryCod
           <Label className="text-xs" style={{ color: "oklch(0.52 0.05 60)" }}>
             Fuel Price ({currencyLabel}/{fuelVolumeLabel})
           </Label>
-          <Input className="mt-1 text-sm" type="number" step="0.01" min="0" value={fuelPrice} onChange={(e) => setFuelPrice(e.target.value)} />
+          <Input
+            className="mt-1 text-sm"
+            type="text"
+            inputMode="decimal"
+            placeholder={String(defaultFuelPrice)}
+            value={fuelPrice}
+            onChange={(e) => setFuelPrice(e.target.value)}
+            onFocus={(e) => e.target.select()}
+          />
         </div>
         <div>
           <Label className="text-xs" style={{ color: "oklch(0.52 0.05 60)" }}>
             Fuel Economy ({fuelEconomyLabel})
           </Label>
-          <Input className="mt-1 text-sm" type="number" step="0.1" min="1" value={economy} onChange={(e) => setEconomy(e.target.value)} />
+          <Input
+            className="mt-1 text-sm"
+            type="text"
+            inputMode="decimal"
+            placeholder={String(defaultFuelEconomy)}
+            value={economy}
+            onChange={(e) => setEconomy(e.target.value)}
+            onFocus={(e) => e.target.select()}
+          />
         </div>
       </div>
       {distance > 0 ? (
@@ -460,9 +476,12 @@ function PerformancesList({ rodeoId, disciplines }: { rodeoId: number; disciplin
             <div className="p-3">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <span className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0", colors.bg)}>
-                    {DISCIPLINE_ICONS[discipline]}
-                  </span>
+                  <img
+                    src={DISCIPLINE_IMAGES[discipline]}
+                    alt={DISCIPLINE_LABELS[discipline]}
+                    className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+                    onError={(e) => { (e.target as HTMLImageElement).replaceWith(Object.assign(document.createElement('span'), { className: `w-10 h-10 rounded-lg flex items-center justify-center text-xl ${colors.bg}`, textContent: DISCIPLINE_ICONS[discipline] })); }}
+                  />
                   <div>
                     <p className="text-sm font-bold" style={{ color: "oklch(0.88 0.03 70)" }}>{DISCIPLINE_LABELS[discipline]}</p>
                     <div className="flex items-center gap-2 flex-wrap">

@@ -126,3 +126,12 @@
 
 ## Bug Fixes
 - [x] Settings gear icon missing from bottom navigation bar
+
+## Enhancement Round 9
+- [x] AI-generated illustrated icons for all 8 disciplines
+- [x] Default region set to Canada (L/100km, CAD)
+- [x] Fix fuel price/L per 100km input bug (cannot clear to retype)
+- [x] Horse name management per discipline (Horses page with full CRUD)
+- [x] Horses page added to bottom navigation bar
+- [x] Improved progress charts (glowing area charts, personal best highlight, improvement badges, run history table)
+- [x] Drill video links in Analytics drills section (YouTube search links per discipline)

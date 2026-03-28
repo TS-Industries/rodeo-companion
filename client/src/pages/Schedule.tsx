@@ -14,6 +14,7 @@ import {
   DISCIPLINES,
   DISCIPLINE_LABELS,
   DISCIPLINE_ICONS,
+  DISCIPLINE_IMAGES,
   DISCIPLINE_COLORS,
   RODEO_TYPES,
   RODEO_TYPE_LABELS,
@@ -32,15 +33,20 @@ function DisciplineChip({ discipline, selected, onToggle }: { discipline: Discip
       type="button"
       onClick={onToggle}
       className={cn(
-        "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border",
+        "flex flex-col items-center gap-1 p-2 rounded-xl text-xs font-semibold transition-all border-2 w-[90px]",
         selected
-          ? `${colors.bg} ${colors.text} border-current`
-          : "border-transparent"
+          ? `${colors.bg} ${colors.text} border-current shadow-lg scale-105`
+          : "border-transparent hover:scale-102"
       )}
-      style={selected ? {} : { background: "oklch(0.22 0.05 48)", color: "oklch(0.52 0.05 60)", border: "1px solid oklch(0.30 0.06 50)" }}
+      style={selected ? { borderColor: colors.accent } : { background: "oklch(0.22 0.05 48)", color: "oklch(0.52 0.05 60)", border: "1px solid oklch(0.30 0.06 50)" }}
     >
-      <span>{DISCIPLINE_ICONS[discipline]}</span>
-      <span>{DISCIPLINE_LABELS[discipline]}</span>
+      <img
+        src={DISCIPLINE_IMAGES[discipline]}
+        alt={DISCIPLINE_LABELS[discipline]}
+        className="w-14 h-14 object-cover rounded-lg"
+        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+      />
+      <span className="text-center leading-tight">{DISCIPLINE_LABELS[discipline]}</span>
     </button>
   );
 }
