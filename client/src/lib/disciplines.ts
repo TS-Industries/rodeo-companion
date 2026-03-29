@@ -46,31 +46,31 @@ export const DISCIPLINE_IMAGES: Record<Discipline, string> = {
   saddle_bronc:     "https://d2xsxph8kpxj0f.cloudfront.net/310519663427083327/C9GZTdmmkAQAM2QeyCH5WD/discipline-saddle-bronc_469f844e.png",
   steer_wrestling:  "https://d2xsxph8kpxj0f.cloudfront.net/310519663427083327/C9GZTdmmkAQAM2QeyCH5WD/discipline-steer-wrestling_88da019b.png",
   bull_riding:      "https://d2xsxph8kpxj0f.cloudfront.net/310519663427083327/C9GZTdmmkAQAM2QeyCH5WD/discipline-bull-riding_9358527d.png",
-  // New disciplines use Lucide icon fallbacks (no AI images yet)
+  goat_tying:       "https://d2xsxph8kpxj0f.cloudfront.net/310519663427083327/C9GZTdmmkAQAM2QeyCH5WD/discipline-goat-tying-6uZNHHXW27H2duWr7NATph.webp",
+  pole_bending:     "https://d2xsxph8kpxj0f.cloudfront.net/310519663427083327/C9GZTdmmkAQAM2QeyCH5WD/discipline-pole-bending-GZL85qWQDocT83nvhtdNrj.webp",
+  ribbon_roping:    "https://d2xsxph8kpxj0f.cloudfront.net/310519663427083327/C9GZTdmmkAQAM2QeyCH5WD/discipline-ribbon-roping-RfHQDGnCoejUVPb7aUtUU9.webp",
+  chute_dogging:    "https://d2xsxph8kpxj0f.cloudfront.net/310519663427083327/C9GZTdmmkAQAM2QeyCH5WD/discipline-chute-dogging-W3Q6K2NRnpt5yA2gffHVVj.webp",
+  cutting:          "https://d2xsxph8kpxj0f.cloudfront.net/310519663427083327/C9GZTdmmkAQAM2QeyCH5WD/discipline-cutting-hfJw4xrQfoD4GijgqP7a5K.webp",
+  working_cow_horse:"https://d2xsxph8kpxj0f.cloudfront.net/310519663427083327/C9GZTdmmkAQAM2QeyCH5WD/discipline-working-cow-horse-Ltcdsg8JYRoykpJzyTFmcP.webp",
+};
+
+// SVG/text icons for compact chip contexts
+// Icons are now the discipline images; this map is kept for legacy compatibility but should not be rendered directly
+export const DISCIPLINE_ICONS: Record<Discipline, string> = {
+  barrel_racing:    "",
+  breakaway_roping: "",
+  team_roping:      "",
+  tie_down_roping:  "",
+  bareback:         "",
+  saddle_bronc:     "",
+  steer_wrestling:  "",
+  bull_riding:      "",
   goat_tying:       "",
   pole_bending:     "",
   ribbon_roping:    "",
   chute_dogging:    "",
   cutting:          "",
   working_cow_horse:"",
-};
-
-// SVG/text icons for compact chip contexts
-export const DISCIPLINE_ICONS: Record<Discipline, string> = {
-  barrel_racing:    "🛢️",
-  breakaway_roping: "🪢",
-  team_roping:      "🤝",
-  tie_down_roping:  "🔗",
-  bareback:         "🐎",
-  saddle_bronc:     "🐴",
-  steer_wrestling:  "🐂",
-  bull_riding:      "🐃",
-  goat_tying:       "🐐",
-  pole_bending:     "🏇",
-  ribbon_roping:    "🎀",
-  chute_dogging:    "🐄",
-  cutting:          "⚡",
-  working_cow_horse:"🌟",
 };
 
 // Timed events use seconds; rough stock events use scores 0-100; some use both

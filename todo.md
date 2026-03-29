@@ -225,3 +225,30 @@
 - [x] Add calendar integration for entry deadlines (Apple/Android)
 - [x] Redesign Progress/Analytics for multi-discipline clarity
 - [x] Fix run history to show rodeo name, discipline, round info (not just date/time)
+
+## Round 17 — Horse Management & Cleanup
+
+- [ ] Remove Drills section from Analytics page
+- [ ] Remove Contacts page and nav entry
+- [ ] Horse notes: expand to multiline textarea
+- [ ] Horse health log: vet visits, dentist, farrier entries with date/notes/cost
+- [ ] Horse care reminders: vet/dentist/farrier reminders linked to phone calendar (Apple/Android/Google)
+- [ ] Horse feeding: feeding schedule and supplement tracking per horse
+- [ ] Horse receipts: upload receipts (photos/PDFs) per horse
+- [ ] Horse receipts auto-create expense entries (linked to horse + expense report)
+- [ ] DB schema: horse_health_logs, horse_care_reminders, horse_feeding, horse_receipts tables
+- [ ] tRPC procedures for all new horse sub-features
+- [ ] Expense report PDF includes horse-related expenses
+
+## Round 17b — New Discipline Images & Browse Fix
+
+- [ ] Generate AI images for goat tying, pole bending, ribbon roping, chute dogging, cutting, working cow horse
+- [ ] Upload discipline images to CDN
+- [ ] Wire new discipline images into disciplines.ts DISCIPLINE_IMAGES map
+- [ ] Fix Browse import dialog to show all 14 disciplines (not just original 8)
+
+## Round 17c — Emoji Removal
+
+- [ ] Remove emojis from DISCIPLINE_ICONS in disciplines.ts
+- [ ] Remove emoji usage from Analytics discipline select dropdown
+- [ ] Audit all pages for discipline emoji usage and remove

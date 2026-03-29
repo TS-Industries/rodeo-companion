@@ -376,3 +376,119 @@ export async function unlinkContactFromRodeo(rodeoId: number, contactId: number,
   await db.delete(rodeoContacts)
     .where(and(eq(rodeoContacts.rodeoId, rodeoId), eq(rodeoContacts.contactId, contactId), eq(rodeoContacts.userId, userId)));
 }
+
+// ─── Horse Health Logs ────────────────────────────────────────────────────────
+import {
+  horseHealthLogs, InsertHorseHealthLog,
+  horseCareReminders, InsertHorseCareReminder,
+  horseFeeding, InsertHorseFeeding,
+  horseReceipts, InsertHorseReceipt,
+} from "../drizzle/schema";
+
+export async function listHorseHealthLogs(userId: number, horseId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(horseHealthLogs)
+    .where(and(eq(horseHealthLogs.userId, userId), eq(horseHealthLogs.horseId, horseId)))
+    .orderBy(horseHealthLogs.logDate);
+}
+export async function createHorseHealthLog(data: InsertHorseHealthLog) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const [result] = await db.insert(horseHealthLogs).values(data).$returningId();
+  return result;
+}
+export async function updateHorseHealthLog(id: number, userId: number, data: Partial<InsertHorseHealthLog>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(horseHealthLogs).set(data).where(and(eq(horseHealthLogs.id, id), eq(horseHealthLogs.userId, userId)));
+}
+export async function deleteHorseHealthLog(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(horseHealthLogs).where(and(eq(horseHealthLogs.id, id), eq(horseHealthLogs.userId, userId)));
+}
+
+// ─── Horse Care Reminders ─────────────────────────────────────────────────────
+export async function listHorseCareReminders(userId: number, horseId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(horseCareReminders)
+    .where(and(eq(horseCareReminders.userId, userId), eq(horseCareReminders.horseId, horseId)))
+    .orderBy(horseCareReminders.reminderDate);
+}
+export async function createHorseCareReminder(data: InsertHorseCareReminder) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const [result] = await db.insert(horseCareReminders).values(data).$returningId();
+  return result;
+}
+export async function updateHorseCareReminder(id: number, userId: number, data: Partial<InsertHorseCareReminder>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(horseCareReminders).set(data).where(and(eq(horseCareReminders.id, id), eq(horseCareReminders.userId, userId)));
+}
+export async function deleteHorseCareReminder(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(horseCareReminders).where(and(eq(horseCareReminders.id, id), eq(horseCareReminders.userId, userId)));
+}
+
+// ─── Horse Feeding ────────────────────────────────────────────────────────────
+export async function listHorseFeeding(userId: number, horseId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(horseFeeding)
+    .where(and(eq(horseFeeding.userId, userId), eq(horseFeeding.horseId, horseId)))
+    .orderBy(horseFeeding.feedName);
+}
+export async function createHorseFeeding(data: InsertHorseFeeding) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const [result] = await db.insert(horseFeeding).values(data).$returningId();
+  return result;
+}
+export async function updateHorseFeeding(id: number, userId: number, data: Partial<InsertHorseFeeding>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(horseFeeding).set(data).where(and(eq(horseFeeding.id, id), eq(horseFeeding.userId, userId)));
+}
+export async function deleteHorseFeeding(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(horseFeeding).where(and(eq(horseFeeding.id, id), eq(horseFeeding.userId, userId)));
+}
+
+// ─── Horse Receipts ───────────────────────────────────────────────────────────
+export async function listHorseReceipts(userId: number, horseId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(horseReceipts)
+    .where(and(eq(horseReceipts.userId, userId), eq(horseReceipts.horseId, horseId)))
+    .orderBy(horseReceipts.receiptDate);
+}
+export async function createHorseReceipt(data: InsertHorseReceipt) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const [result] = await db.insert(horseReceipts).values(data).$returningId();
+  return result;
+}
+export async function updateHorseReceipt(id: number, userId: number, data: Partial<InsertHorseReceipt>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(horseReceipts).set(data).where(and(eq(horseReceipts.id, id), eq(horseReceipts.userId, userId)));
+}
+export async function deleteHorseReceipt(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(horseReceipts).where(and(eq(horseReceipts.id, id), eq(horseReceipts.userId, userId)));
+}
+
+// List all receipts for a user (for expense report)
+export async function listAllHorseReceiptsForUser(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(horseReceipts)
+    .where(eq(horseReceipts.userId, userId))
+    .orderBy(horseReceipts.receiptDate);
+}

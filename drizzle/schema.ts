@@ -207,6 +207,94 @@ export const horses = mysqlTable("horses", {
 export type Horse = typeof horses.$inferSelect;
 export type InsertHorse = typeof horses.$inferInsert;
 
+// Care reminder types for horses
+export const CARE_REMINDER_TYPES = ["vet", "dentist", "farrier", "deworming", "vaccination", "other"] as const;
+export type CareReminderType = (typeof CARE_REMINDER_TYPES)[number];
+export const CARE_REMINDER_LABELS: Record<CareReminderType, string> = {
+  vet: "Vet Visit",
+  dentist: "Dentist / Teeth Float",
+  farrier: "Farrier / Shoeing",
+  deworming: "Deworming",
+  vaccination: "Vaccination",
+  other: "Other",
+};
+
+// Health log entries (vet visits, treatments, observations)
+export const horseHealthLogs = mysqlTable("horse_health_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  horseId: int("horseId").notNull(),
+  type: mysqlEnum("type", CARE_REMINDER_TYPES).default("vet").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  notes: text("notes"),
+  cost: int("cost").default(0), // cost in cents
+  provider: varchar("provider", { length: 255 }), // vet name, farrier name, etc.
+  logDate: timestamp("logDate").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type HorseHealthLog = typeof horseHealthLogs.$inferSelect;
+export type InsertHorseHealthLog = typeof horseHealthLogs.$inferInsert;
+
+// Upcoming care reminders (linked to phone calendar)
+export const horseCareReminders = mysqlTable("horse_care_reminders", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  horseId: int("horseId").notNull(),
+  type: mysqlEnum("type", CARE_REMINDER_TYPES).default("vet").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  notes: text("notes"),
+  reminderDate: timestamp("reminderDate").notNull(),
+  isCompleted: boolean("isCompleted").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type HorseCareReminder = typeof horseCareReminders.$inferSelect;
+export type InsertHorseCareReminder = typeof horseCareReminders.$inferInsert;
+
+// Feeding & supplement records per horse
+export const horseFeeding = mysqlTable("horse_feeding", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  horseId: int("horseId").notNull(),
+  feedName: varchar("feedName", { length: 255 }).notNull(), // e.g. "Hay", "Oats", "Supplement X"
+  feedType: mysqlEnum("feedType", ["hay", "grain", "supplement", "mineral", "other"]).default("hay").notNull(),
+  amount: varchar("amount", { length: 128 }), // e.g. "2 flakes", "3 lbs", "1 scoop"
+  frequency: varchar("frequency", { length: 128 }), // e.g. "Twice daily", "Morning only"
+  notes: text("notes"),
+  monthlyCostCents: int("monthlyCostCents").default(0), // estimated monthly cost
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type HorseFeeding = typeof horseFeeding.$inferSelect;
+export type InsertHorseFeeding = typeof horseFeeding.$inferInsert;
+
+// Receipts attached to horses (vet, farrier, feed, etc.) — also linked to expenses
+export const horseReceipts = mysqlTable("horse_receipts", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  horseId: int("horseId").notNull(),
+  healthLogId: int("healthLogId"), // optional link to a health log entry
+  title: varchar("title", { length: 255 }).notNull(),
+  category: mysqlEnum("category", CARE_REMINDER_TYPES).default("vet").notNull(),
+  amountCents: int("amountCents").default(0).notNull(), // amount in cents
+  s3Key: varchar("s3Key", { length: 512 }),
+  url: varchar("url", { length: 1024 }),
+  filename: varchar("filename", { length: 255 }),
+  mimeType: varchar("mimeType", { length: 64 }),
+  receiptDate: timestamp("receiptDate").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type HorseReceipt = typeof horseReceipts.$inferSelect;
+export type InsertHorseReceipt = typeof horseReceipts.$inferInsert;
+
 // Season prize money goal (one row per user per year)
 export const seasonGoals = mysqlTable("season_goals", {
   id: int("id").autoincrement().primaryKey(),

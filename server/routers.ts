@@ -30,6 +30,23 @@ import {
   createHorse,
   updateHorse,
   deleteHorse,
+  listHorseHealthLogs,
+  createHorseHealthLog,
+  updateHorseHealthLog,
+  deleteHorseHealthLog,
+  listHorseCareReminders,
+  createHorseCareReminder,
+  updateHorseCareReminder,
+  deleteHorseCareReminder,
+  listHorseFeeding,
+  createHorseFeeding,
+  updateHorseFeeding,
+  deleteHorseFeeding,
+  listHorseReceipts,
+  createHorseReceipt,
+  updateHorseReceipt,
+  deleteHorseReceipt,
+  listAllHorseReceiptsForUser,
   getSeasonGoal,
   upsertSeasonGoal,
   listContacts,
@@ -45,7 +62,7 @@ import { nanoid } from "nanoid";
 import { invokeLLM } from "./_core/llm";
 import { notifyOwner } from "./_core/notification";
 import { scrapeAllCanadianRodeos, getCpraEventsFromDb, getCpraEventById, getCpraEventCount } from "./canadianRodeoScraper";
-import { DISCIPLINES, DISCIPLINE_LABELS, EXPENSE_CATEGORIES, ROUND_TYPES, PARTNER_ROLES, type Discipline } from "../drizzle/schema";
+import { DISCIPLINES, DISCIPLINE_LABELS, EXPENSE_CATEGORIES, ROUND_TYPES, PARTNER_ROLES, CARE_REMINDER_TYPES, type Discipline } from "../drizzle/schema";
 
 const disciplineEnum = z.enum(DISCIPLINES);
 const rodeoTypeEnum = z.enum(["jackpot", "amateur", "professional"]);
@@ -616,6 +633,209 @@ const horsesRouter = router({
     }),
 });
 
+// ─── Horse Sub-Routers ───────────────────────────────────────────────────────────
+const careReminderTypeEnum = z.enum(CARE_REMINDER_TYPES);
+
+const horseHealthLogsRouter = router({
+  list: protectedProcedure
+    .input(z.object({ horseId: z.number() }))
+    .query(async ({ ctx, input }) => listHorseHealthLogs(ctx.user.id, input.horseId)),
+  create: protectedProcedure
+    .input(z.object({
+      horseId: z.number(),
+      type: careReminderTypeEnum,
+      title: z.string().min(1).max(255),
+      notes: z.string().optional(),
+      cost: z.number().min(0).optional(), // dollars
+      provider: z.string().max(255).optional(),
+      logDate: z.string(), // ISO date string
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const result = await createHorseHealthLog({
+        userId: ctx.user.id,
+        horseId: input.horseId,
+        type: input.type,
+        title: input.title,
+        notes: input.notes ?? null,
+        cost: input.cost ? Math.round(input.cost * 100) : 0,
+        provider: input.provider ?? null,
+        logDate: new Date(input.logDate),
+      });
+      return result;
+    }),
+  update: protectedProcedure
+    .input(z.object({
+      id: z.number(),
+      type: careReminderTypeEnum.optional(),
+      title: z.string().min(1).max(255).optional(),
+      notes: z.string().optional().nullable(),
+      cost: z.number().min(0).optional(),
+      provider: z.string().max(255).optional().nullable(),
+      logDate: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { id, cost, logDate, ...rest } = input;
+      const data: Record<string, unknown> = { ...rest };
+      if (cost !== undefined) data.cost = Math.round(cost * 100);
+      if (logDate) data.logDate = new Date(logDate);
+      await updateHorseHealthLog(id, ctx.user.id, data as never);
+      return { success: true };
+    }),
+  delete: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await deleteHorseHealthLog(input.id, ctx.user.id);
+      return { success: true };
+    }),
+});
+
+const horseCareRemindersRouter = router({
+  list: protectedProcedure
+    .input(z.object({ horseId: z.number() }))
+    .query(async ({ ctx, input }) => listHorseCareReminders(ctx.user.id, input.horseId)),
+  create: protectedProcedure
+    .input(z.object({
+      horseId: z.number(),
+      type: careReminderTypeEnum,
+      title: z.string().min(1).max(255),
+      notes: z.string().optional(),
+      reminderDate: z.string(), // ISO date string
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const result = await createHorseCareReminder({
+        userId: ctx.user.id,
+        horseId: input.horseId,
+        type: input.type,
+        title: input.title,
+        notes: input.notes ?? null,
+        reminderDate: new Date(input.reminderDate),
+        isCompleted: false,
+      });
+      return result;
+    }),
+  update: protectedProcedure
+    .input(z.object({
+      id: z.number(),
+      type: careReminderTypeEnum.optional(),
+      title: z.string().min(1).max(255).optional(),
+      notes: z.string().optional().nullable(),
+      reminderDate: z.string().optional(),
+      isCompleted: z.boolean().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { id, reminderDate, ...rest } = input;
+      const data: Record<string, unknown> = { ...rest };
+      if (reminderDate) data.reminderDate = new Date(reminderDate);
+      await updateHorseCareReminder(id, ctx.user.id, data as never);
+      return { success: true };
+    }),
+  delete: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await deleteHorseCareReminder(input.id, ctx.user.id);
+      return { success: true };
+    }),
+});
+
+const horseFeedingRouter = router({
+  list: protectedProcedure
+    .input(z.object({ horseId: z.number() }))
+    .query(async ({ ctx, input }) => listHorseFeeding(ctx.user.id, input.horseId)),
+  create: protectedProcedure
+    .input(z.object({
+      horseId: z.number(),
+      feedName: z.string().min(1).max(255),
+      feedType: z.enum(["hay", "grain", "supplement", "mineral", "other"]),
+      amount: z.string().max(128).optional(),
+      frequency: z.string().max(128).optional(),
+      notes: z.string().optional(),
+      monthlyCostDollars: z.number().min(0).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const result = await createHorseFeeding({
+        userId: ctx.user.id,
+        horseId: input.horseId,
+        feedName: input.feedName,
+        feedType: input.feedType,
+        amount: input.amount ?? null,
+        frequency: input.frequency ?? null,
+        notes: input.notes ?? null,
+        monthlyCostCents: input.monthlyCostDollars ? Math.round(input.monthlyCostDollars * 100) : 0,
+        isActive: true,
+      });
+      return result;
+    }),
+  update: protectedProcedure
+    .input(z.object({
+      id: z.number(),
+      feedName: z.string().min(1).max(255).optional(),
+      feedType: z.enum(["hay", "grain", "supplement", "mineral", "other"]).optional(),
+      amount: z.string().max(128).optional().nullable(),
+      frequency: z.string().max(128).optional().nullable(),
+      notes: z.string().optional().nullable(),
+      monthlyCostDollars: z.number().min(0).optional(),
+      isActive: z.boolean().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { id, monthlyCostDollars, ...rest } = input;
+      const data: Record<string, unknown> = { ...rest };
+      if (monthlyCostDollars !== undefined) data.monthlyCostCents = Math.round(monthlyCostDollars * 100);
+      await updateHorseFeeding(id, ctx.user.id, data as never);
+      return { success: true };
+    }),
+  delete: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await deleteHorseFeeding(input.id, ctx.user.id);
+      return { success: true };
+    }),
+});
+
+const horseReceiptsRouter = router({
+  list: protectedProcedure
+    .input(z.object({ horseId: z.number() }))
+    .query(async ({ ctx, input }) => listHorseReceipts(ctx.user.id, input.horseId)),
+  listAll: protectedProcedure
+    .query(async ({ ctx }) => listAllHorseReceiptsForUser(ctx.user.id)),
+  create: protectedProcedure
+    .input(z.object({
+      horseId: z.number(),
+      healthLogId: z.number().optional(),
+      title: z.string().min(1).max(255),
+      category: careReminderTypeEnum,
+      amountDollars: z.number().min(0),
+      s3Key: z.string().optional(),
+      url: z.string().optional(),
+      filename: z.string().optional(),
+      mimeType: z.string().optional(),
+      receiptDate: z.string(),
+      notes: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const result = await createHorseReceipt({
+        userId: ctx.user.id,
+        horseId: input.horseId,
+        healthLogId: input.healthLogId ?? null,
+        title: input.title,
+        category: input.category,
+        amountCents: Math.round(input.amountDollars * 100),
+        s3Key: input.s3Key ?? null,
+        url: input.url ?? null,
+        filename: input.filename ?? null,
+        mimeType: input.mimeType ?? null,
+        receiptDate: new Date(input.receiptDate),
+        notes: input.notes ?? null,
+      });
+      return result;
+    }),
+  delete: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await deleteHorseReceipt(input.id, ctx.user.id);
+      return { success: true };
+    }),
+});
+
 // ─── Season Goals ───────────────────────────────────────────────────────────────
 const seasonGoalsRouter = router({
   get: protectedProcedure
@@ -807,6 +1027,10 @@ export const appRouter = router({
   notifications: notificationsRouter,
    expenses: expensesRouter,
   horses: horsesRouter,
+  horseHealthLogs: horseHealthLogsRouter,
+  horseCareReminders: horseCareRemindersRouter,
+  horseFeeding: horseFeedingRouter,
+  horseReceipts: horseReceiptsRouter,
   seasonGoals: seasonGoalsRouter,
   contacts: contactsRouter,
   events: eventsRouter,

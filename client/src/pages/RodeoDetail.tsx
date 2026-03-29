@@ -375,7 +375,7 @@ function AddPerformanceDialog({ rodeoId, discipline, open, onClose }: {
       <DialogContent className="max-w-sm mx-auto" style={{ background: "oklch(0.18 0.04 48)", border: "1px solid oklch(0.72 0.16 75 / 30%)" }}>
         <DialogHeader>
           <DialogTitle className="text-lg font-bold" style={{ fontFamily: "'Playfair Display', serif", color: "oklch(0.78 0.18 80)" }}>
-            {DISCIPLINE_ICONS[discipline]} Log Run — {DISCIPLINE_LABELS[discipline]}
+            Log Run — {DISCIPLINE_LABELS[discipline]}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-1">
@@ -468,7 +468,7 @@ function PerformancesList({ rodeoId, disciplines }: { rodeoId: number; disciplin
                     src={DISCIPLINE_IMAGES[discipline]}
                     alt={DISCIPLINE_LABELS[discipline]}
                     className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
-                    onError={(e) => { (e.target as HTMLImageElement).replaceWith(Object.assign(document.createElement('span'), { className: `w-10 h-10 rounded-lg flex items-center justify-center text-xl ${colors.bg}`, textContent: DISCIPLINE_ICONS[discipline] })); }}
+                    onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }}
                   />
                   <div>
                     <p className="text-sm font-bold" style={{ color: "oklch(0.88 0.03 70)" }}>{DISCIPLINE_LABELS[discipline]}</p>
@@ -750,8 +750,9 @@ export default function RodeoDetail(){
               {disciplineList.map((d) => {
                 const c = DISCIPLINE_COLORS[d];
                 return (
-                  <span key={d} className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-semibold", c.bg, c.text)}>
-                    {DISCIPLINE_ICONS[d]} {DISCIPLINE_LABELS[d]}
+                  <span key={d} className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-sm font-semibold", c.bg, c.text)}>
+                    <img src={DISCIPLINE_IMAGES[d]} alt="" className="w-4 h-4 rounded object-cover flex-shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} />
+                    {DISCIPLINE_LABELS[d]}
                   </span>
                 );
               })}

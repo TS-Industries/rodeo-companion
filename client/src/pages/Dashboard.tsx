@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { format, differenceInDays, differenceInHours } from "date-fns";
 import {
-  DISCIPLINE_LABELS, DISCIPLINE_ICONS, DISCIPLINE_COLORS, type Discipline,
+  DISCIPLINE_LABELS, DISCIPLINE_ICONS, DISCIPLINE_IMAGES, DISCIPLINE_COLORS, type Discipline,
 } from "@/lib/disciplines";
 import { cn } from "@/lib/utils";
 
@@ -242,8 +242,9 @@ function UpcomingCountdown({ rodeo }: { rodeo: any }) {
           {disciplineList.map((d) => {
             const c = DISCIPLINE_COLORS[d];
             return (
-              <span key={d} className={cn("inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold", c?.bg, c?.text)}>
-                {DISCIPLINE_ICONS[d]} {DISCIPLINE_LABELS[d]}
+              <span key={d} className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold", c?.bg, c?.text)}>
+                <img src={DISCIPLINE_IMAGES[d]} alt="" className="w-3.5 h-3.5 rounded object-cover flex-shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} />
+                {DISCIPLINE_LABELS[d]}
               </span>
             );
           })}
@@ -548,8 +549,8 @@ export default function Dashboard() {
                 const c = DISCIPLINE_COLORS[d] ?? { bg: "bg-gray-800", text: "text-gray-300", accent: "#888" };
                 return (
                   <div key={run.id} className="card-shimmer card-hover flex items-center gap-3 p-3 rounded-xl">
-                    <div className={cn("icon-badge text-xl", c.bg)}>
-                      {DISCIPLINE_ICONS[d]}
+                    <div className={cn("icon-badge overflow-hidden", c.bg)}>
+                      <img src={DISCIPLINE_IMAGES[d]} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold truncate"

@@ -15,7 +15,6 @@ import Help from "./pages/Help";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import Horses from "./pages/Horses";
-import Contacts from "./pages/Contacts";
 import BrowseEvents from "./pages/BrowseEvents";
 import {
   CalendarDays,
@@ -24,7 +23,6 @@ import {
   MapPin,
   Settings as SettingsIcon,
   Home as HomeIcon,
-  Users,
 } from "lucide-react";
 import { cn } from "./lib/utils";
 
@@ -45,7 +43,6 @@ const NAV_ITEMS = [
   { path: "/analytics", label: "Progress", icon: BarChart3 },
   { path: "/locations", label: "Map", icon: MapPin },
   { path: "/horses", label: "Horses", icon: HorseNavIcon },
-  { path: "/contacts", label: "Contacts", icon: Users },
   { path: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
@@ -151,7 +148,6 @@ function AppShell() {
         <Route path="/locations" component={Locations} />
         <Route path="/settings" component={Settings} />
         <Route path="/horses" component={Horses} />
-        <Route path="/contacts" component={Contacts} />
         <Route path="/browse-events" component={BrowseEvents} />
         <Route path="/help" component={Help} />
         <Route path="/404" component={NotFound} />

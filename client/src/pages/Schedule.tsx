@@ -187,8 +187,9 @@ function RodeoCard({ rodeo, onClick }: { rodeo: any; onClick: () => void }) {
           {disciplineList.map((d) => {
             const c = DISCIPLINE_COLORS[d];
             return (
-              <span key={d} className={cn("inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold", c.bg, c.text)}>
-                {DISCIPLINE_ICONS[d]} {DISCIPLINE_LABELS[d]}
+              <span key={d} className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold", c.bg, c.text)}>
+                <img src={DISCIPLINE_IMAGES[d]} alt="" className="w-3.5 h-3.5 rounded object-cover flex-shrink-0" onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} />
+                {DISCIPLINE_LABELS[d]}
               </span>
             );
           })}

@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import {
   DISCIPLINES, DISCIPLINE_LABELS, DISCIPLINE_ICONS, DISCIPLINE_COLORS,
-  DISCIPLINE_DRILL_VIDEOS,
+  DISCIPLINE_IMAGES, DISCIPLINE_DRILL_VIDEOS,
   isTimedDiscipline, formatTime, formatScore, type Discipline,
 } from "@/lib/disciplines";
 import { EXPENSE_CATEGORY_LABELS, EXPENSE_CATEGORY_ICONS, formatDollars, type ExpenseCategory } from "@/lib/expenses";
@@ -200,8 +200,8 @@ function PerformanceTab({ discipline, period }: { discipline: string; period: Pe
             return (
               <div key={disc} className="flex items-center gap-3 rounded-xl px-3 py-2.5"
                 style={{ background: "oklch(0.18 0.04 48)", border: "1px solid oklch(0.28 0.06 50)" }}>
-                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 ${colors.bg}`}>
-                  {DISCIPLINE_ICONS[disc]}
+                <span className={`w-8 h-8 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 ${colors.bg}`}>
+                  <img src={DISCIPLINE_IMAGES[disc]} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} />
                 </span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold truncate" style={{ color: "oklch(0.88 0.03 70)" }}>{DISCIPLINE_LABELS[disc]}</p>
@@ -300,8 +300,8 @@ function PerformanceTab({ discipline, period }: { discipline: string; period: Pe
             return (
               <div key={run.id ?? i} className="px-4 py-3" style={{ background: "oklch(0.16 0.04 48)" }}>
                 <div className="flex items-start gap-3">
-                  <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs flex-shrink-0 mt-0.5 ${colors.bg}`}>
-                    {DISCIPLINE_ICONS[run.discipline as Discipline]}
+                  <span className={`w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 mt-0.5 ${colors.bg}`}>
+                    <img src={DISCIPLINE_IMAGES[run.discipline as Discipline]} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} />
                   </span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -929,18 +929,17 @@ export default function Analytics() {
             <SelectContent>
               <SelectItem value="all" className="text-xs">All Disciplines</SelectItem>
               {DISCIPLINES.map((d) => (
-                <SelectItem key={d} value={d} className="text-xs">{DISCIPLINE_ICONS[d]} {DISCIPLINE_LABELS[d]}</SelectItem>
+                <SelectItem key={d} value={d} className="text-xs">{DISCIPLINE_LABELS[d]}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
 
         <Tabs defaultValue="performance">
-          <TabsList className="w-full grid grid-cols-4">
+          <TabsList className="w-full grid grid-cols-3">
             <TabsTrigger value="performance" className="text-xs">Runs</TabsTrigger>
             <TabsTrigger value="financials" className="text-xs">P&amp;L</TabsTrigger>
             <TabsTrigger value="expenses" className="text-xs">Expenses</TabsTrigger>
-            <TabsTrigger value="drills" className="text-xs">Drills</TabsTrigger>
           </TabsList>
           <TabsContent value="performance" className="mt-4">
             <PerformanceTab discipline={discipline} period={period} />
@@ -950,9 +949,6 @@ export default function Analytics() {
           </TabsContent>
           <TabsContent value="expenses" className="mt-4">
             <ExpensesTab period={period} />
-          </TabsContent>
-          <TabsContent value="drills" className="mt-4">
-            <DrillsTab discipline={discipline} />
           </TabsContent>
         </Tabs>
       </div>

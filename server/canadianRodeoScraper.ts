@@ -39,19 +39,21 @@ const ALL_DISCIPLINES: Discipline[] = [
   "cutting", "working_cow_horse",
 ];
 
-// High school / junior high disciplines (includes goat tying, pole bending, ribbon roping, chute dogging)
+// High school / junior high disciplines — all 14 so competitors can pick what applies
 const HS_DISCIPLINES: Discipline[] = [
   "barrel_racing", "breakaway_roping", "team_roping",
   "tie_down_roping", "bareback", "saddle_bronc",
   "steer_wrestling", "bull_riding",
   "goat_tying", "pole_bending", "ribbon_roping", "chute_dogging",
+  "cutting", "working_cow_horse",
 ];
 
-// Amateur rodeo disciplines
+// Amateur rodeo disciplines — all 14 so competitors can pick what applies
 const AMATEUR_DISCIPLINES: Discipline[] = [
   "barrel_racing", "breakaway_roping", "team_roping", "tie_down_roping",
   "bareback", "saddle_bronc", "steer_wrestling", "bull_riding",
-  "goat_tying", "pole_bending", "chute_dogging",
+  "goat_tying", "pole_bending", "ribbon_roping", "chute_dogging",
+  "cutting", "working_cow_horse",
 ];
 
 function slugify(source: string, name: string, dateStr: string): string {
