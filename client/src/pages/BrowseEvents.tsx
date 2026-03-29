@@ -82,6 +82,8 @@ const SOURCE_LABELS: Record<string, string> = {
   kcra: "KCRA",
   ram: "RAM Rodeo",
   ahsra: "AHSRA",
+  lra: "LRA",
+  fca: "FCA",
 };
 
 const LEVEL_COLORS: Record<string, string> = {
@@ -120,11 +122,11 @@ function ImportDialog({
   onClose: () => void;
   onImported: (rodeoId: number | null) => void;
 }) {
-  const [selectedDisciplines, setSelectedDisciplines] = useState<Discipline[]>(
-    (event.disciplines as Discipline[]).filter((d) =>
-      (DISCIPLINES as readonly string[]).includes(d)
-    )
+  // Only show disciplines that are available at this specific event
+  const eventDisciplines = (event.disciplines as Discipline[]).filter((d) =>
+    (DISCIPLINES as readonly string[]).includes(d)
   );
+  const [selectedDisciplines, setSelectedDisciplines] = useState<Discipline[]>(eventDisciplines);
 
   const importMutation = trpc.events.import.useMutation({
     onSuccess: (data) => {
@@ -174,7 +176,7 @@ function ImportDialog({
               Select your disciplines:
             </p>
             <div className="grid grid-cols-2 gap-2">
-              {(DISCIPLINES as readonly Discipline[]).map((d) => {
+              {eventDisciplines.map((d) => {
                 const selected = selectedDisciplines.includes(d);
                 return (
                   <button
@@ -398,6 +400,17 @@ export default function BrowseEvents() {
   const filtered = useMemo(() => {
     let list = events as CpraEvent[];
 
+    // Only show future events (today or later)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    list = list.filter((e) => {
+      if (!e.startDate) return true; // keep events with unknown dates
+      const startDate = new Date(e.startDate);
+      // Use endDate if available so multi-day events stay visible until they end
+      const endDate = e.endDate ? new Date(e.endDate) : startDate;
+      return endDate >= today;
+    });
+
     if (province !== "All Provinces") {
       list = list.filter((e) => e.province === province);
     }
@@ -414,13 +427,21 @@ export default function BrowseEvents() {
       );
     }
 
+    // Sort soonest first
+    list = [...list].sort((a, b) => {
+      const aTime = a.startDate ? new Date(a.startDate).getTime() : Infinity;
+      const bTime = b.startDate ? new Date(b.startDate).getTime() : Infinity;
+      return aTime - bTime;
+    });
+
     return list;
   }, [events, province, level, search]);
 
   const handleImported = (rodeoId: number | null) => {
     setImportingEvent(null);
     if (rodeoId) {
-      setTimeout(() => navigate(`/rodeo/${rodeoId}`), 500);
+      // Navigate to the schedule detail page (correct route is /schedule/:id)
+      setTimeout(() => navigate(`/schedule/${rodeoId}`), 500);
     }
   };
 
@@ -444,7 +465,7 @@ export default function BrowseEvents() {
           <div>
             <h1 className="text-xl font-bold text-amber-300">Browse Canadian Rodeos</h1>
             <p className="text-amber-500/70 text-xs mt-0.5">
-              {count > 0 ? `${count} events from CPRA, WRA, KCRA, RAM Rodeo & AHSRA` : "Loading events..."}
+              {count > 0 ? `${count} events from CPRA, WRA, KCRA, LRA, FCA, RAM Rodeo & AHSRA` : "Loading events..."}
             </p>
           </div>
           {user && (

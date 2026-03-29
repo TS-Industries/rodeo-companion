@@ -13,7 +13,7 @@ import {
   ExternalLink, Play, Target, Award, Star, Zap, Download,
 } from "lucide-react";
 import {
-  DISCIPLINES, DISCIPLINE_LABELS, DISCIPLINE_ICONS,
+  DISCIPLINES, DISCIPLINE_LABELS, DISCIPLINE_ICONS, DISCIPLINE_COLORS,
   DISCIPLINE_DRILL_VIDEOS,
   isTimedDiscipline, formatTime, formatScore, type Discipline,
 } from "@/lib/disciplines";
@@ -127,6 +127,7 @@ function PerformanceTab({ discipline, period }: { discipline: string; period: Pe
     discipline: discipline === "all" ? undefined : discipline as Discipline,
     period,
   });
+  const [showAllRuns, setShowAllRuns] = useState(false);
 
   if (isLoading) {
     return <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin" style={{ color: "oklch(0.72 0.16 75)" }} /></div>;
@@ -137,64 +138,94 @@ function PerformanceTab({ discipline, period }: { discipline: string; period: Pe
       <div className="text-center py-12">
         <div className="text-5xl mb-3">🏆</div>
         <p className="text-sm font-medium" style={{ color: "oklch(0.62 0.05 65)" }}>No runs recorded for this period</p>
-        <p className="text-xs mt-1" style={{ color: "oklch(0.42 0.04 55)" }}>Log your first run to see progress charts</p>
+        <p className="text-xs mt-1" style={{ color: "oklch(0.42 0.04 55)" }}>Log your first run to see your stats</p>
       </div>
     );
   }
 
-  const chartData = [...summary.chartData]
-    .sort((a, b) => a.date - b.date)
-    .map((d) => ({
-      date: format(new Date(d.date), "MMM d"),
-      time: d.time != null ? parseFloat(d.time.toFixed(3)) : null,
-      score: d.score,
-    }));
+  // Group runs by discipline for per-discipline stats
+  const runsByDiscipline: Record<string, typeof summary.chartData> = {};
+  summary.chartData.forEach((r) => {
+    if (!runsByDiscipline[r.discipline]) runsByDiscipline[r.discipline] = [];
+    runsByDiscipline[r.discipline]!.push(r);
+  });
 
-  const hasTimes = chartData.some((d) => d.time != null);
-  const hasScores = chartData.some((d) => d.score != null);
+  const disciplinesWithRuns = Object.keys(runsByDiscipline) as Discipline[];
 
-  const times = chartData.filter((d) => d.time != null).map((d) => d.time as number);
-  const scores = chartData.filter((d) => d.score != null).map((d) => d.score as number);
-  const timeImprovement = times.length >= 2 ? ((times[times.length - 1] - times[0]) / times[0]) * 100 : null;
-  const scoreImprovement = scores.length >= 2 ? ((scores[scores.length - 1] - scores[0]) / scores[0]) * 100 : null;
+  // For single-discipline view: show chart only if it makes sense
+  const isSingleDiscipline = discipline !== "all";
+  const singleRuns = isSingleDiscipline ? (runsByDiscipline[discipline] ?? []) : [];
+  const singleTimedRuns = singleRuns.filter((r) => r.time != null).sort((a, b) => a.date - b.date);
+  const singleScoredRuns = singleRuns.filter((r) => r.score != null).sort((a, b) => a.date - b.date);
+  const chartTimeData = singleTimedRuns.map((r) => ({ date: format(new Date(r.date), "MMM d"), time: parseFloat((r.time as number).toFixed(3)) }));
+  const chartScoreData = singleScoredRuns.map((r) => ({ date: format(new Date(r.date), "MMM d"), score: r.score }));
 
-  const disciplineLabel = discipline !== "all" ? DISCIPLINE_LABELS[discipline as Discipline] : "All Disciplines";
+  // Sorted run history (newest first)
+  const sortedRuns = [...summary.chartData].sort((a, b) => b.date - a.date);
+  const visibleRuns = showAllRuns ? sortedRuns : sortedRuns.slice(0, 10);
 
   return (
     <div className="space-y-4">
+      {/* Overall stats */}
       <div className="grid grid-cols-3 gap-2">
         <StatCard label="Total Runs" value={String(summary.totalRuns)} icon={<Target className="w-3 h-3" />} />
-        {hasTimes && (
-          <>
-            <StatCard label="Personal Best" value={formatTime(summary.bestTime)} trend="down" highlight icon={<Award className="w-3 h-3" />} />
-            <StatCard label="Avg Time" value={formatTime(summary.avgTime)} />
-          </>
+        {summary.bestTime != null && (
+          <StatCard label="Best Time" value={formatTime(summary.bestTime)} trend="down" highlight icon={<Award className="w-3 h-3" />} />
         )}
-        {hasScores && (
-          <>
-            <StatCard label="Best Score" value={formatScore(summary.bestScore)} trend="up" highlight icon={<Star className="w-3 h-3" />} />
-            <StatCard label="Avg Score" value={formatScore(summary.avgScore)} />
-          </>
+        {summary.avgTime != null && (
+          <StatCard label="Avg Time" value={formatTime(summary.avgTime)} />
+        )}
+        {summary.bestScore != null && (
+          <StatCard label="Best Score" value={formatScore(summary.bestScore)} trend="up" highlight icon={<Star className="w-3 h-3" />} />
+        )}
+        {summary.avgScore != null && (
+          <StatCard label="Avg Score" value={formatScore(summary.avgScore)} />
         )}
       </div>
 
-      {(timeImprovement != null || scoreImprovement != null) && (
-        <div className="flex items-center gap-2 px-1">
-          <Zap className="w-3.5 h-3.5" style={{ color: "oklch(0.72 0.16 75)" }} />
-          <span className="text-xs" style={{ color: "oklch(0.62 0.05 65)" }}>Season trend:</span>
-          {timeImprovement != null && <ImprovementBadge pct={timeImprovement} isTimed={true} />}
-          {scoreImprovement != null && <ImprovementBadge pct={scoreImprovement} isTimed={false} />}
+      {/* Per-discipline breakdown — only shown in "All Disciplines" view */}
+      {!isSingleDiscipline && disciplinesWithRuns.length > 1 && (
+        <div className="space-y-2">
+          <p className="text-xs font-bold uppercase tracking-wide px-1" style={{ color: "oklch(0.52 0.05 60)" }}>By Discipline</p>
+          {disciplinesWithRuns.map((disc) => {
+            const runs = runsByDiscipline[disc] ?? [];
+            const isTimed = runs.some((r) => r.time != null);
+            const timedVals = runs.filter((r) => r.time != null).map((r) => r.time as number);
+            const scoredVals = runs.filter((r) => r.score != null).map((r) => r.score as number);
+            const best = isTimed
+              ? (timedVals.length ? formatTime(Math.min(...timedVals)) : "—")
+              : (scoredVals.length ? formatScore(Math.max(...scoredVals)) : "—");
+            const colors = DISCIPLINE_COLORS[disc];
+            const totalWon = runs.reduce((s, r) => s + (r.prizeMoneyCents ?? 0), 0);
+            return (
+              <div key={disc} className="flex items-center gap-3 rounded-xl px-3 py-2.5"
+                style={{ background: "oklch(0.18 0.04 48)", border: "1px solid oklch(0.28 0.06 50)" }}>
+                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 ${colors.bg}`}>
+                  {DISCIPLINE_ICONS[disc]}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate" style={{ color: "oklch(0.88 0.03 70)" }}>{DISCIPLINE_LABELS[disc]}</p>
+                  <p className="text-xs" style={{ color: "oklch(0.52 0.05 60)" }}>{runs.length} run{runs.length !== 1 ? "s" : ""}</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-sm font-bold" style={{ color: "oklch(0.88 0.18 80)" }}>{best}</p>
+                  {totalWon > 0 && <p className="text-xs" style={{ color: "oklch(0.65 0.18 145)" }}>💰 ${(totalWon / 100).toFixed(2)}</p>}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
-      {hasTimes && chartData.length > 1 && (
+      {/* Single-discipline time trend chart */}
+      {isSingleDiscipline && chartTimeData.length > 1 && (
         <div className="rounded-xl p-4 relative overflow-hidden"
           style={{ background: "oklch(0.16 0.05 48)", border: "1px solid oklch(0.28 0.06 50)" }}>
           <div className="absolute inset-0 opacity-5 pointer-events-none"
             style={{ background: "radial-gradient(ellipse at 50% 0%, oklch(0.72 0.16 75), transparent 70%)" }} />
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm font-bold" style={{ color: "oklch(0.88 0.18 80)", fontFamily: "'Playfair Display', serif" }}>
-              {disciplineLabel} — Time Trend
+              {DISCIPLINE_LABELS[discipline as Discipline]} — Time Trend
             </p>
             <span className="text-[10px] px-2 py-0.5 rounded-full font-bold"
               style={{ background: "oklch(0.72 0.16 75 / 15%)", color: "oklch(0.72 0.16 75)", border: "1px solid oklch(0.72 0.16 75 / 30%)" }}>
@@ -202,7 +233,7 @@ function PerformanceTab({ discipline, period }: { discipline: string; period: Pe
             </span>
           </div>
           <ResponsiveContainer width="100%" height={180}>
-            <AreaChart data={chartData} margin={{ top: 8, right: 4, bottom: 0, left: -20 }}>
+            <AreaChart data={chartTimeData} margin={{ top: 8, right: 4, bottom: 0, left: -20 }}>
               <defs>
                 <linearGradient id="timeGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#d97706" stopOpacity={0.4} />
@@ -221,14 +252,15 @@ function PerformanceTab({ discipline, period }: { discipline: string; period: Pe
         </div>
       )}
 
-      {hasScores && chartData.length > 1 && (
+      {/* Single-discipline score trend chart */}
+      {isSingleDiscipline && chartScoreData.length > 1 && (
         <div className="rounded-xl p-4 relative overflow-hidden"
           style={{ background: "oklch(0.16 0.05 48)", border: "1px solid oklch(0.28 0.06 50)" }}>
           <div className="absolute inset-0 opacity-5 pointer-events-none"
             style={{ background: "radial-gradient(ellipse at 50% 0%, oklch(0.65 0.18 145), transparent 70%)" }} />
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm font-bold" style={{ color: "oklch(0.88 0.18 80)", fontFamily: "'Playfair Display', serif" }}>
-              {disciplineLabel} — Score Trend
+              {DISCIPLINE_LABELS[discipline as Discipline]} — Score Trend
             </p>
             <span className="text-[10px] px-2 py-0.5 rounded-full font-bold"
               style={{ background: "oklch(0.65 0.18 145 / 15%)", color: "oklch(0.65 0.18 145)", border: "1px solid oklch(0.65 0.18 145 / 30%)" }}>
@@ -236,7 +268,7 @@ function PerformanceTab({ discipline, period }: { discipline: string; period: Pe
             </span>
           </div>
           <ResponsiveContainer width="100%" height={180}>
-            <AreaChart data={chartData} margin={{ top: 8, right: 4, bottom: 0, left: -20 }}>
+            <AreaChart data={chartScoreData} margin={{ top: 8, right: 4, bottom: 0, left: -20 }}>
               <defs>
                 <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#16a34a" stopOpacity={0.4} />
@@ -255,34 +287,77 @@ function PerformanceTab({ discipline, period }: { discipline: string; period: Pe
         </div>
       )}
 
-      {chartData.length === 1 && (
-        <div className="rounded-xl p-5 text-center"
-          style={{ background: "oklch(0.18 0.04 48)", border: "1px solid oklch(0.28 0.06 50)" }}>
-          <div className="text-3xl mb-2">🎯</div>
-          <p className="text-sm font-medium" style={{ color: "oklch(0.72 0.16 75)" }}>First run logged!</p>
-          <p className="text-xs mt-1" style={{ color: "oklch(0.52 0.05 60)" }}>Add more runs to unlock your progress chart</p>
+      {/* Full run history with context */}
+      <div className="rounded-xl overflow-hidden" style={{ border: "1px solid oklch(0.28 0.06 50)" }}>
+        <div className="px-4 py-2.5 flex items-center justify-between" style={{ background: "oklch(0.20 0.05 48)" }}>
+          <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "oklch(0.52 0.05 60)" }}>Run History</p>
+          <span className="text-[10px]" style={{ color: "oklch(0.42 0.04 55)" }}>{sortedRuns.length} total</span>
         </div>
-      )}
-
-      {chartData.length > 0 && (
-        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid oklch(0.28 0.06 50)" }}>
-          <div className="px-4 py-2" style={{ background: "oklch(0.20 0.05 48)" }}>
-            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "oklch(0.52 0.05 60)" }}>Run History</p>
-          </div>
-          <div className="divide-y" style={{ borderColor: "oklch(0.25 0.05 50)" }}>
-            {[...chartData].reverse().slice(0, 8).map((d, i) => (
-              <div key={i} className="flex items-center justify-between px-4 py-2.5"
-                style={{ background: "oklch(0.16 0.04 48)" }}>
-                <span className="text-xs" style={{ color: "oklch(0.62 0.05 65)" }}>{d.date}</span>
-                <div className="flex items-center gap-3">
-                  {d.time != null && <span className="text-sm font-bold" style={{ color: "oklch(0.88 0.18 80)" }}>{d.time.toFixed(3)}s</span>}
-                  {d.score != null && <span className="text-sm font-bold" style={{ color: "oklch(0.65 0.18 145)" }}>{d.score.toFixed(1)} pts</span>}
+        <div className="divide-y" style={{ borderColor: "oklch(0.25 0.05 50)" }}>
+          {visibleRuns.map((run, i) => {
+            const isTimed = run.time != null;
+            const colors = DISCIPLINE_COLORS[run.discipline as Discipline] ?? { bg: "bg-muted", text: "text-muted-foreground", accent: "#888" };
+            return (
+              <div key={run.id ?? i} className="px-4 py-3" style={{ background: "oklch(0.16 0.04 48)" }}>
+                <div className="flex items-start gap-3">
+                  <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs flex-shrink-0 mt-0.5 ${colors.bg}`}>
+                    {DISCIPLINE_ICONS[run.discipline as Discipline]}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-bold" style={{ color: "oklch(0.88 0.03 70)" }}>
+                        {DISCIPLINE_LABELS[run.discipline as Discipline]}
+                      </span>
+                      {run.round && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                          style={{ background: "oklch(0.72 0.16 75 / 15%)", color: "oklch(0.72 0.16 75)" }}>
+                          {run.round}
+                        </span>
+                      )}
+                      {(run.prizeMoneyCents ?? 0) > 0 && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                          style={{ background: "oklch(0.65 0.18 145 / 20%)", color: "oklch(0.65 0.18 145)" }}>
+                          💰 ${((run.prizeMoneyCents ?? 0) / 100).toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs mt-0.5" style={{ color: "oklch(0.62 0.05 65)" }}>
+                      {run.rodeoName} · {format(new Date(run.date), "MMM d, yyyy")}
+                    </p>
+                    {run.notes && (
+                      <p className="text-xs mt-1 italic" style={{ color: "oklch(0.52 0.05 60)" }}>{run.notes}</p>
+                    )}
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    {isTimed && (
+                      <p className="text-base font-black" style={{ color: "oklch(0.88 0.18 80)" }}>
+                        {(run.time as number).toFixed(3)}s
+                      </p>
+                    )}
+                    {run.score != null && (
+                      <p className="text-base font-black" style={{ color: "oklch(0.65 0.18 145)" }}>
+                        {run.score.toFixed(1)} pts
+                      </p>
+                    )}
+                    {run.penaltySeconds != null && run.penaltySeconds > 0 && (
+                      <p className="text-[10px]" style={{ color: "oklch(0.65 0.18 25)" }}>+{run.penaltySeconds}s pen.</p>
+                    )}
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
-      )}
+        {sortedRuns.length > 10 && (
+          <button
+            onClick={() => setShowAllRuns(!showAllRuns)}
+            className="w-full py-2.5 text-xs font-semibold"
+            style={{ background: "oklch(0.18 0.04 48)", color: "oklch(0.72 0.16 75)", borderTop: "1px solid oklch(0.25 0.05 50)" }}
+          >
+            {showAllRuns ? "Show Less" : `Show All ${sortedRuns.length} Runs`}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

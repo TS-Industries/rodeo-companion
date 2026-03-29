@@ -33,14 +33,25 @@ async function fetchHtml(url: string): Promise<string> {
 }
 
 const ALL_DISCIPLINES: Discipline[] = [
-  "barrel_racing", "team_roping", "tie_down_roping",
+  "barrel_racing", "breakaway_roping", "team_roping", "tie_down_roping",
   "bareback", "saddle_bronc", "steer_wrestling", "bull_riding",
+  "goat_tying", "pole_bending", "ribbon_roping", "chute_dogging",
+  "cutting", "working_cow_horse",
 ];
 
+// High school / junior high disciplines (includes goat tying, pole bending, ribbon roping, chute dogging)
 const HS_DISCIPLINES: Discipline[] = [
   "barrel_racing", "breakaway_roping", "team_roping",
   "tie_down_roping", "bareback", "saddle_bronc",
   "steer_wrestling", "bull_riding",
+  "goat_tying", "pole_bending", "ribbon_roping", "chute_dogging",
+];
+
+// Amateur rodeo disciplines
+const AMATEUR_DISCIPLINES: Discipline[] = [
+  "barrel_racing", "breakaway_roping", "team_roping", "tie_down_roping",
+  "bareback", "saddle_bronc", "steer_wrestling", "bull_riding",
+  "goat_tying", "pole_bending", "chute_dogging",
 ];
 
 function slugify(source: string, name: string, dateStr: string): string {
@@ -351,7 +362,7 @@ export async function scrapeWra(): Promise<number> {
     startDate: parseCpraDate(r.dateText),
     endDate: parseCpraEndDate(r.dateText, parseCpraDate(r.dateText)),
     entryOpenDate: null,
-    disciplines: JSON.stringify(ALL_DISCIPLINES),
+    disciplines: JSON.stringify(AMATEUR_DISCIPLINES),
     purseAmount: null,
     entryFee: null,
     committeeContact: null,
@@ -395,7 +406,7 @@ export async function scrapeKcra(): Promise<number> {
     startDate: parseCpraDate(r.dateText),
     endDate: parseCpraEndDate(r.dateText, parseCpraDate(r.dateText)),
     entryOpenDate: null,
-    disciplines: JSON.stringify(ALL_DISCIPLINES),
+    disciplines: JSON.stringify(AMATEUR_DISCIPLINES),
     purseAmount: null,
     entryFee: null,
     committeeContact: null,
@@ -646,23 +657,119 @@ export async function scrapeAhsraFinals(): Promise<number> {
   return upserted;
 }
 
+// ─── LRA (Lakeland Rodeo Association, Alberta Amateur) — Hardcoded 2026 ──────
+
+export async function scrapeLra(): Promise<number> {
+  console.log("[LRA] Loading hardcoded LRA 2026 schedule (lrarodeo.com)...");
+
+  // Data from https://lrarodeo.com/schedule/ — 2026 Tentative Schedule PDF
+  const lraRodeos = [
+    { name: "LRA St. Albert Rodeo", city: "St. Albert", dateText: "May 22-24, 2026" },
+    { name: "LRA Cadogan Rodeo", city: "Cadogan", dateText: "May 30-31, 2026" },
+    { name: "LRA Wetaskiwin Rodeo", city: "Wetaskiwin", dateText: "June 12-14, 2026" },
+    { name: "LRA Castor Rodeo", city: "Castor", dateText: "June 19, 2026" },
+    { name: "LRA Killam Rodeo", city: "Killam", dateText: "June 19-20, 2026" },
+    { name: "LRA Gooseberry Rodeo", city: "Gooseberry", dateText: "June 19-21, 2026" },
+    { name: "LRA Hairy Hill Rodeo", city: "Hairy Hill", dateText: "July 3-4, 2026" },
+    { name: "LRA Stoney Lake Rodeo", city: "Stoney Lake", dateText: "July 4-5, 2026" },
+    { name: "LRA Oyen Indoor Rodeo", city: "Oyen", dateText: "July 8-11, 2026" },
+    { name: "LRA Lamont Summer Sizzler", city: "Lamont", dateText: "July 11-12, 2026" },
+    { name: "LRA Hardisty Rodeo", city: "Hardisty", dateText: "July 18-19, 2026" },
+    { name: "LRA Big Valley Rodeo", city: "Big Valley", dateText: "July 24-25, 2026" },
+    { name: "LRA Stettler County Fair & Rodeo", city: "Stettler", dateText: "July 30-Aug 1, 2026" },
+    { name: "LRA Smoky Lake Rodeo", city: "Smoky Lake", dateText: "Aug 1-2, 2026" },
+    { name: "LRA Tofield Rodeo", city: "Tofield", dateText: "Aug 7-9, 2026" },
+    { name: "LRA Kikino Silver Birch Rodeo", city: "Kikino", dateText: "Aug 14-16, 2026" },
+    { name: "LRA Finals", city: "St. Paul", dateText: "September 3-6, 2026", isSpecial: true },
+  ];
+
+  const events: RodeoEvent[] = lraRodeos.map(r => ({
+    externalId: slugify("lra", r.name, r.dateText),
+    name: r.name,
+    province: "Alberta",
+    city: r.city,
+    locationName: null,
+    locationAddress: `${r.city}, AB`,
+    startDate: parseCpraDate(r.dateText),
+    endDate: parseCpraEndDate(r.dateText, parseCpraDate(r.dateText)),
+    entryOpenDate: null,
+    disciplines: JSON.stringify(AMATEUR_DISCIPLINES),
+    purseAmount: null,
+    entryFee: null,
+    committeeContact: null,
+    committeePhone: null,
+    isSpecialEvent: (r as { isSpecial?: boolean }).isSpecial ?? false,
+    detailsUrl: "https://lrarodeo.com/schedule/",
+    websiteUrl: "https://lrarodeo.com",
+    rawData: JSON.stringify({ source: "lra", level: "amateur", province: "Alberta" }),
+  }));
+
+  const upserted = await upsertEvents(events);
+  console.log(`[LRA] Done: ${upserted}/${events.length} upserted`);
+  return upserted;
+}
+
+// ─── FCA (Foothills Cowboys Association, Alberta Amateur) — Hardcoded 2026 ────
+
+export async function scrapeFca(): Promise<number> {
+  console.log("[FCA] Loading hardcoded FCA 2026 schedule (fcarodeo.ca)...");
+
+  // Data from https://www.fcarodeo.ca/ — 2025 schedule (2026 not yet posted as of Mar 2026)
+  // Using 2025 dates as a placeholder — will be updated when 2026 schedule is posted
+  const fcaRodeos = [
+    { name: "FCA Bighorn Stampede (Caroline)", city: "Caroline", dateText: "May 16-17, 2026" },
+    { name: "FCA Water Valley Stampede", city: "Water Valley", dateText: "June 6-7, 2026" },
+    { name: "FCA Pete Knight Days (Crossfield)", city: "Crossfield", dateText: "June 13-14, 2026" },
+    { name: "FCA Dogpound Stampede", city: "Dogpound", dateText: "July 15, 2026" },
+    { name: "FCA Cochrane Lions Rodeo", city: "Cochrane", dateText: "August 29-31, 2026" },
+    { name: "FCA Finals", city: "High River", dateText: "September 25-26, 2026", isSpecial: true },
+  ];
+
+  const events: RodeoEvent[] = fcaRodeos.map(r => ({
+    externalId: slugify("fca", r.name, r.dateText),
+    name: r.name,
+    province: "Alberta",
+    city: r.city,
+    locationName: null,
+    locationAddress: `${r.city}, AB`,
+    startDate: parseCpraDate(r.dateText),
+    endDate: parseCpraEndDate(r.dateText, parseCpraDate(r.dateText)),
+    entryOpenDate: null,
+    disciplines: JSON.stringify(AMATEUR_DISCIPLINES),
+    purseAmount: null,
+    entryFee: null,
+    committeeContact: "FCA Office",
+    committeePhone: "403-453-1472",
+    isSpecialEvent: (r as { isSpecial?: boolean }).isSpecial ?? false,
+    detailsUrl: "https://www.fcarodeo.ca/",
+    websiteUrl: "https://www.fcarodeo.ca",
+    rawData: JSON.stringify({ source: "fca", level: "amateur", province: "Alberta" }),
+  }));
+
+  const upserted = await upsertEvents(events);
+  console.log(`[FCA] Done: ${upserted}/${events.length} upserted`);
+  return upserted;
+}
+
 // ─── Master Scrape Function ───────────────────────────────────────────────────
 
 export async function scrapeAllCanadianRodeos(): Promise<{
-  cpra: number; wra: number; kcra: number; ram: number; ahsra: number; total: number;
+  cpra: number; wra: number; kcra: number; ram: number; ahsra: number; lra: number; fca: number; total: number;
 }> {
   console.log("[Scraper] Starting full Canadian rodeo scrape...");
-  const [cpra, wra, kcra, ram, ahsra] = await Promise.allSettled([
+  const [cpra, wra, kcra, ram, ahsra, lra, fca] = await Promise.allSettled([
     scrapeCpra(),
     scrapeWra(),
     scrapeKcra(),
     scrapeRamRodeo(),
     scrapeAhsraFinals(),
+    scrapeLra(),
+    scrapeFca(),
   ]).then(results => results.map(r => r.status === "fulfilled" ? r.value : 0));
 
-  const total = cpra + wra + kcra + ram + ahsra;
-  console.log(`[Scraper] Complete. Total: ${total} (CPRA:${cpra} WRA:${wra} KCRA:${kcra} RAM:${ram} AHSRA:${ahsra})`);
-  return { cpra, wra, kcra, ram, ahsra, total };
+  const total = cpra + wra + kcra + ram + ahsra + lra + fca;
+  console.log(`[Scraper] Complete. Total: ${total} (CPRA:${cpra} WRA:${wra} KCRA:${kcra} RAM:${ram} AHSRA:${ahsra} LRA:${lra} FCA:${fca})`);
+  return { cpra, wra, kcra, ram, ahsra, lra, fca, total };
 }
 
 // ─── DB Query Helpers ────────────────────────────────────────────────────────

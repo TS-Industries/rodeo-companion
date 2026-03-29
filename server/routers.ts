@@ -184,7 +184,7 @@ const performancesRouter = router({
       z.object({
         rodeoId: z.number(),
         discipline: disciplineEnum,
-        round: roundEnum.default("regular"),
+        round: z.string().max(64).default("Round 1"), // free-text round name
         timeSeconds: z.number().optional(),
         score: z.number().optional(),
         penaltySeconds: z.number().default(0),
@@ -213,13 +213,14 @@ const performancesRouter = router({
     .input(
       z.object({
         id: z.number(),
-        round: roundEnum.optional(),
+        round: z.string().max(64).optional(), // free-text round name
         timeSeconds: z.number().optional().nullable(),
         score: z.number().optional().nullable(),
         penaltySeconds: z.number().optional(),
         prizeMoneyCents: z.number().int().min(0).optional(),
         notes: z.string().optional().nullable(),
         runDate: z.number().optional(),
+        discipline: disciplineEnum.optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -374,6 +375,8 @@ const analyticsRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const all = await getPerformancesByUser(ctx.user.id);
+      const allRodeos = await getRodeosByUser(ctx.user.id);
+      const rodeoMap = Object.fromEntries(allRodeos.map((r) => [r.id, r.name]));
       const now = Date.now();
       const msMap = { week: 7, month: 30, year: 365, all: 99999 };
       const cutoff = now - msMap[input.period] * 24 * 60 * 60 * 1000;
@@ -395,10 +398,18 @@ const analyticsRouter = router({
         bestScore: scores.length ? Math.max(...scores) : null,
         avgScore: scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : null,
         chartData: filtered.map((p) => ({
+          id: p.id,
           date: p.runDate.getTime(),
           time: p.timeSeconds != null ? (p.timeSeconds + (p.penaltySeconds ?? 0)) : null,
+          rawTime: p.timeSeconds,
+          penaltySeconds: p.penaltySeconds,
           score: p.score,
           discipline: p.discipline,
+          round: p.round,
+          notes: p.notes,
+          rodeoId: p.rodeoId,
+          rodeoName: rodeoMap[p.rodeoId] ?? "Unknown Rodeo",
+          prizeMoneyCents: p.prizeMoneyCents,
         })),
       };
     }),

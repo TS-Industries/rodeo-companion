@@ -78,6 +78,13 @@
       "when": 1774703214777,
       "tag": "0010_lame_starbolt",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1774823974018,
+      "tag": "0011_fair_toxin",
+      "breakpoints": true
     }
   ]
 }

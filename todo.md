@@ -205,3 +205,23 @@
 - [x] Re-ran scraper: 151 real events (CPRA:62, WRA:11, KCRA:9, AHSRA:69)
 - [x] Hanna + Olds NULL dates confirmed TBC on CPRA website (correct behavior)
 - [ ] Browse Events import error — needs user test with real data now loaded
+
+## Round 16 — User Requested Fixes & Features
+
+- [x] Add 6 new disciplines: goat_tying, pole_bending, ribbon_roping, chute_dogging, cutting, working_cow_horse
+- [x] Update DB schema enum for performances and rodeos tables
+- [x] Update client disciplines.ts with new disciplines (labels, icons, colors, drill videos)
+- [x] Research Foothills Cowboy Association (AB) - deep scrape attempt (LRA 17 rodeos found, FCA 6 found)
+- [x] Research Lakeland Rodeo Association - deep scrape attempt (LRA 2026 schedule added)
+- [x] Research other missing Canadian amateur/HS associations
+- [x] Filter Browse Events to show FUTURE events only (no past events)
+- [x] Fix 404 after import: navigate to /schedule/:id not /rodeo/:id
+- [x] Fix discipline selection in import: only selected disciplines show in schedule
+- [x] Sort schedule soonest-first (ascending by date)
+- [x] Add rich filters to My Runs (rodeo, discipline, date, province)
+- [x] Change round field from enum to free-text input
+- [x] Add Edit Run capability (not just add video/delete)
+- [x] Fix video upload failures (investigate and fix)
+- [x] Add calendar integration for entry deadlines (Apple/Android)
+- [x] Redesign Progress/Analytics for multi-discipline clarity
+- [x] Fix run history to show rodeo name, discipline, round info (not just date/time)

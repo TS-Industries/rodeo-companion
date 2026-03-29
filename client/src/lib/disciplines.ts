@@ -9,6 +9,12 @@ export const DISCIPLINES = [
   "saddle_bronc",
   "steer_wrestling",
   "bull_riding",
+  "goat_tying",
+  "pole_bending",
+  "ribbon_roping",
+  "chute_dogging",
+  "cutting",
+  "working_cow_horse",
 ] as const;
 
 export type Discipline = (typeof DISCIPLINES)[number];
@@ -22,6 +28,12 @@ export const DISCIPLINE_LABELS: Record<Discipline, string> = {
   saddle_bronc:     "Saddle Bronc",
   steer_wrestling:  "Steer Wrestling",
   bull_riding:      "Bull Riding",
+  goat_tying:       "Goat Tying",
+  pole_bending:     "Pole Bending",
+  ribbon_roping:    "Ribbon Roping",
+  chute_dogging:    "Chute Dogging",
+  cutting:          "Cutting",
+  working_cow_horse:"Working Cow Horse",
 };
 
 // AI-generated illustrated icons (CDN URLs tied to webdev project lifecycle)
@@ -34,9 +46,16 @@ export const DISCIPLINE_IMAGES: Record<Discipline, string> = {
   saddle_bronc:     "https://d2xsxph8kpxj0f.cloudfront.net/310519663427083327/C9GZTdmmkAQAM2QeyCH5WD/discipline-saddle-bronc_469f844e.png",
   steer_wrestling:  "https://d2xsxph8kpxj0f.cloudfront.net/310519663427083327/C9GZTdmmkAQAM2QeyCH5WD/discipline-steer-wrestling_88da019b.png",
   bull_riding:      "https://d2xsxph8kpxj0f.cloudfront.net/310519663427083327/C9GZTdmmkAQAM2QeyCH5WD/discipline-bull-riding_9358527d.png",
+  // New disciplines use Lucide icon fallbacks (no AI images yet)
+  goat_tying:       "",
+  pole_bending:     "",
+  ribbon_roping:    "",
+  chute_dogging:    "",
+  cutting:          "",
+  working_cow_horse:"",
 };
 
-// Emoji fallback icons (used in compact/chip contexts)
+// SVG/text icons for compact chip contexts
 export const DISCIPLINE_ICONS: Record<Discipline, string> = {
   barrel_racing:    "🛢️",
   breakaway_roping: "🪢",
@@ -46,18 +65,34 @@ export const DISCIPLINE_ICONS: Record<Discipline, string> = {
   saddle_bronc:     "🐴",
   steer_wrestling:  "🐂",
   bull_riding:      "🐃",
+  goat_tying:       "🐐",
+  pole_bending:     "🏇",
+  ribbon_roping:    "🎀",
+  chute_dogging:    "🐄",
+  cutting:          "⚡",
+  working_cow_horse:"🌟",
 };
 
-// Timed events use seconds; rough stock events use scores 0-100
+// Timed events use seconds; rough stock events use scores 0-100; some use both
 export const TIMED_DISCIPLINES: Discipline[] = [
   "barrel_racing",
   "breakaway_roping",
   "team_roping",
   "tie_down_roping",
   "steer_wrestling",
+  "goat_tying",
+  "pole_bending",
+  "ribbon_roping",
+  "chute_dogging",
 ];
 
-export const SCORED_DISCIPLINES: Discipline[] = ["bareback", "saddle_bronc", "bull_riding"];
+export const SCORED_DISCIPLINES: Discipline[] = [
+  "bareback",
+  "saddle_bronc",
+  "bull_riding",
+  "cutting",
+  "working_cow_horse",
+];
 
 export function isTimedDiscipline(d: Discipline): boolean {
   return TIMED_DISCIPLINES.includes(d);
@@ -76,6 +111,12 @@ export const DISCIPLINE_COLORS: Record<Discipline, { bg: string; text: string; a
   saddle_bronc:     { bg: "bg-green-900/40",   text: "text-green-300",   accent: "#16a34a" },
   steer_wrestling:  { bg: "bg-red-900/40",     text: "text-red-300",     accent: "#dc2626" },
   bull_riding:      { bg: "bg-rose-900/40",    text: "text-rose-300",    accent: "#e11d48" },
+  goat_tying:       { bg: "bg-lime-900/40",    text: "text-lime-300",    accent: "#65a30d" },
+  pole_bending:     { bg: "bg-cyan-900/40",    text: "text-cyan-300",    accent: "#0891b2" },
+  ribbon_roping:    { bg: "bg-pink-900/40",    text: "text-pink-300",    accent: "#db2777" },
+  chute_dogging:    { bg: "bg-yellow-900/40",  text: "text-yellow-300",  accent: "#ca8a04" },
+  cutting:          { bg: "bg-indigo-900/40",  text: "text-indigo-300",  accent: "#4338ca" },
+  working_cow_horse:{ bg: "bg-emerald-900/40", text: "text-emerald-300", accent: "#059669" },
 };
 
 // ─── Rodeo Types ──────────────────────────────────────────────────────────────
@@ -137,6 +178,36 @@ export const DISCIPLINE_DRILL_VIDEOS: Record<Discipline, DrillVideo[]> = {
     { title: "Bull Riding Fundamentals", url: "https://www.youtube.com/results?search_query=bull+riding+fundamentals+training+drill", description: "Core body position and rope grip" },
     { title: "Spurring & Free Arm", url: "https://www.youtube.com/results?search_query=bull+riding+spurring+free+arm+technique", description: "Using your free arm and spurring for points" },
     { title: "Mental Preparation", url: "https://www.youtube.com/results?search_query=bull+riding+mental+preparation+training", description: "Mental game and visualization techniques" },
+  ],
+  goat_tying: [
+    { title: "Goat Tying Dismount Technique", url: "https://www.youtube.com/results?search_query=goat+tying+dismount+technique+drill", description: "Fast and controlled dismount from the horse" },
+    { title: "Three-Leg Tie Speed Drills", url: "https://www.youtube.com/results?search_query=goat+tying+three+leg+tie+speed+drill", description: "Building speed in the tie sequence" },
+    { title: "Goat Tying Fundamentals", url: "https://www.youtube.com/results?search_query=goat+tying+fundamentals+training", description: "Core technique for goat tying competition" },
+  ],
+  pole_bending: [
+    { title: "Pole Bending Pattern Work", url: "https://www.youtube.com/results?search_query=pole+bending+pattern+drill+training", description: "Clean weaving pattern and rate training" },
+    { title: "Speed & Turns in Poles", url: "https://www.youtube.com/results?search_query=pole+bending+speed+turns+drill", description: "Maximizing speed without knocking poles" },
+    { title: "Horse Collection in Poles", url: "https://www.youtube.com/results?search_query=pole+bending+horse+collection+training", description: "Getting your horse collected through the poles" },
+  ],
+  ribbon_roping: [
+    { title: "Ribbon Roping Team Coordination", url: "https://www.youtube.com/results?search_query=ribbon+roping+team+coordination+drill", description: "Timing between roper and ribbon runner" },
+    { title: "Ribbon Runner Technique", url: "https://www.youtube.com/results?search_query=ribbon+roping+runner+technique+training", description: "Efficient ribbon grab and run technique" },
+    { title: "Ribbon Roping Fundamentals", url: "https://www.youtube.com/results?search_query=ribbon+roping+fundamentals+junior+rodeo", description: "Core skills for ribbon roping competition" },
+  ],
+  chute_dogging: [
+    { title: "Chute Dogging Technique", url: "https://www.youtube.com/results?search_query=chute+dogging+technique+training", description: "Proper body position and steer control from the chute" },
+    { title: "Steer Wrestling from Chute", url: "https://www.youtube.com/results?search_query=chute+dogging+steer+wrestling+training", description: "Transitioning from chute to ground quickly" },
+    { title: "Chute Dogging Speed Drills", url: "https://www.youtube.com/results?search_query=chute+dogging+speed+drill+junior+rodeo", description: "Building speed and efficiency in chute dogging" },
+  ],
+  cutting: [
+    { title: "Cutting Horse Fundamentals", url: "https://www.youtube.com/results?search_query=cutting+horse+fundamentals+training", description: "Core cutting horse training principles" },
+    { title: "Working the Herd", url: "https://www.youtube.com/results?search_query=cutting+horse+working+herd+technique", description: "Reading cattle and making your cut" },
+    { title: "Cutting Competition Prep", url: "https://www.youtube.com/results?search_query=cutting+horse+competition+preparation", description: "Preparing horse and rider for cutting competition" },
+  ],
+  working_cow_horse: [
+    { title: "Reined Cow Horse Fundamentals", url: "https://www.youtube.com/results?search_query=reined+cow+horse+fundamentals+training", description: "Core reining and cow work principles" },
+    { title: "Fence Work Technique", url: "https://www.youtube.com/results?search_query=working+cow+horse+fence+work+technique", description: "Running cattle down the fence and boxing" },
+    { title: "Working Cow Horse Competition", url: "https://www.youtube.com/results?search_query=working+cow+horse+competition+training", description: "Preparing for reined cow horse competition" },
   ],
 };
 

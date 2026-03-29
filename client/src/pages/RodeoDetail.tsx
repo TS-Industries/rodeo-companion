@@ -10,8 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import {
   ArrowLeft, MapPin, CalendarDays, Bell, CheckCircle2, Plus, Trash2,
-  Clock, DollarSign, ChevronRight, Fuel, Calculator, Users, Phone, X,
+  Clock, DollarSign, ChevronRight, Fuel, Calculator, Users, Phone, X, CalendarPlus,
 } from "lucide-react";
+import { downloadICS, openGoogleCalendar, isIOS, isAndroid, type CalendarEvent } from "@/lib/calendarUtils";
+import { Dialog as CalDialog, DialogContent as CalDialogContent, DialogHeader as CalDialogHeader, DialogTitle as CalDialogTitle } from "@/components/ui/dialog";
 import { format, differenceInDays } from "date-fns";
 import {
   DISCIPLINE_LABELS, DISCIPLINE_ICONS, DISCIPLINE_IMAGES, DISCIPLINE_COLORS,
@@ -350,7 +352,7 @@ function AddPerformanceDialog({ rodeoId, discipline, open, onClose }: {
     onError: (e) => toast.error(e.message),
   });
   const isTimed = isTimedDiscipline(discipline);
-  const [form, setForm] = useState({ value: "", penalty: "0", prizeMoney: "", round: "regular" as RoundType, notes: "", runDate: new Date().toISOString().split("T")[0] });
+  const [form, setForm] = useState({ value: "", penalty: "0", prizeMoney: "", round: "", notes: "", runDate: new Date().toISOString().split("T")[0] });
 
   const handleSubmit = () => {
     const val = parseFloat(form.value);
@@ -377,30 +379,16 @@ function AddPerformanceDialog({ rodeoId, discipline, open, onClose }: {
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-1">
-          {/* Round selector */}
+          {/* Round - free text */}
           <div>
-            <Label className="text-xs font-semibold" style={{ color: "oklch(0.72 0.16 75)" }}>Round</Label>
-            <div className="flex gap-2 mt-1">
-              {(["regular", "short_go", "final"] as RoundType[]).map((r) => {
-                const style = ROUND_BADGE_STYLES[r];
-                const isSelected = form.round === r;
-                return (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => setForm({ ...form, round: r })}
-                    className="flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                    style={{
-                      background: isSelected ? style.bg : "oklch(0.22 0.04 48)",
-                      color: isSelected ? style.text : "oklch(0.42 0.04 55)",
-                      border: `1px solid ${isSelected ? style.text : "oklch(0.28 0.06 50)"}`,
-                    }}
-                  >
-                    {style.label}
-                  </button>
-                );
-              })}
-            </div>
+            <Label className="text-xs font-semibold" style={{ color: "oklch(0.72 0.16 75)" }}>Round / Go</Label>
+            <Input
+              className="mt-1"
+              placeholder="e.g. Day 1, Round 2, Short Go, Finals…"
+              value={form.round}
+              onChange={(e) => setForm({ ...form, round: e.target.value })}
+            />
+            <p className="text-[10px] mt-1" style={{ color: "oklch(0.42 0.04 55)" }}>Leave blank if not applicable</p>
           </div>
           <div>
             <Label className="text-xs font-semibold" style={{ color: "oklch(0.72 0.16 75)" }}>
@@ -525,14 +513,12 @@ function PerformancesList({ rodeoId, disciplines }: { rodeoId: number; disciplin
                               <span className="text-xs" style={{ color: "oklch(0.65 0.18 25)" }}>(+{run.penaltySeconds}s)</span>
                             )}
                             {/* Round badge */}
-                            {run.round && run.round !== "regular" && (() => {
-                              const rs = ROUND_BADGE_STYLES[run.round as RoundType];
-                              return (
-                                <span className="text-xs font-bold px-1.5 py-0.5 rounded-full" style={{ background: rs.bg, color: rs.text }}>
-                                  {rs.label}
-                                </span>
-                              );
-                            })()}
+                            {run.round && (
+                              <span className="text-xs font-bold px-1.5 py-0.5 rounded-full"
+                                style={{ background: "oklch(0.72 0.16 75 / 15%)", color: "oklch(0.72 0.16 75)" }}>
+                                {run.round}
+                              </span>
+                            )}
                             {(run.prizeMoneyCents ?? 0) > 0 && (
                               <span className="text-xs font-bold px-1.5 py-0.5 rounded-full" style={{ background: "oklch(0.65 0.18 145 / 20%)", color: "oklch(0.65 0.18 145)" }}>
                                 💰 ${((run.prizeMoneyCents ?? 0) / 100).toFixed(2)}
@@ -674,6 +660,7 @@ export default function RodeoDetail(){
   const [, navigate] = useLocation();
   const rodeoId = parseInt(params.id ?? "0", 10);
   const utils = trpc.useUtils();
+  const [showCalDialog, setShowCalDialog] = useState(false);
 
   const { data: rodeo, isLoading } = trpc.rodeos.get.useQuery({ id: rodeoId });
   const toggleEntered = trpc.rodeos.update.useMutation({
@@ -785,11 +772,24 @@ export default function RodeoDetail(){
                 {rodeoDays >= 0 && <span className="text-xs" style={{ color: "oklch(0.52 0.05 60)" }}>({rodeoDays === 0 ? "Today!" : `${rodeoDays}d away`})</span>}
               </div>
 
-              <div className={cn("flex items-center gap-2 text-sm", deadlineDays < 0 ? "text-muted-foreground" : deadlineDays <= 3 ? "text-orange-400 font-medium" : "")}
-                style={deadlineDays > 3 ? { color: "oklch(0.78 0.10 65)" } : {}}>
-                <Bell className="w-4 h-4 flex-shrink-0" />
-                <span>Entry deadline: {format(new Date(rodeo.entryDeadline), "MMMM d, yyyy")}</span>
-                {deadlineDays >= 0 && <span className="text-xs">({deadlineDays === 0 ? "Today!" : `${deadlineDays}d left`})</span>}
+              <div className="flex items-center gap-2">
+                <div className={cn("flex items-center gap-2 text-sm flex-1", deadlineDays < 0 ? "text-muted-foreground" : deadlineDays <= 3 ? "text-orange-400 font-medium" : "")}
+                  style={deadlineDays > 3 ? { color: "oklch(0.78 0.10 65)" } : {}}>
+                  <Bell className="w-4 h-4 flex-shrink-0" />
+                  <span>Entry deadline: {format(new Date(rodeo.entryDeadline), "MMMM d, yyyy")}</span>
+                  {deadlineDays >= 0 && <span className="text-xs">({deadlineDays === 0 ? "Today!" : `${deadlineDays}d left`})</span>}
+                </div>
+                {deadlineDays >= 0 && (
+                  <button
+                    onClick={() => setShowCalDialog(true)}
+                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold transition-colors flex-shrink-0"
+                    style={{ background: "oklch(0.65 0.14 195 / 20%)", color: "oklch(0.72 0.16 200)" }}
+                    title="Add entry deadline to calendar"
+                  >
+                    <CalendarPlus className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Add to Calendar</span>
+                  </button>
+                )}
               </div>
 
               {rodeo.locationName && (
@@ -860,6 +860,92 @@ export default function RodeoDetail(){
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* ── Calendar Picker Dialog ── */}
+      {showCalDialog && rodeo && (() => {
+        const deadlineEvent: CalendarEvent = {
+          title: `Entry Deadline: ${rodeo.name}`,
+          description: `Entry deadline for ${rodeo.name}. Rodeo date: ${format(new Date(rodeo.rodeoDate), "MMMM d, yyyy")}.${rodeo.locationName ? ` Location: ${rodeo.locationName}` : ""}`,
+          startDate: new Date(rodeo.entryDeadline),
+          endDate: new Date(new Date(rodeo.entryDeadline).getTime() + 60 * 60 * 1000),
+          location: rodeo.locationAddress ?? rodeo.locationName ?? undefined,
+        };
+        const rodeoDayEvent: CalendarEvent = {
+          title: rodeo.name,
+          description: `${rodeo.name}${rodeo.locationName ? ` at ${rodeo.locationName}` : ""}`,
+          startDate: new Date(rodeo.rodeoDate),
+          endDate: new Date(new Date(rodeo.rodeoDate).getTime() + 8 * 60 * 60 * 1000),
+          location: rodeo.locationAddress ?? rodeo.locationName ?? undefined,
+        };
+        return (
+          <CalDialog open={showCalDialog} onOpenChange={(o) => !o && setShowCalDialog(false)}>
+            <CalDialogContent className="max-w-sm" style={{ background: "oklch(0.18 0.04 48)", border: "1px solid oklch(0.72 0.16 75 / 30%)" }}>
+              <CalDialogHeader>
+                <CalDialogTitle style={{ color: "oklch(0.78 0.18 80)", fontFamily: "'Playfair Display', serif" }}>
+                  📅 Add to Calendar
+                </CalDialogTitle>
+              </CalDialogHeader>
+              <div className="space-y-3 py-2">
+                <p className="text-xs" style={{ color: "oklch(0.62 0.05 65)" }}>
+                  Choose what to add to your device calendar:
+                </p>
+
+                {/* Entry Deadline */}
+                <div className="rounded-xl p-3 space-y-2" style={{ background: "oklch(0.20 0.05 48)", border: "1px solid oklch(0.32 0.07 55)" }}>
+                  <p className="text-xs font-bold" style={{ color: "oklch(0.78 0.18 80)" }}>⏰ Entry Deadline</p>
+                  <p className="text-xs" style={{ color: "oklch(0.52 0.05 60)" }}>{format(new Date(rodeo.entryDeadline), "MMMM d, yyyy")}</p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => { downloadICS(deadlineEvent); setShowCalDialog(false); toast.success("Calendar file downloaded!"); }}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold"
+                      style={{ background: "oklch(0.65 0.14 195 / 20%)", color: "oklch(0.72 0.16 200)" }}
+                    >
+                      {isIOS() ? "🍎 Apple Calendar" : isAndroid() ? "📱 Add to Calendar" : "⬇️ Download .ics"}
+                    </button>
+                    {!isIOS() && !isAndroid() && (
+                      <button
+                        onClick={() => { openGoogleCalendar(deadlineEvent); setShowCalDialog(false); }}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold"
+                        style={{ background: "oklch(0.65 0.18 25 / 20%)", color: "oklch(0.75 0.20 30)" }}
+                      >
+                        📅 Google Calendar
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Rodeo Day */}
+                <div className="rounded-xl p-3 space-y-2" style={{ background: "oklch(0.20 0.05 48)", border: "1px solid oklch(0.32 0.07 55)" }}>
+                  <p className="text-xs font-bold" style={{ color: "oklch(0.78 0.18 80)" }}>🏆 Rodeo Day</p>
+                  <p className="text-xs" style={{ color: "oklch(0.52 0.05 60)" }}>{format(new Date(rodeo.rodeoDate), "MMMM d, yyyy")}</p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => { downloadICS(rodeoDayEvent); setShowCalDialog(false); toast.success("Calendar file downloaded!"); }}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold"
+                      style={{ background: "oklch(0.65 0.14 195 / 20%)", color: "oklch(0.72 0.16 200)" }}
+                    >
+                      {isIOS() ? "🍎 Apple Calendar" : isAndroid() ? "📱 Add to Calendar" : "⬇️ Download .ics"}
+                    </button>
+                    {!isIOS() && !isAndroid() && (
+                      <button
+                        onClick={() => { openGoogleCalendar(rodeoDayEvent); setShowCalDialog(false); }}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold"
+                        style={{ background: "oklch(0.65 0.18 25 / 20%)", color: "oklch(0.75 0.20 30)" }}
+                      >
+                        📅 Google Calendar
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <p className="text-[10px] text-center" style={{ color: "oklch(0.42 0.04 55)" }}>
+                  {isIOS() ? "Opens in Apple Calendar automatically" : isAndroid() ? "Opens in your default calendar app" : "Download .ics to add to any calendar app"}
+                </p>
+              </div>
+            </CalDialogContent>
+          </CalDialog>
+        );
+      })()}
     </div>
   );
 }

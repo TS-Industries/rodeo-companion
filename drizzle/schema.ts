@@ -34,6 +34,12 @@ export const DISCIPLINES = [
   "saddle_bronc",
   "steer_wrestling",
   "bull_riding",
+  "goat_tying",
+  "pole_bending",
+  "ribbon_roping",
+  "chute_dogging",
+  "cutting",
+  "working_cow_horse",
 ] as const;
 export type Discipline = (typeof DISCIPLINES)[number];
 
@@ -46,6 +52,12 @@ export const DISCIPLINE_LABELS: Record<Discipline, string> = {
   saddle_bronc: "Saddle Bronc",
   steer_wrestling: "Steer Wrestling",
   bull_riding: "Bull Riding",
+  goat_tying: "Goat Tying",
+  pole_bending: "Pole Bending",
+  ribbon_roping: "Ribbon Roping",
+  chute_dogging: "Chute Dogging",
+  cutting: "Cutting",
+  working_cow_horse: "Working Cow Horse",
 };
 
 // Rodeo events / scheduled rodeos
@@ -76,7 +88,7 @@ export const rodeos = mysqlTable("rodeos", {
 export type Rodeo = typeof rodeos.$inferSelect;
 export type InsertRodeo = typeof rodeos.$inferInsert;
 
-// Round types for performances
+// Round types for performances - kept for legacy reference
 export const ROUND_TYPES = ["regular", "short_go", "final"] as const;
 export type RoundType = (typeof ROUND_TYPES)[number];
 export const ROUND_TYPE_LABELS: Record<RoundType, string> = {
@@ -91,7 +103,7 @@ export const performances = mysqlTable("performances", {
   userId: int("userId").notNull(),
   rodeoId: int("rodeoId").notNull(),
   discipline: mysqlEnum("discipline", DISCIPLINES).notNull(),
-  round: mysqlEnum("round", ROUND_TYPES).default("regular").notNull(), // which round of competition
+  round: varchar("round", { length: 64 }).default("Round 1").notNull(), // free-text round label (e.g. "Day 1", "Round 2", "Short Go", "Final")
   timeSeconds: float("timeSeconds"), // null for rough stock (scored differently)
   score: float("score"),             // for rough stock events
   penaltySeconds: float("penaltySeconds").default(0),
