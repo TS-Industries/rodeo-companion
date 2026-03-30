@@ -122,14 +122,10 @@ function ImportDialog({
   onClose: () => void;
   onImported: (rodeoId: number | null) => void;
 }) {
-  // Show ALL 14 disciplines so users can pick what they compete in at this event
-  // Pre-select disciplines that the event lists (if any), otherwise pre-select all
-  const eventDisciplines = (event.disciplines as Discipline[]).filter((d) =>
-    (DISCIPLINES as readonly string[]).includes(d)
-  );
+  // Show ALL 14 disciplines but start with NONE selected.
+  // The user must explicitly tap the disciplines they compete in at this event.
   const allDisciplines = DISCIPLINES as readonly Discipline[];
-  const initialSelected: Discipline[] = eventDisciplines.length > 0 ? eventDisciplines : [...allDisciplines];
-  const [selectedDisciplines, setSelectedDisciplines] = useState<Discipline[]>(initialSelected);
+  const [selectedDisciplines, setSelectedDisciplines] = useState<Discipline[]>([]);
 
   const importMutation = trpc.events.import.useMutation({
     onSuccess: (data) => {

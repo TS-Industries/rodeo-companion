@@ -295,3 +295,7 @@
 - [x] Add AHSRA D1/D2/D3 Junior High 2026 spring schedule to scraper (16 rodeos)
 - [x] Add AHSRA D1/D2/D3 High School 2026 spring schedule to scraper (18 rodeos + Finals)
 - [x] Add WRA 2026 schedule to scraper (updated with confirmed dates from wrarodeo.com)
+
+## Round 21 — Discipline Selection Fix
+- [x] Fix Browse import dialog: start with ZERO disciplines selected (not all 14 pre-selected)
+- [x] Fix RodeoDetail: only show the disciplines the user actually selected (confirmed — reads from saved DB record correctly)
