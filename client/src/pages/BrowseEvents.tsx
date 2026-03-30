@@ -122,11 +122,14 @@ function ImportDialog({
   onClose: () => void;
   onImported: (rodeoId: number | null) => void;
 }) {
-  // Only show disciplines that are available at this specific event
+  // Show ALL 14 disciplines so users can pick what they compete in at this event
+  // Pre-select disciplines that the event lists (if any), otherwise pre-select all
   const eventDisciplines = (event.disciplines as Discipline[]).filter((d) =>
     (DISCIPLINES as readonly string[]).includes(d)
   );
-  const [selectedDisciplines, setSelectedDisciplines] = useState<Discipline[]>(eventDisciplines);
+  const allDisciplines = DISCIPLINES as readonly Discipline[];
+  const initialSelected: Discipline[] = eventDisciplines.length > 0 ? eventDisciplines : [...allDisciplines];
+  const [selectedDisciplines, setSelectedDisciplines] = useState<Discipline[]>(initialSelected);
 
   const importMutation = trpc.events.import.useMutation({
     onSuccess: (data) => {
@@ -176,7 +179,7 @@ function ImportDialog({
               Select your disciplines:
             </p>
             <div className="grid grid-cols-2 gap-2">
-              {eventDisciplines.map((d) => {
+              {(allDisciplines as Discipline[]).map((d) => {
                 const selected = selectedDisciplines.includes(d);
                 return (
                   <button
@@ -439,10 +442,9 @@ export default function BrowseEvents() {
 
   const handleImported = (rodeoId: number | null) => {
     setImportingEvent(null);
-    if (rodeoId) {
-      // Navigate to the schedule detail page (correct route is /schedule/:id)
-      setTimeout(() => navigate(`/schedule/${rodeoId}`), 500);
-    }
+    // Always navigate to the schedule list — the rodeoId may not be available
+    // due to MySQL insertId extraction timing; user can find their new rodeo there
+    setTimeout(() => navigate("/schedule"), 500);
   };
 
   return (

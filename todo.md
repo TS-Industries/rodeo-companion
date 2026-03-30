@@ -228,27 +228,70 @@
 
 ## Round 17 — Horse Management & Cleanup
 
-- [ ] Remove Drills section from Analytics page
-- [ ] Remove Contacts page and nav entry
-- [ ] Horse notes: expand to multiline textarea
-- [ ] Horse health log: vet visits, dentist, farrier entries with date/notes/cost
-- [ ] Horse care reminders: vet/dentist/farrier reminders linked to phone calendar (Apple/Android/Google)
-- [ ] Horse feeding: feeding schedule and supplement tracking per horse
-- [ ] Horse receipts: upload receipts (photos/PDFs) per horse
-- [ ] Horse receipts auto-create expense entries (linked to horse + expense report)
-- [ ] DB schema: horse_health_logs, horse_care_reminders, horse_feeding, horse_receipts tables
-- [ ] tRPC procedures for all new horse sub-features
-- [ ] Expense report PDF includes horse-related expenses
+- [x] Remove Drills section from Analytics page
+- [x] Remove Contacts page and nav entry
+- [x] Horse notes: expand to multiline textarea
+- [x] Horse health log: vet visits, dentist, farrier entries with date/notes/cost
+- [x] Horse care reminders: vet/dentist/farrier reminders linked to phone calendar (Apple/Android/Google)
+- [x] Horse feeding: feeding schedule and supplement tracking per horse
+- [x] Horse receipts: upload receipts (photos/PDFs) per horse
+- [x] Horse receipts auto-create expense entries (linked to horse + expense report)
+- [x] DB schema: horse_health_logs, horse_care_reminders, horse_feeding, horse_receipts tables
+- [x] tRPC procedures for all new horse sub-features
+- [ ] Expense report PDF includes horse-related expenses (future)
 
 ## Round 17b — New Discipline Images & Browse Fix
 
-- [ ] Generate AI images for goat tying, pole bending, ribbon roping, chute dogging, cutting, working cow horse
-- [ ] Upload discipline images to CDN
-- [ ] Wire new discipline images into disciplines.ts DISCIPLINE_IMAGES map
-- [ ] Fix Browse import dialog to show all 14 disciplines (not just original 8)
+- [x] Generate AI images for goat tying, pole bending, ribbon roping, chute dogging, cutting, working cow horse
+- [x] Upload discipline images to CDN
+- [x] Wire new discipline images into disciplines.ts DISCIPLINE_IMAGES map
+- [x] Fix Browse import dialog to show all 14 disciplines (not just original 8)
 
 ## Round 17c — Emoji Removal
 
-- [ ] Remove emojis from DISCIPLINE_ICONS in disciplines.ts
-- [ ] Remove emoji usage from Analytics discipline select dropdown
-- [ ] Audit all pages for discipline emoji usage and remove
+- [x] Remove emojis from DISCIPLINE_ICONS in disciplines.ts
+- [x] Remove emoji usage from Analytics discipline select dropdown
+- [x] Audit all pages for discipline emoji usage and remove
+
+## Round 18 — Bug Fixes & Association Expansion
+
+- [x] Fix Browse: discipline selection persists when added to schedule (not stripped out)
+- [x] Fix Progress: run history items are clickable/expandable to see full run detail
+- [x] Fix Progress P&L: rodeo names link to rodeo detail
+- [x] Fix Expenses: add rodeo selector so expenses can be tied to a specific rodeo
+- [x] Fix Horses health log: add "set next reminder" date field when logging any care entry (auto-creates a care reminder)
+- [ ] Add all associations from Master Directory to scraper (future — expanding beyond AB/SK foundation)
+
+## Round 19 — Full Association Scraping, Daily Refresh & Change Notifications
+
+- [ ] Deep-scrape CCA (canadiancowboys.ca) — SK/AB/MB amateur rodeos
+- [ ] Deep-scrape CRA (chinookrodeoassociation.com) — Southern AB/SK/BC amateur
+- [ ] Deep-scrape CARA (cararodeo.com) — Central AB amateur
+- [ ] Deep-scrape BCRA (rodeobc.com) — BC amateur/semi-pro
+- [ ] Deep-scrape MRCA (mrcarodeo.jigsy.com) — MB/SK amateur
+- [ ] Deep-scrape BRC (bullriderscanada.ca) — AB/SK bull riding
+- [ ] Deep-scrape NRCA (northernrodeocowboysassociation.com) — Northern AB amateur
+- [ ] Deep-scrape CCRA senior (canadaseniorrodeo.com) — 40+ western Canada
+- [ ] Deep-scrape BCLBRA (bclbra.org) — BC youth (8-14)
+- [ ] Deep-scrape CGRA (cgra.ca) — Canadian Girls Rodeo
+- [ ] Deep-scrape CCRA collegiate (canadiancollegerodeo.com) — post-secondary
+- [ ] Deep-scrape INFR (infr.org) — Indigenous National Finals regions
+- [ ] Deep-scrape IRCA Region One (ircaregionone.ca) — Western Canada Indigenous
+- [ ] Deep-scrape AHSRA (albertahsrodeo.com) — Alberta HS full schedule
+- [ ] Deep-scrape BCHSRA (bchsra.ca) — BC High School
+- [ ] Deep-scrape SHSRA (shsra.ca) — Saskatchewan High School
+- [ ] Deep-scrape MHSRA (mhsra.ca) — Manitoba High School
+- [ ] Deep-scrape OHSRA (ohsrarodeo.ca) — Ontario High School
+- [ ] Add daily auto-refresh cron job (server-side, runs at 3am MT daily)
+- [ ] Add change-detection: compare new scrape vs stored, flag changed fields
+- [ ] Add in-app notifications when a user's scheduled rodeo changes (date/location/cancellation)
+- [ ] Update Browse Events header to show all sources
+
+## Round 20 — Bug Fixes & AHSRA/WRA Schedule Data
+- [x] Fix Browse: discipline selection persists when added to schedule (not stripped)
+- [x] Fix Progress: run history items clickable/expandable to see full detail
+- [x] Fix Expenses: add rodeo selector to link expenses to a specific rodeo
+- [x] Fix Horses health log: add "set next reminder" with calendar deep-link for each care entry
+- [x] Add AHSRA D1/D2/D3 Junior High 2026 spring schedule to scraper (16 rodeos)
+- [x] Add AHSRA D1/D2/D3 High School 2026 spring schedule to scraper (18 rodeos + Finals)
+- [x] Add WRA 2026 schedule to scraper (updated with confirmed dates from wrarodeo.com)

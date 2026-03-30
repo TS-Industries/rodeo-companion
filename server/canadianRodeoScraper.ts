@@ -338,20 +338,15 @@ function parseTextSchedule(lines: string[]): RodeoEvent[] {
 export async function scrapeWra(): Promise<number> {
   console.log("[WRA] Loading hardcoded WRA schedule (wrarodeo.com)...");
 
-  // Data scraped from wrarodeo.com/schedule/ on 2026-03-28
-  // WRA = Western Rodeo Association (Alberta amateur)
+  // Data scraped from wrarodeo.com/schedule/ on 2026-03-30 (Wildrose Rodeo Association, Alberta amateur)
+  // Source: wrarodeo.com/wp-content/uploads/2026/01/2026-Tentative-Rodeo-Schedule-1.pdf
+  // Note: Some dates TBD — only confirmed dates included
   const wraRodeos = [
-    { name: "Stavely Stampede", city: "Stavely", dateText: "May 16-17, 2026" },
-    { name: "Ponoka Stampede", city: "Ponoka", dateText: "June 25-28, 2026" },
-    { name: "Buck Lake Stampede", city: "Buck Lake", dateText: "July 11-12, 2026" },
-    { name: "Drayton Valley Rodeo", city: "Drayton Valley", dateText: "July 18-19, 2026" },
-    { name: "Barrhead Rodeo", city: "Barrhead", dateText: "July 25-26, 2026" },
-    { name: "Westlock Rodeo", city: "Westlock", dateText: "August 1-2, 2026" },
-    { name: "Lacombe Rodeo", city: "Lacombe", dateText: "August 8-9, 2026" },
-    { name: "Camrose Stampede", city: "Camrose", dateText: "August 15-16, 2026" },
-    { name: "Stettler Rodeo", city: "Stettler", dateText: "August 22-23, 2026" },
-    { name: "Innisfail Rodeo", city: "Innisfail", dateText: "August 29-30, 2026" },
-    { name: "WRA Finals", city: "Ponoka", dateText: "September 12-13, 2026", isSpecial: true },
+    { name: "WRA High Prairie Rodeo", city: "High Prairie", dateText: "April 25-26, 2026" },
+    { name: "WRA Medicine Lodge Rodeo", city: "Medicine Lodge", dateText: "May 9-10, 2026" },
+    { name: "WRA Mayerthorpe Rodeo", city: "Mayerthorpe", dateText: "May 22-24, 2026" },
+    { name: "WRA Buck Lake Stampede", city: "Buck Lake", dateText: "July 11, 2026" },
+    { name: "WRA Finals", city: "Barrhead", dateText: "September 17-20, 2026", isSpecial: true },
   ];
 
   const events: RodeoEvent[] = wraRodeos.map(r => ({

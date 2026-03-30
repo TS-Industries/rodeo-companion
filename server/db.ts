@@ -92,7 +92,10 @@ export async function createRodeo(data: InsertRodeo) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
   const result = await db.insert(rodeos).values(data);
-  return { insertId: (result as any)[0]?.insertId as number | undefined };
+  // MySQL/TiDB returns [ResultSetHeader, ...] — insertId is on the first element
+  const header = (result as any)[0];
+  const insertId: number | undefined = header?.insertId ?? header?.lastID ?? undefined;
+  return { insertId };
 }
 
 export async function updateRodeo(id: number, userId: number, data: Partial<InsertRodeo>) {

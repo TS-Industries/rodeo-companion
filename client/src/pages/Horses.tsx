@@ -79,12 +79,15 @@ function HealthLogTab({ horseId, horseName }: { horseId: number; horseName: stri
   const utils = trpc.useUtils();
   const { data: logs = [], isLoading } = trpc.horseHealthLogs.list.useQuery({ horseId });
   const createLog = trpc.horseHealthLogs.create.useMutation({
-    onSuccess: () => { utils.horseHealthLogs.list.invalidate({ horseId }); toast.success("Log entry added"); setShowAdd(false); resetForm(); },
+    onSuccess: () => { utils.horseHealthLogs.list.invalidate({ horseId }); toast.success("Log entry added"); },
     onError: (e) => toast.error(e.message),
   });
   const deleteLog = trpc.horseHealthLogs.delete.useMutation({
     onSuccess: () => utils.horseHealthLogs.list.invalidate({ horseId }),
     onError: (e) => toast.error(e.message),
+  });
+  const createReminder = trpc.horseCareReminders.create.useMutation({
+    onSuccess: () => utils.horseCareReminders.list.invalidate({ horseId }),
   });
 
   const [showAdd, setShowAdd] = useState(false);
@@ -94,7 +97,9 @@ function HealthLogTab({ horseId, horseName }: { horseId: number; horseName: stri
   const [cost, setCost] = useState("");
   const [notes, setNotes] = useState("");
   const [logDate, setLogDate] = useState(() => new Date().toISOString().slice(0, 10));
-  function resetForm() { setType("vet"); setTitle(""); setProvider(""); setCost(""); setNotes(""); setLogDate(new Date().toISOString().slice(0, 10)); }
+  const [nextReminderDate, setNextReminderDate] = useState("");
+  const [pendingCalEvent, setPendingCalEvent] = useState<{ title: string; date: Date; description?: string } | null>(null);
+  function resetForm() { setType("vet"); setTitle(""); setProvider(""); setCost(""); setNotes(""); setLogDate(new Date().toISOString().slice(0, 10)); setNextReminderDate(""); }
 
   const sorted = [...logs].sort((a, b) => new Date(b.logDate).getTime() - new Date(a.logDate).getTime());
 
@@ -176,13 +181,41 @@ function HealthLogTab({ horseId, horseName }: { horseId: number; horseName: stri
             <div>
               <Label className="text-xs font-semibold" style={{ color: "oklch(0.72 0.16 75)" }}>Notes</Label>
               <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Treatment details, observations, medications..." rows={3} className="mt-1 text-sm resize-none" />
+            </div>            {/* Next Reminder */}
+            <div className="rounded-lg p-3 space-y-2" style={{ background: "oklch(0.20 0.05 48)", border: "1px solid oklch(0.72 0.16 75 / 20%)" }}>
+              <Label className="text-xs font-semibold flex items-center gap-1.5" style={{ color: "oklch(0.72 0.16 75)" }}>
+                <Bell className="w-3.5 h-3.5" /> Set Next Reminder Date (optional)
+              </Label>
+              <Input type="date" value={nextReminderDate} onChange={(e) => setNextReminderDate(e.target.value)} className="text-sm" />
+              {nextReminderDate && (
+                <p className="text-[11px]" style={{ color: "oklch(0.52 0.05 60)" }}>A reminder will be created and you can add it to your phone calendar.</p>
+              )}
             </div>
-            <Button className="w-full" disabled={!title || createLog.isPending} onClick={() => createLog.mutate({ horseId, type, title, provider: provider || undefined, cost: cost ? parseFloat(cost) : undefined, notes: notes || undefined, logDate })}>
+            <Button className="w-full" disabled={!title || createLog.isPending} onClick={async () => {
+              await createLog.mutateAsync({ horseId, type, title, provider: provider || undefined, cost: cost ? parseFloat(cost) : undefined, notes: notes || undefined, logDate });
+              if (nextReminderDate) {
+                const reminderTitle = `${horseName}: ${CARE_LABELS[type]}`;
+                try {
+                  await createReminder.mutateAsync({ horseId, type, title: reminderTitle, notes: notes || undefined, reminderDate: nextReminderDate });
+                } catch { /* ignore */ }
+                setPendingCalEvent({ title: reminderTitle, date: new Date(nextReminderDate + 'T09:00:00'), description: `${CARE_LABELS[type]} for ${horseName}${provider ? ` with ${provider}` : ''}${notes ? '. ' + notes : ''}` });
+              } else {
+                setShowAdd(false);
+                resetForm();
+              }
+            }}>
               {createLog.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Entry"}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
+      {pendingCalEvent && (
+        <CalendarPickerDialog
+          open={!!pendingCalEvent}
+          onClose={() => { setPendingCalEvent(null); setShowAdd(false); resetForm(); }}
+          event={pendingCalEvent}
+        />
+      )}
     </div>
   );
 }

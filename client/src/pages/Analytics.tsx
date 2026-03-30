@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -123,6 +124,7 @@ function ScoreTooltip({ active, payload, label }: { active?: boolean; payload?: 
 
 // ─── Performance Tab ──────────────────────────────────────────────────────────
 function PerformanceTab({ discipline, period }: { discipline: string; period: Period }) {
+  const [, navigate] = useLocation();
   const { data: summary, isLoading } = trpc.analytics.summary.useQuery({
     discipline: discipline === "all" ? undefined : discipline as Discipline,
     period,
@@ -298,7 +300,12 @@ function PerformanceTab({ discipline, period }: { discipline: string; period: Pe
             const isTimed = run.time != null;
             const colors = DISCIPLINE_COLORS[run.discipline as Discipline] ?? { bg: "bg-muted", text: "text-muted-foreground", accent: "#888" };
             return (
-              <div key={run.id ?? i} className="px-4 py-3" style={{ background: "oklch(0.16 0.04 48)" }}>
+              <button
+                key={run.id ?? i}
+                onClick={() => run.rodeoId && navigate(`/schedule/${run.rodeoId}`)}
+                className="w-full text-left px-4 py-3 transition-colors hover:bg-white/5"
+                style={{ background: "oklch(0.16 0.04 48)" }}
+              >
                 <div className="flex items-start gap-3">
                   <span className={`w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 mt-0.5 ${colors.bg}`}>
                     <img src={DISCIPLINE_IMAGES[run.discipline as Discipline]} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} />
@@ -344,7 +351,7 @@ function PerformanceTab({ discipline, period }: { discipline: string; period: Pe
                     )}
                   </div>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
@@ -366,21 +373,37 @@ function PerformanceTab({ discipline, period }: { discipline: string; period: Pe
 function ExpensesTab({ period }: { period: Period }) {
   const { data: allExpenses, isLoading } = trpc.expenses.listAll.useQuery();
   const { data: rodeos } = trpc.rodeos.list.useQuery();
-
+  const [selectedRodeoId, setSelectedRodeoId] = useState<string>("all");
   if (isLoading) {
     return <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin" style={{ color: "oklch(0.72 0.16 75)" }} /></div>;
   }
-
   const now = Date.now();
   const msMap = { week: 7, month: 30, year: 365, all: 99999 };
   const cutoff = now - msMap[period] * 24 * 60 * 60 * 1000;
-  const filtered = allExpenses?.filter((e) => new Date(e.date).getTime() >= cutoff) ?? [];
+  const filtered = (allExpenses ?? []).filter((e) => {
+    const inPeriod = new Date(e.date).getTime() >= cutoff;
+    const inRodeo = selectedRodeoId === "all" || e.rodeoId === parseInt(selectedRodeoId);
+    return inPeriod && inRodeo;
+  });
 
   if (filtered.length === 0) {
     return (
-      <div className="text-center py-12">
-        <div className="text-5xl mb-3">💰</div>
-        <p className="text-sm font-medium" style={{ color: "oklch(0.62 0.05 65)" }}>No expenses for this period</p>
+      <div className="space-y-4">
+        {(rodeos ?? []).length > 0 && (
+          <Select value={selectedRodeoId} onValueChange={setSelectedRodeoId}>
+            <SelectTrigger className="text-xs w-full"><SelectValue placeholder="Filter by rodeo" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all" className="text-xs">All Rodeos</SelectItem>
+              {(rodeos ?? []).map((r) => (
+                <SelectItem key={r.id} value={String(r.id)} className="text-xs">{r.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+        <div className="text-center py-12">
+          <div className="text-5xl mb-3">💰</div>
+          <p className="text-sm font-medium" style={{ color: "oklch(0.62 0.05 65)" }}>No expenses for this {selectedRodeoId !== "all" ? "rodeo" : "period"}</p>
+        </div>
       </div>
     );
   }
@@ -406,6 +429,18 @@ function ExpensesTab({ period }: { period: Period }) {
 
   return (
     <div className="space-y-4">
+      {/* Rodeo filter */}
+      {(rodeos ?? []).length > 0 && (
+        <Select value={selectedRodeoId} onValueChange={setSelectedRodeoId}>
+          <SelectTrigger className="text-xs w-full"><SelectValue placeholder="Filter by rodeo" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all" className="text-xs">All Rodeos</SelectItem>
+            {(rodeos ?? []).map((r) => (
+              <SelectItem key={r.id} value={String(r.id)} className="text-xs">{r.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
       <div className="rounded-xl p-4 text-center relative overflow-hidden"
         style={{ background: "linear-gradient(135deg, oklch(0.20 0.07 30), oklch(0.16 0.05 40))", border: "1px solid oklch(0.65 0.18 25 / 40%)" }}>
         <div className="absolute inset-0 opacity-5 pointer-events-none"
