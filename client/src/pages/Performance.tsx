@@ -22,6 +22,8 @@ import {
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
+const SUGGESTED_ROUNDS = ["Day 1", "Day 2", "Short Go", "Finals", "Slack"] as const;
+
 // ─── Run Card ─────────────────────────────────────────────────────────────────
 function RunCard({
   run,
@@ -177,7 +179,11 @@ function RunDialog({
   const [discipline, setDiscipline] = useState<Discipline>(
     existingRun?.discipline ?? availableDisciplines[0] ?? "barrel_racing"
   );
-  const [round, setRound] = useState(existingRun?.round ?? "Round 1");
+  const existingRound = existingRun?.round ?? "Day 1";
+  const isCustomDefault = !SUGGESTED_ROUNDS.includes(existingRound as any) && existingRound !== "";
+  const [round, setRound] = useState(existingRound);
+  const [customRound, setCustomRound] = useState(isCustomDefault ? existingRound : "");
+  const [useCustomRound, setUseCustomRound] = useState(isCustomDefault);
   const [timeInput, setTimeInput] = useState(existingRun?.timeSeconds != null ? String(existingRun.timeSeconds) : "");
   const [penaltyInput, setPenaltyInput] = useState(existingRun?.penaltySeconds != null ? String(existingRun.penaltySeconds) : "0");
   const [scoreInput, setScoreInput] = useState(existingRun?.score != null ? String(existingRun.score) : "");
@@ -272,7 +278,7 @@ function RunDialog({
       updateRun.mutate({
         id: existingRun.id,
         discipline,
-        round: round || "Round 1",
+        round: round || "Day 1",
         timeSeconds: isTimed && timeInput ? timeVal : null,
         score: isScored && scoreInput ? scoreVal : null,
         penaltySeconds: penaltyVal,
@@ -284,7 +290,7 @@ function RunDialog({
       createRun.mutate({
         rodeoId,
         discipline,
-        round: round || "Round 1",
+        round: round || "Day 1",
         timeSeconds: isTimed && timeInput ? timeVal : undefined,
         score: isScored && scoreInput ? scoreVal : undefined,
         penaltySeconds: penaltyVal,
@@ -325,17 +331,45 @@ function RunDialog({
             </div>
           </div>
 
-          {/* Round — free-text */}
+          {/* Round — select with custom fallback */}
           <div>
             <Label className="text-xs font-semibold" style={{ color: "oklch(0.72 0.16 75)" }}>
-              Round / Go <span className="font-normal text-xs" style={{ color: "oklch(0.52 0.05 60)" }}>(e.g. Round 1, Short Go, Day 2)</span>
+              Round / Go
             </Label>
-            <Input
-              className="mt-1"
-              placeholder="Round 1"
-              value={round}
-              onChange={(e) => setRound(e.target.value)}
-            />
+            {useCustomRound ? (
+              <div className="flex gap-2 mt-1">
+                <Input
+                  placeholder="e.g. Perf 2, Matinee"
+                  value={customRound}
+                  onChange={(e) => { setCustomRound(e.target.value); setRound(e.target.value); }}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="border-amber-900/40 text-amber-400 hover:bg-amber-900/20 h-9 px-2"
+                  onClick={() => { setUseCustomRound(false); setRound("Day 1"); setCustomRound(""); }}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            ) : (
+              <Select value={round} onValueChange={(v) => {
+                if (v === "__custom__") { setUseCustomRound(true); setRound(""); }
+                else setRound(v);
+              }}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SUGGESTED_ROUNDS.map((r) => (
+                    <SelectItem key={r} value={r}>{r}</SelectItem>
+                  ))}
+                  <SelectItem value="__custom__">Other...</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           {/* Date */}
