@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import {
   ArrowLeft, MapPin, CalendarDays, Bell, CheckCircle2, Plus, Trash2,
-  Clock, DollarSign, ChevronRight, Fuel, Calculator, Users, Phone, X, CalendarPlus,
+  Clock, DollarSign, ChevronRight, Fuel, Calculator, CalendarPlus,
 } from "lucide-react";
 import { downloadICS, openGoogleCalendar, isIOS, isAndroid, type CalendarEvent } from "@/lib/calendarUtils";
 import { Dialog as CalDialog, DialogContent as CalDialogContent, DialogHeader as CalDialogHeader, DialogTitle as CalDialogTitle } from "@/components/ui/dialog";
@@ -352,7 +352,8 @@ function AddPerformanceDialog({ rodeoId, discipline, open, onClose }: {
     onError: (e) => toast.error(e.message),
   });
   const isTimed = isTimedDiscipline(discipline);
-  const [form, setForm] = useState({ value: "", penalty: "0", prizeMoney: "", round: "", notes: "", runDate: new Date().toISOString().split("T")[0] });
+  const isPartnerEvent = discipline === "team_roping" || discipline === "ribbon_roping";
+  const [form, setForm] = useState({ value: "", penalty: "0", prizeMoney: "", round: "", partnerName: "", notes: "", runDate: new Date().toISOString().split("T")[0] });
 
   const handleSubmit = () => {
     const val = parseFloat(form.value);
@@ -365,6 +366,7 @@ function AddPerformanceDialog({ rodeoId, discipline, open, onClose }: {
       score: !isTimed ? val : undefined,
       penaltySeconds: parseFloat(form.penalty) || 0,
       prizeMoneyCents: Math.round(prizeMoneyDollars * 100),
+      partnerName: form.partnerName || undefined,
       notes: form.notes || undefined,
       runDate: new Date(form.runDate).getTime(),
     });
@@ -415,6 +417,12 @@ function AddPerformanceDialog({ rodeoId, discipline, open, onClose }: {
             </div>
             <p className="text-xs mt-1" style={{ color: "oklch(0.42 0.04 55)" }}>Enter 0 or leave blank if you didn't place</p>
           </div>
+          {isPartnerEvent && (
+            <div>
+              <Label className="text-xs font-semibold" style={{ color: "oklch(0.72 0.16 75)" }}>Partner Name</Label>
+              <Input className="mt-1" placeholder="e.g. John Smith" value={form.partnerName} onChange={(e) => setForm({ ...form, partnerName: e.target.value })} />
+            </div>
+          )}
           <div>
             <Label className="text-xs font-semibold" style={{ color: "oklch(0.72 0.16 75)" }}>Notes</Label>
             <Input className="mt-1" placeholder="Any notes about this run…" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
@@ -552,107 +560,6 @@ function PerformancesList({ rodeoId, disciplines }: { rodeoId: number; disciplin
   );
 }
 
-// ─── Partners Tab ─────────────────────────────────────────────────────────────────
-const PARTNER_ROLE_LABELS: Record<string, string> = {
-  header: "Header", heeler: "Heeler", partner: "Partner", coach: "Coach", other: "Other",
-};
-const ROLE_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  header:  { bg: "oklch(0.65 0.18 25 / 15%)",  text: "oklch(0.75 0.20 30)",  border: "oklch(0.65 0.18 25 / 40%)" },
-  heeler:  { bg: "oklch(0.65 0.14 195 / 15%)", text: "oklch(0.72 0.16 200)", border: "oklch(0.65 0.14 195 / 40%)" },
-  partner: { bg: "oklch(0.72 0.16 75 / 15%)",  text: "oklch(0.78 0.18 80)",  border: "oklch(0.72 0.16 75 / 40%)" },
-  coach:   { bg: "oklch(0.65 0.14 145 / 15%)", text: "oklch(0.72 0.16 145)", border: "oklch(0.65 0.14 145 / 40%)" },
-  other:   { bg: "oklch(0.50 0.05 60 / 15%)",  text: "oklch(0.62 0.05 65)",  border: "oklch(0.50 0.05 60 / 40%)" },
-};
-const ROLE_EMOJI: Record<string, string> = {
-  header: "🎯", heeler: "🪚", partner: "🤝", coach: "📋", other: "👤",
-};
-
-function PartnersTab({ rodeoId }: { rodeoId: number }) {
-  const utils = trpc.useUtils();
-  const { data: linked, isLoading } = trpc.contacts.getForRodeo.useQuery({ rodeoId });
-  const { data: allContacts } = trpc.contacts.list.useQuery();
-  const linkMutation = trpc.contacts.linkToRodeo.useMutation({
-    onSuccess: () => { toast.success("Partner linked!"); utils.contacts.getForRodeo.invalidate({ rodeoId }); },
-    onError: (e) => toast.error(e.message),
-  });
-  const unlinkMutation = trpc.contacts.unlinkFromRodeo.useMutation({
-    onSuccess: () => { toast.success("Partner removed"); utils.contacts.getForRodeo.invalidate({ rodeoId }); },
-    onError: (e) => toast.error(e.message),
-  });
-
-  const linkedIds = new Set((linked ?? []).map((c: any) => c.id));
-  const available = (allContacts ?? []).filter((c: any) => !linkedIds.has(c.id));
-
-  return (
-    <div className="space-y-3">
-      {/* Linked partners */}
-      {isLoading && (
-        <div className="flex justify-center py-4">
-          <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "oklch(0.72 0.16 75)", borderTopColor: "transparent" }} />
-        </div>
-      )}
-      {!isLoading && (linked ?? []).length === 0 && (
-        <div className="rounded-xl p-5 text-center" style={{ background: "oklch(0.18 0.04 46)", border: "1px dashed oklch(0.30 0.06 50)" }}>
-          <Users className="w-8 h-8 mx-auto mb-2" style={{ color: "oklch(0.42 0.05 55)" }} />
-          <p className="text-sm font-semibold" style={{ color: "oklch(0.62 0.05 65)" }}>No partners linked yet</p>
-          <p className="text-xs mt-1" style={{ color: "oklch(0.42 0.04 55)" }}>Add a contact below to link them to this rodeo</p>
-        </div>
-      )}
-      {(linked ?? []).map((c: any) => {
-        const rc = ROLE_COLORS[c.role] ?? ROLE_COLORS.other;
-        return (
-          <div key={c.id} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: rc.bg, border: `1px solid ${rc.border}` }}>
-            <span className="text-xl">{ROLE_EMOJI[c.role] ?? "👤"}</span>
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-sm" style={{ color: "oklch(0.93 0.03 75)" }}>{c.name}</p>
-              <p className="text-xs" style={{ color: rc.text }}>{PARTNER_ROLE_LABELS[c.role] ?? c.role}</p>
-              {c.phone && (
-                <a href={`tel:${c.phone}`} className="flex items-center gap-1 text-xs mt-0.5" style={{ color: "oklch(0.65 0.14 195)" }}>
-                  <Phone className="w-3 h-3" />{c.phone}
-                </a>
-              )}
-            </div>
-            <button
-              onClick={() => unlinkMutation.mutate({ rodeoId, contactId: c.id })}
-              className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "oklch(0.65 0.18 25 / 15%)", border: "1px solid oklch(0.65 0.18 25 / 30%)" }}>
-              <X className="w-3.5 h-3.5" style={{ color: "oklch(0.65 0.18 25)" }} />
-            </button>
-          </div>
-        );
-      })}
-
-      {/* Add partner */}
-      {available.length > 0 && (
-        <div className="rounded-xl p-3 space-y-2" style={{ background: "oklch(0.20 0.04 48)", border: "1px solid oklch(0.28 0.06 50)" }}>
-          <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "oklch(0.72 0.16 75)" }}>Link a Partner</p>
-          <div className="space-y-1.5">
-            {available.map((c: any) => {
-              const rc = ROLE_COLORS[c.role] ?? ROLE_COLORS.other;
-              return (
-                <button
-                  key={c.id}
-                  onClick={() => linkMutation.mutate({ rodeoId, contactId: c.id })}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all active:scale-[0.98]"
-                  style={{ background: "oklch(0.17 0.04 46)", border: `1px solid ${rc.border}` }}>
-                  <span>{ROLE_EMOJI[c.role] ?? "👤"}</span>
-                  <span className="flex-1 text-sm font-semibold" style={{ color: "oklch(0.88 0.03 75)" }}>{c.name}</span>
-                  <span className="text-xs" style={{ color: rc.text }}>{PARTNER_ROLE_LABELS[c.role] ?? c.role}</span>
-                  <Plus className="w-3.5 h-3.5" style={{ color: "oklch(0.72 0.16 75)" }} />
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {allContacts?.length === 0 && (
-        <p className="text-xs text-center" style={{ color: "oklch(0.42 0.04 55)" }}>
-          No contacts yet — add some in the Contacts tab first.
-        </p>
-      )}
-    </div>
-  );
-}
 
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 export default function RodeoDetail(){
@@ -848,16 +755,12 @@ export default function RodeoDetail(){
           <TabsList className="w-full">
             <TabsTrigger value="runs" className="flex-1">Runs</TabsTrigger>
             <TabsTrigger value="expenses" className="flex-1">Expenses</TabsTrigger>
-            <TabsTrigger value="partners" className="flex-1">Partners</TabsTrigger>
           </TabsList>
           <TabsContent value="runs" className="mt-4">
             <PerformancesList rodeoId={rodeoId} disciplines={disciplineList} />
           </TabsContent>
           <TabsContent value="expenses" className="mt-4">
             <ExpensesList rodeoId={rodeoId} countryCode={(rodeo as any).countryCode} />
-          </TabsContent>
-          <TabsContent value="partners" className="mt-4">
-            <PartnersTab rodeoId={rodeoId} />
           </TabsContent>
         </Tabs>
       </div>

@@ -322,63 +322,6 @@ export async function upsertSeasonGoal(userId: number, year: number, targetCents
   }
 }
 
-// ─── Contacts ─────────────────────────────────────────────────────────────────
-import { contacts, InsertContact, rodeoContacts } from "../drizzle/schema";
-
-export async function listContacts(userId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(contacts).where(eq(contacts.userId, userId)).orderBy(contacts.name);
-}
-
-export async function createContact(data: InsertContact) {
-  const db = await getDb();
-  if (!db) throw new Error("DB not available");
-  const [result] = await db.insert(contacts).values(data).$returningId();
-  return result;
-}
-
-export async function updateContact(id: number, userId: number, data: Partial<InsertContact>) {
-  const db = await getDb();
-  if (!db) throw new Error("DB not available");
-  await db.update(contacts).set(data).where(and(eq(contacts.id, id), eq(contacts.userId, userId)));
-}
-
-export async function deleteContact(id: number, userId: number) {
-  const db = await getDb();
-  if (!db) throw new Error("DB not available");
-  // Remove all rodeo links first
-  await db.delete(rodeoContacts).where(and(eq(rodeoContacts.contactId, id), eq(rodeoContacts.userId, userId)));
-  await db.delete(contacts).where(and(eq(contacts.id, id), eq(contacts.userId, userId)));
-}
-
-export async function getRodeoContacts(rodeoId: number, userId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  const links = await db.select().from(rodeoContacts)
-    .where(and(eq(rodeoContacts.rodeoId, rodeoId), eq(rodeoContacts.userId, userId)));
-  if (!links.length) return [];
-  const contactIds = links.map((l) => l.contactId);
-  const allContacts = await db.select().from(contacts).where(eq(contacts.userId, userId));
-  return allContacts.filter((c) => contactIds.includes(c.id));
-}
-
-export async function linkContactToRodeo(rodeoId: number, contactId: number, userId: number) {
-  const db = await getDb();
-  if (!db) throw new Error("DB not available");
-  // Prevent duplicates
-  const existing = await db.select().from(rodeoContacts)
-    .where(and(eq(rodeoContacts.rodeoId, rodeoId), eq(rodeoContacts.contactId, contactId), eq(rodeoContacts.userId, userId)));
-  if (existing.length) return;
-  await db.insert(rodeoContacts).values({ rodeoId, contactId, userId });
-}
-
-export async function unlinkContactFromRodeo(rodeoId: number, contactId: number, userId: number) {
-  const db = await getDb();
-  if (!db) throw new Error("DB not available");
-  await db.delete(rodeoContacts)
-    .where(and(eq(rodeoContacts.rodeoId, rodeoId), eq(rodeoContacts.contactId, contactId), eq(rodeoContacts.userId, userId)));
-}
 
 // ─── Horse Health Logs ────────────────────────────────────────────────────────
 import {

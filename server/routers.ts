@@ -49,20 +49,13 @@ import {
   listAllHorseReceiptsForUser,
   getSeasonGoal,
   upsertSeasonGoal,
-  listContacts,
-  createContact,
-  updateContact,
-  deleteContact,
-  getRodeoContacts,
-  linkContactToRodeo,
-  unlinkContactFromRodeo,
 } from "./db";
 import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
 import { invokeLLM } from "./_core/llm";
 import { notifyOwner } from "./_core/notification";
 import { scrapeAllCanadianRodeos, getCpraEventsFromDb, getCpraEventById, getCpraEventCount } from "./canadianRodeoScraper";
-import { DISCIPLINES, DISCIPLINE_LABELS, EXPENSE_CATEGORIES, ROUND_TYPES, PARTNER_ROLES, CARE_REMINDER_TYPES, type Discipline } from "../drizzle/schema";
+import { DISCIPLINES, DISCIPLINE_LABELS, EXPENSE_CATEGORIES, ROUND_TYPES, CARE_REMINDER_TYPES, type Discipline } from "../drizzle/schema";
 
 const disciplineEnum = z.enum(DISCIPLINES);
 const rodeoTypeEnum = z.enum(["jackpot", "amateur", "professional"]);
@@ -206,6 +199,7 @@ const performancesRouter = router({
         score: z.number().optional(),
         penaltySeconds: z.number().default(0),
         prizeMoneyCents: z.number().int().min(0).default(0),
+        partnerName: z.string().max(128).optional(),
         notes: z.string().optional(),
         runDate: z.number(),
       })
@@ -220,6 +214,7 @@ const performancesRouter = router({
         score: input.score ?? null,
         penaltySeconds: input.penaltySeconds,
         prizeMoneyCents: input.prizeMoneyCents,
+        partnerName: input.partnerName ?? null,
         notes: input.notes ?? null,
         runDate: new Date(input.runDate),
       });
@@ -235,6 +230,7 @@ const performancesRouter = router({
         score: z.number().optional().nullable(),
         penaltySeconds: z.number().optional(),
         prizeMoneyCents: z.number().int().min(0).optional(),
+        partnerName: z.string().max(128).optional().nullable(),
         notes: z.string().optional().nullable(),
         runDate: z.number().optional(),
         discipline: disciplineEnum.optional(),
@@ -864,70 +860,6 @@ const seasonGoalsRouter = router({
     }),
 });
 
-// ─── Contacts ────────────────────────────────────────────────────────────────────
-const contactsRouter = router({
-  list: protectedProcedure.query(({ ctx }) => listContacts(ctx.user.id)),
-
-  create: protectedProcedure
-    .input(z.object({
-      name: z.string().min(1).max(128),
-      role: z.enum(PARTNER_ROLES).default("partner"),
-      phone: z.string().max(32).optional().nullable(),
-      email: z.string().email().optional().nullable(),
-      notes: z.string().optional().nullable(),
-    }))
-    .mutation(async ({ ctx, input }) => {
-      const result = await createContact({
-        userId: ctx.user.id,
-        name: input.name,
-        role: input.role,
-        phone: input.phone ?? null,
-        email: input.email ?? null,
-        notes: input.notes ?? null,
-      });
-      return result;
-    }),
-
-  update: protectedProcedure
-    .input(z.object({
-      id: z.number(),
-      name: z.string().min(1).max(128).optional(),
-      role: z.enum(PARTNER_ROLES).optional(),
-      phone: z.string().max(32).optional().nullable(),
-      email: z.string().email().optional().nullable(),
-      notes: z.string().optional().nullable(),
-    }))
-    .mutation(async ({ ctx, input }) => {
-      const { id, ...data } = input;
-      await updateContact(id, ctx.user.id, data);
-      return { success: true };
-    }),
-
-  delete: protectedProcedure
-    .input(z.object({ id: z.number() }))
-    .mutation(async ({ ctx, input }) => {
-      await deleteContact(input.id, ctx.user.id);
-      return { success: true };
-    }),
-
-  getForRodeo: protectedProcedure
-    .input(z.object({ rodeoId: z.number() }))
-    .query(({ ctx, input }) => getRodeoContacts(input.rodeoId, ctx.user.id)),
-
-  linkToRodeo: protectedProcedure
-    .input(z.object({ rodeoId: z.number(), contactId: z.number() }))
-    .mutation(async ({ ctx, input }) => {
-      await linkContactToRodeo(input.rodeoId, input.contactId, ctx.user.id);
-      return { success: true };
-    }),
-
-  unlinkFromRodeo: protectedProcedure
-    .input(z.object({ rodeoId: z.number(), contactId: z.number() }))
-    .mutation(async ({ ctx, input }) => {
-      await unlinkContactFromRodeo(input.rodeoId, input.contactId, ctx.user.id);
-      return { success: true };
-    }),
-});
 
 // ─── Canadian Rodeo Events (Browse & Import) ────────────────────────────────
 const eventsRouter = router({
@@ -1041,7 +973,6 @@ export const appRouter = router({
   horseFeeding: horseFeedingRouter,
   horseReceipts: horseReceiptsRouter,
   seasonGoals: seasonGoalsRouter,
-  contacts: contactsRouter,
   events: eventsRouter,
 });
 export type AppRouter = typeof appRouter;
