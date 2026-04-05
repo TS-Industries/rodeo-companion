@@ -129,6 +129,15 @@ function ImportDialog({
   const allDisciplines = DISCIPLINES as readonly Discipline[];
   const [selectedDisciplines, setSelectedDisciplines] = useState<Discipline[]>(defaultDisciplines);
 
+  // Entry deadline days — remember the user's last-used value
+  const [deadlineDays, setDeadlineDays] = useState(() => {
+    try {
+      const saved = localStorage.getItem("rc-entry-deadline-days");
+      if (saved) { const n = parseInt(saved, 10); if (n >= 3 && n <= 60) return n; }
+    } catch { /* ignore */ }
+    return 14;
+  });
+
   const importMutation = trpc.events.import.useMutation({
     onSuccess: (data) => {
       toast.success(`"${event.name}" added to your schedule!`);
@@ -150,9 +159,11 @@ function ImportDialog({
       toast.error("Please select at least one discipline");
       return;
     }
+    try { localStorage.setItem("rc-entry-deadline-days", String(deadlineDays)); } catch { /* ignore */ }
     importMutation.mutate({
       eventId: event.id,
       disciplines: selectedDisciplines,
+      entryDeadlineDays: deadlineDays,
     });
   };
 
@@ -203,6 +214,31 @@ function ImportDialog({
               <span className="text-amber-200">{formatDate(event.entryOpenDate)}</span>
             </div>
           )}
+
+          {/* Entry deadline days before start */}
+          <div>
+            <label className="text-amber-300/80 text-sm font-medium">
+              Entry deadline (days before start)
+            </label>
+            <div className="flex items-center gap-3 mt-1.5">
+              <input
+                type="range"
+                min={3}
+                max={60}
+                value={deadlineDays}
+                onChange={(e) => setDeadlineDays(parseInt(e.target.value, 10))}
+                className="flex-1 accent-amber-500 h-2"
+              />
+              <span className="text-amber-200 font-bold text-sm tabular-nums w-8 text-right">
+                {deadlineDays}
+              </span>
+            </div>
+            {event.startDate && (
+              <p className="text-amber-500/50 text-xs mt-1">
+                Deadline: {formatDate(new Date(new Date(event.startDate).getTime() - deadlineDays * 86400000))}
+              </p>
+            )}
+          </div>
 
           {event.committeeContact && (
             <div className="text-xs text-amber-400/60">

@@ -966,6 +966,7 @@ const eventsRouter = router({
       discipline: z.enum(DISCIPLINES).optional(),
       disciplines: z.array(z.enum(DISCIPLINES)).optional(),
       rodeotype: z.enum(["jackpot", "amateur", "professional"]).optional(),
+      entryDeadlineDays: z.number().int().min(3).max(60).default(14),
     }))
     .mutation(async ({ ctx, input }) => {
       const event = await getCpraEventById(input.eventId);
@@ -993,9 +994,9 @@ const eventsRouter = router({
         } catch { /* ignore */ }
       }
 
-      // Default entry deadline: 14 days before start
+      // Entry deadline: N days before start (user-configurable, default 14)
       const rodeoDate = event.startDate ?? new Date();
-      const entryDeadline = new Date(rodeoDate.getTime() - 14 * 24 * 60 * 60 * 1000);
+      const entryDeadline = new Date(rodeoDate.getTime() - input.entryDeadlineDays * 24 * 60 * 60 * 1000);
 
       const { createRodeo } = await import("./db");
       const newRodeo = await createRodeo({
