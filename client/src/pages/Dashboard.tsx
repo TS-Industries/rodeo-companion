@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import {
   CalendarDays, Trophy, BarChart3, MapPin,
   Settings, Bell, Plus, ChevronRight, Clock, DollarSign,
-  TrendingUp, Star, Flame, Zap, Target, Users, Flag,
+  TrendingUp, Star, Flame, Zap, Target, Flag,
 } from "lucide-react";
 import { format, differenceInDays, differenceInHours } from "date-fns";
 import {
@@ -532,8 +532,6 @@ export default function Dashboard() {
               accent="oklch(0.65 0.14 195)" onClick={() => navigate("/locations")} />
             <QuickCard icon={HorseSilhouette} label="My Horses" sub="Manage your horses"
               accent="oklch(0.65 0.12 55)" onClick={() => navigate("/horses")} />
-            <QuickCard icon={Users} label="Contacts" sub="Partners & team"
-              accent="oklch(0.60 0.12 280)" onClick={() => navigate("/contacts")} />
           </div>
         </div>
 
