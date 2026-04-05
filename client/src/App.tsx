@@ -36,6 +36,30 @@ function HorseNavIcon({ className, style }: { className?: string; style?: React.
   );
 }
 
+function PageErrorFallback() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
+      <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4"
+        style={{ background: "oklch(0.72 0.16 75 / 15%)", border: "1px solid oklch(0.72 0.16 75 / 30%)" }}>
+        <span className="text-2xl">🐴</span>
+      </div>
+      <h2 className="text-lg font-bold mb-2" style={{ color: "oklch(0.82 0.18 80)" }}>
+        Something went wrong
+      </h2>
+      <p className="text-sm mb-5" style={{ color: "oklch(0.55 0.06 60)" }}>
+        Pull to refresh or tap below to reload.
+      </p>
+      <button
+        onClick={() => window.location.reload()}
+        className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-colors"
+        style={{ background: "oklch(0.72 0.16 75)", color: "oklch(0.15 0.04 48)" }}
+      >
+        Reload Page
+      </button>
+    </div>
+  );
+}
+
 const NAV_ITEMS = [
   { path: "/", label: "Home", icon: HomeIcon, exact: true },
   { path: "/schedule", label: "Schedule", icon: CalendarDays },
@@ -140,15 +164,15 @@ function AppShell() {
   return (
     <div className="min-h-screen bg-background pb-20 relative">
       <Switch>
-        <Route path="/" component={Dashboard} />
-        <Route path="/schedule" component={Schedule} />
+        <Route path="/"><ErrorBoundary fallback={<PageErrorFallback />}><Dashboard /></ErrorBoundary></Route>
+        <Route path="/schedule"><ErrorBoundary fallback={<PageErrorFallback />}><Schedule /></ErrorBoundary></Route>
         <Route path="/schedule/:id" component={RodeoDetail} />
-        <Route path="/performance" component={Performance} />
-        <Route path="/analytics" component={Analytics} />
+        <Route path="/performance"><ErrorBoundary fallback={<PageErrorFallback />}><Performance /></ErrorBoundary></Route>
+        <Route path="/analytics"><ErrorBoundary fallback={<PageErrorFallback />}><Analytics /></ErrorBoundary></Route>
         <Route path="/locations" component={Locations} />
         <Route path="/settings" component={Settings} />
         <Route path="/horses" component={Horses} />
-        <Route path="/browse-events" component={BrowseEvents} />
+        <Route path="/browse-events"><ErrorBoundary fallback={<PageErrorFallback />}><BrowseEvents /></ErrorBoundary></Route>
         <Route path="/help" component={Help} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
