@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, lte } from "drizzle-orm";
+import { and, count, desc, eq, gte, lte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   InsertUser,
@@ -13,6 +13,7 @@ import {
   videos,
   notificationPrefs,
   expenses,
+  horses,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -67,6 +68,21 @@ export async function getUserByOpenId(openId: string) {
   if (!db) return undefined;
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
   return result[0];
+}
+
+// ─── Usage Counts (for free tier limits) ─────────────────────────────────────
+
+export async function getUserUsageCounts(userId: number) {
+  const db = await getDb();
+  if (!db) return { rodeoCount: 0, performanceCount: 0, horseCount: 0 };
+  const [rodeoResult] = await db.select({ c: count() }).from(rodeos).where(eq(rodeos.userId, userId));
+  const [perfResult] = await db.select({ c: count() }).from(performances).where(eq(performances.userId, userId));
+  const [horseResult] = await db.select({ c: count() }).from(horses).where(eq(horses.userId, userId));
+  return {
+    rodeoCount: rodeoResult?.c ?? 0,
+    performanceCount: perfResult?.c ?? 0,
+    horseCount: horseResult?.c ?? 0,
+  };
 }
 
 // ─── Rodeos ───────────────────────────────────────────────────────────────────
@@ -275,7 +291,7 @@ export async function deleteExpense(id: number, userId: number) {
 }
 
 // ─── Horses ───────────────────────────────────────────────────────────────────
-import { horses, InsertHorse } from "../drizzle/schema";
+import { InsertHorse } from "../drizzle/schema";
 
 export async function listHorses(userId: number) {
   const db = await getDb();

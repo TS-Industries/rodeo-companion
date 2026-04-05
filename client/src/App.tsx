@@ -16,6 +16,7 @@ import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import Horses from "./pages/Horses";
 import BrowseEvents from "./pages/BrowseEvents";
+import Upgrade from "./pages/Upgrade";
 import {
   CalendarDays,
   Trophy,
@@ -173,6 +174,7 @@ function AppShell() {
         <Route path="/settings" component={Settings} />
         <Route path="/horses" component={Horses} />
         <Route path="/browse-events"><ErrorBoundary fallback={<PageErrorFallback />}><BrowseEvents /></ErrorBoundary></Route>
+        <Route path="/upgrade" component={Upgrade} />
         <Route path="/help" component={Help} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />

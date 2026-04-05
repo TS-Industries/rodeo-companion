@@ -49,6 +49,7 @@ import {
   listAllHorseReceiptsForUser,
   getSeasonGoal,
   upsertSeasonGoal,
+  getUserUsageCounts,
 } from "./db";
 import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
@@ -59,6 +60,9 @@ import { DISCIPLINES, DISCIPLINE_LABELS, EXPENSE_CATEGORIES, ROUND_TYPES, CARE_R
 const disciplineEnum = z.enum(DISCIPLINES);
 const rodeoTypeEnum = z.enum(["jackpot", "amateur", "professional"]);
 const roundEnum = z.enum(ROUND_TYPES);
+
+// ─── Free Tier Limits ────────────────────────────────────────────────────────
+const FREE_TIER_LIMITS = { maxRodeos: 3, maxPerformances: 10, maxHorses: 1 } as const;
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
@@ -101,6 +105,12 @@ const rodeosRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      if (ctx.user.plan === "free") {
+        const counts = await getUserUsageCounts(ctx.user.id);
+        if (counts.rodeoCount >= FREE_TIER_LIMITS.maxRodeos) {
+          throw new Error(`Free plan is limited to ${FREE_TIER_LIMITS.maxRodeos} rodeos. Upgrade to Pro for unlimited.`);
+        }
+      }
       const created = await createRodeo({
         userId: ctx.user.id,
         name: input.name,
@@ -204,6 +214,12 @@ const performancesRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      if (ctx.user.plan === "free") {
+        const counts = await getUserUsageCounts(ctx.user.id);
+        if (counts.performanceCount >= FREE_TIER_LIMITS.maxPerformances) {
+          throw new Error(`Free plan is limited to ${FREE_TIER_LIMITS.maxPerformances} runs. Upgrade to Pro for unlimited.`);
+        }
+      }
       await createPerformance({
         userId: ctx.user.id,
         rodeoId: input.rodeoId,
@@ -529,6 +545,12 @@ const horsesRouter = router({
       notes: z.string().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
+      if (ctx.user.plan === "free") {
+        const counts = await getUserUsageCounts(ctx.user.id);
+        if (counts.horseCount >= FREE_TIER_LIMITS.maxHorses) {
+          throw new Error(`Free plan is limited to ${FREE_TIER_LIMITS.maxHorses} horse. Upgrade to Pro for unlimited.`);
+        }
+      }
       const result = await createHorse({
         userId: ctx.user.id,
         name: input.name,
@@ -830,6 +852,12 @@ const eventsRouter = router({
       entryDeadlineDays: z.number().int().min(3).max(60).default(14),
     }))
     .mutation(async ({ ctx, input }) => {
+      if (ctx.user.plan === "free") {
+        const counts = await getUserUsageCounts(ctx.user.id);
+        if (counts.rodeoCount >= FREE_TIER_LIMITS.maxRodeos) {
+          throw new Error(`Free plan is limited to ${FREE_TIER_LIMITS.maxRodeos} rodeos. Upgrade to Pro for unlimited.`);
+        }
+      }
       const event = await getCpraEventById(input.eventId);
       if (!event) throw new Error("Event not found");
 
@@ -885,6 +913,18 @@ const eventsRouter = router({
     }),
 });
 
+// ─── Plan & Usage ──────────────────────────────────────────────────────────────
+const planRouter = router({
+  usage: protectedProcedure.query(async ({ ctx }) => {
+    const counts = await getUserUsageCounts(ctx.user.id);
+    return {
+      plan: ctx.user.plan ?? "free",
+      limits: FREE_TIER_LIMITS,
+      ...counts,
+    };
+  }),
+});
+
 // ─── App Router ─────────────────────────────────────────────────────────────────
 export const appRouter = router({
   system: systemRouter,
@@ -901,6 +941,7 @@ export const appRouter = router({
   horseFeeding: horseFeedingRouter,
   horseReceipts: horseReceiptsRouter,
   seasonGoals: seasonGoalsRouter,
+  plan: planRouter,
   events: eventsRouter,
 });
 export type AppRouter = typeof appRouter;
