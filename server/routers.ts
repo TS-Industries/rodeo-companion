@@ -434,10 +434,20 @@ const analyticsRouter = router({
 
 // ─── Drills ───────────────────────────────────────────────────────────────────
 
+type DrillSuggestion = { title: string; description: string; difficulty: string; duration: string };
+const drillCache = new Map<string, { data: DrillSuggestion[]; expiresAt: number }>();
+const DRILL_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
 const drillsRouter = router({
   getSuggestions: protectedProcedure
     .input(z.object({ discipline: disciplineEnum }))
     .query(async ({ input }) => {
+      // Return cached suggestions if fresh
+      const cached = drillCache.get(input.discipline);
+      if (cached && cached.expiresAt > Date.now()) {
+        return cached.data;
+      }
+
       const label = DISCIPLINE_LABELS[input.discipline as Discipline];
       const response = await invokeLLM({
         messages: [
@@ -484,12 +494,9 @@ const drillsRouter = router({
       const content = typeof rawContent === "string" ? rawContent : "{}";
       try {
         const parsed = JSON.parse(content);
-        return parsed.drills as Array<{
-          title: string;
-          description: string;
-          difficulty: string;
-          duration: string;
-        }>;
+        const drills = parsed.drills as DrillSuggestion[];
+        drillCache.set(input.discipline, { data: drills, expiresAt: Date.now() + DRILL_CACHE_TTL_MS });
+        return drills;
       } catch {
         return [];
       }
