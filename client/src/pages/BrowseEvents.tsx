@@ -117,15 +117,17 @@ function ImportDialog({
   event,
   onClose,
   onImported,
+  defaultDisciplines,
 }: {
   event: CpraEvent;
   onClose: () => void;
   onImported: (rodeoId: number | null) => void;
+  defaultDisciplines: Discipline[];
 }) {
-  // Show ALL 14 disciplines but start with NONE selected.
-  // The user must explicitly tap the disciplines they compete in at this event.
+  // Pre-select the user's most frequently competed disciplines.
+  // They can deselect as needed before importing.
   const allDisciplines = DISCIPLINES as readonly Discipline[];
-  const [selectedDisciplines, setSelectedDisciplines] = useState<Discipline[]>([]);
+  const [selectedDisciplines, setSelectedDisciplines] = useState<Discipline[]>(defaultDisciplines);
 
   const importMutation = trpc.events.import.useMutation({
     onSuccess: (data) => {
@@ -386,6 +388,22 @@ export default function BrowseEvents() {
 
   const { data: count = 0 } = trpc.events.count.useQuery();
 
+  // Infer the user's most frequently competed disciplines from their rodeo history
+  const { data: userRodeos = [] } = trpc.rodeos.list.useQuery(undefined, { staleTime: 5 * 60 * 1000 });
+  const frequentDisciplines = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const r of userRodeos) {
+      try {
+        const discs: string[] = typeof r.disciplines === "string" ? JSON.parse(r.disciplines) : [];
+        for (const d of discs) counts.set(d, (counts.get(d) ?? 0) + 1);
+      } catch { /* skip malformed */ }
+    }
+    // Return disciplines sorted by frequency (most used first)
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([d]) => d as Discipline);
+  }, [userRodeos]);
+
   const scrapeMutation = trpc.events.scrape.useMutation({
     onSuccess: (result) => {
       toast.success(`Refreshed! Found ${result.total} events from all sources.`);
@@ -619,6 +637,7 @@ export default function BrowseEvents() {
           event={importingEvent}
           onClose={() => setImportingEvent(null)}
           onImported={handleImported}
+          defaultDisciplines={frequentDisciplines}
         />
       )}
     </div>
