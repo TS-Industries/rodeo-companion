@@ -931,6 +931,7 @@ const eventsRouter = router({
       source: z.string().optional(), // 'cpra' | 'wra' | 'kcra' | 'ram' | 'ahsra'
       level: z.string().optional(),  // 'professional' | 'amateur' | 'high_school'
       search: z.string().optional(),
+      futureOnly: z.boolean().optional(), // default true — only return events ending today or later
     }).optional())
     .query(async ({ input }) => {
       const events = await getCpraEventsFromDb(input ?? {});

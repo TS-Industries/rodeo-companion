@@ -399,16 +399,7 @@ export default function BrowseEvents() {
   const filtered = useMemo(() => {
     let list = events as CpraEvent[];
 
-    // Only show future events (today or later)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    list = list.filter((e) => {
-      if (!e.startDate) return true; // keep events with unknown dates
-      const startDate = new Date(e.startDate);
-      // Use endDate if available so multi-day events stay visible until they end
-      const endDate = e.endDate ? new Date(e.endDate) : startDate;
-      return endDate >= today;
-    });
+    // Future-only filtering is now handled server-side via futureOnly param
 
     if (province !== "All Provinces") {
       list = list.filter((e) => e.province === province);

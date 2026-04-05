@@ -11,7 +11,7 @@
 
 import * as cheerio from "cheerio";
 import { getDb } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, gte, or, isNull, sql } from "drizzle-orm";
 import { cpraEvents } from "../drizzle/schema";
 import type { Discipline } from "../drizzle/schema";
 
@@ -773,10 +773,28 @@ export async function scrapeAllCanadianRodeos(): Promise<{
 
 export async function getCpraEventsFromDb(filters?: {
   province?: string; source?: string; level?: string; search?: string;
+  futureOnly?: boolean;
 }) {
   const db = await getDb();
   if (!db) return [];
-  const rows = await db.select().from(cpraEvents);
+
+  // When futureOnly is true (the default), push the date filter into the DB query
+  // so past events never leave the database. Keep rows with no dates (TBD events).
+  const useFutureFilter = filters?.futureOnly !== false;
+
+  let rows;
+  if (useFutureFilter) {
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    rows = await db.select().from(cpraEvents).where(
+      or(
+        gte(sql`COALESCE(${cpraEvents.endDate}, ${cpraEvents.startDate})`, today),
+        isNull(cpraEvents.startDate),
+      )
+    );
+  } else {
+    rows = await db.select().from(cpraEvents);
+  }
   let filtered: typeof rows = rows;
 
   if (filters?.province) {
