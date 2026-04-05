@@ -299,3 +299,21 @@
 ## Round 21 — Discipline Selection Fix
 - [x] Fix Browse import dialog: start with ZERO disciplines selected (not all 14 pre-selected)
 - [x] Fix RodeoDetail: only show the disciplines the user actually selected (confirmed — reads from saved DB record correctly)
+
+## Session 2 — Architecture Cleanup & New Features
+
+### Done
+- [x] CUT contacts: removed contacts and rodeo_contacts tables, router, db helpers, Partners tab from RodeoDetail
+- [x] Added partnerName text field to performances for team roping (shown in AddPerformanceDialog for team_roping/ribbon_roping)
+- [x] CUT drills: removed drills router, LLM drill suggestions, drill cache, DrillCard/VideoLinkCard/DrillsTab from Analytics, DISCIPLINE_DRILL_VIDEOS from disciplines.ts
+- [x] ADD association deep links: Settings lets user select associations (AHSRA, LRA, WRA, CPRA, FCA, KCRA, RAM) with one-tap links to website & standings
+- [x] FREE TIER LIMITS: added plan field to users (free/pro), free tier enforces max 3 rodeos, 10 runs, 1 horse. Placeholder Upgrade page at /upgrade
+- [x] HOME SCREEN REDESIGN: rebuilt Dashboard around "What do I need this week?" — (a) entry deadline alerts with mark-entered, (b) next rodeo countdown, (c) last run vs season avg, (d) season progress bar. Removed quotes, stat cards, quick access grid
+
+### Next Session
+- [ ] Payment processing for Pro tier (Stripe?)
+- [ ] Rebuild drills based on actual run data
+- [ ] Offline support (Service Worker + IndexedDB)
+- [ ] Push notifications for entry deadlines
+- [ ] In-app video playback
+- [ ] Season summary PDF export
