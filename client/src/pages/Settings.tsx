@@ -6,8 +6,40 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Bell, User, LogOut, Shield, Loader2, Globe, Fuel, Trophy } from "lucide-react";
+import { Bell, User, LogOut, Shield, Loader2, Globe, Fuel, Trophy, ExternalLink } from "lucide-react";
 import { useUnits, type UnitSystem } from "@/contexts/UnitContext";
+
+// ─��─ Association Deep Links ──────────────────────────────────────────────────
+const ASSOCIATIONS = [
+  { code: "AHSRA", name: "Alberta High School Rodeo", website: "https://www.equestevents.ca", standingsLabel: "EQuest Events", standingsUrl: "https://www.equestevents.ca" },
+  { code: "LRA", name: "Lakeland Rodeo Association", website: "https://lakelandrodeo.com", standingsLabel: "LRA Standings", standingsUrl: "https://lakelandrodeo.com" },
+  { code: "WRA", name: "Wildrose Rodeo Association", website: "https://wrarodeo.com", standingsLabel: "WRA Standings", standingsUrl: "https://wrarodeo.com" },
+  { code: "CPRA", name: "Canadian Pro Rodeo Association", website: "https://rodeocanada.com", standingsLabel: "CPRA Standings", standingsUrl: "https://rodeocanada.com" },
+  { code: "FCA", name: "Foothills Cowboys Association", website: "https://foothillscowboys.com", standingsLabel: "FCA Standings", standingsUrl: "https://foothillscowboys.com" },
+  { code: "KCRA", name: "Kananaskis Country Rodeo Assoc.", website: "https://kcra.ca", standingsLabel: "KCRA Standings", standingsUrl: "https://kcra.ca" },
+  { code: "RAM", name: "Rodeo Alberta Members", website: "https://rodeoalberta.com", standingsLabel: "RAM Standings", standingsUrl: "https://rodeoalberta.com" },
+] as const;
+
+type AssociationCode = (typeof ASSOCIATIONS)[number]["code"];
+
+function useSelectedAssociations() {
+  const [selected, setSelected] = useState<AssociationCode[]>(() => {
+    try {
+      const stored = localStorage.getItem("rodeo_associations");
+      return stored ? JSON.parse(stored) : [];
+    } catch { return []; }
+  });
+
+  const toggle = (code: AssociationCode) => {
+    setSelected((prev) => {
+      const next = prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code];
+      localStorage.setItem("rodeo_associations", JSON.stringify(next));
+      return next;
+    });
+  };
+
+  return { selected, toggle };
+}
 
 export default function Settings() {
   const { user, logout } = useAuth();
@@ -23,6 +55,8 @@ export default function Settings() {
       else toast.info("No upcoming deadlines right now.");
     },
   });
+
+  const { selected: selectedAssociations, toggle: toggleAssociation } = useSelectedAssociations();
 
   const [enableDeadline, setEnableDeadline] = useState(true);
   const [daysBefore, setDaysBefore] = useState(14);
@@ -126,6 +160,65 @@ export default function Settings() {
               <p className="text-xs" style={{ color: "oklch(0.65 0.14 145)" }}>
                 ✓ Current goal: ${(seasonGoal.targetCents / 100).toLocaleString()} for {currentYear}
               </p>
+            )}
+          </div>
+        </div>
+
+        {/* ─── My Associations ─── */}
+        <div className="card-western rounded-xl overflow-hidden">
+          {sectionHeader(<ExternalLink className="w-4 h-4" style={{ color: "oklch(0.72 0.16 75)" }} />, "My Associations")}
+          <div className="p-4 space-y-3">
+            <p className="text-xs" style={{ color: "oklch(0.52 0.05 60)" }}>
+              Select the associations you compete in. Quick links will appear below.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {ASSOCIATIONS.map((a) => {
+                const isActive = selectedAssociations.includes(a.code);
+                return (
+                  <button
+                    key={a.code}
+                    onClick={() => toggleAssociation(a.code)}
+                    className="px-3 py-1.5 rounded-full text-xs font-bold transition-all"
+                    style={{
+                      background: isActive ? "oklch(0.72 0.16 75 / 20%)" : "oklch(0.20 0.04 48)",
+                      border: `1.5px solid ${isActive ? "oklch(0.72 0.16 75)" : "oklch(0.28 0.06 50)"}`,
+                      color: isActive ? "oklch(0.78 0.18 80)" : "oklch(0.52 0.05 60)",
+                    }}
+                  >
+                    {isActive ? "✓ " : ""}{a.code}
+                  </button>
+                );
+              })}
+            </div>
+
+            {selectedAssociations.length > 0 && (
+              <div className="space-y-2 pt-1">
+                {ASSOCIATIONS.filter((a) => selectedAssociations.includes(a.code)).map((a) => (
+                  <div key={a.code} className="rounded-xl p-3" style={{ background: "oklch(0.20 0.04 48)", border: "1px solid oklch(0.28 0.06 50)" }}>
+                    <p className="text-xs font-bold mb-1.5" style={{ color: "oklch(0.88 0.03 70)" }}>{a.name}</p>
+                    <div className="flex gap-2">
+                      <a
+                        href={a.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-colors active:scale-[0.98]"
+                        style={{ background: "oklch(0.72 0.16 75 / 15%)", color: "oklch(0.78 0.18 80)", border: "1px solid oklch(0.72 0.16 75 / 30%)" }}
+                      >
+                        <Globe className="w-3.5 h-3.5" /> Website
+                      </a>
+                      <a
+                        href={a.standingsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-colors active:scale-[0.98]"
+                        style={{ background: "oklch(0.65 0.14 145 / 15%)", color: "oklch(0.72 0.16 145)", border: "1px solid oklch(0.65 0.14 145 / 30%)" }}
+                      >
+                        <Trophy className="w-3.5 h-3.5" /> {a.standingsLabel}
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </div>
