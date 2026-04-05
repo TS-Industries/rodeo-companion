@@ -10,12 +10,12 @@ import {
 } from "recharts";
 import { format } from "date-fns";
 import {
-  TrendingDown, TrendingUp, Minus, Dumbbell, Loader2, Trophy,
-  ExternalLink, Play, Target, Award, Star, Zap, Download,
+  TrendingDown, TrendingUp, Minus, Loader2,
+  Target, Award, Star, Download,
 } from "lucide-react";
 import {
-  DISCIPLINES, DISCIPLINE_LABELS, DISCIPLINE_ICONS, DISCIPLINE_COLORS,
-  DISCIPLINE_IMAGES, DISCIPLINE_DRILL_VIDEOS,
+  DISCIPLINES, DISCIPLINE_LABELS, DISCIPLINE_COLORS,
+  DISCIPLINE_IMAGES,
   isTimedDiscipline, formatTime, formatScore, type Discipline,
 } from "@/lib/disciplines";
 import { EXPENSE_CATEGORY_LABELS, EXPENSE_CATEGORY_ICONS, formatDollars, type ExpenseCategory } from "@/lib/expenses";
@@ -786,147 +786,6 @@ ${fin.perRodeo.length > 0 ? `
   );
 }
 
-// ─── Drill AI Card ────────────────────────────────────────────────────────────
-function DrillCard({ drill }: { drill: { title: string; description: string; difficulty: string; duration: string } }) {
-  const diffStyle = drill.difficulty === "beginner"
-    ? { bg: "oklch(0.65 0.14 145 / 20%)", color: "oklch(0.65 0.14 145)" }
-    : drill.difficulty === "intermediate"
-    ? { bg: "oklch(0.72 0.16 75 / 20%)", color: "oklch(0.78 0.18 80)" }
-    : { bg: "oklch(0.65 0.18 25 / 20%)", color: "oklch(0.72 0.22 28)" };
-  return (
-    <div className="rounded-xl p-4" style={{ background: "oklch(0.18 0.04 48)", border: "1px solid oklch(0.28 0.06 50)" }}>
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <h4 className="font-black text-sm" style={{ color: "oklch(0.93 0.03 75)", fontFamily: "'Playfair Display', serif" }}>{drill.title}</h4>
-        <span className="text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-wide flex-shrink-0"
-          style={{ background: diffStyle.bg, color: diffStyle.color, border: `1px solid ${diffStyle.color}40` }}>
-          {drill.difficulty}
-        </span>
-      </div>
-      <p className="text-xs leading-relaxed" style={{ color: "oklch(0.62 0.05 65)" }}>{drill.description}</p>
-      <p className="text-xs mt-2 font-bold" style={{ color: "oklch(0.72 0.16 75)" }}>⏱ {drill.duration}</p>
-    </div>
-  );
-}
-
-// ─── Video Link Card ──────────────────────────────────────────────────────────
-function VideoLinkCard({ video, index }: { video: { title: string; url: string; description: string }; index: number }) {
-  const accentColors = ["#d97706", "#16a34a", "#0d9488"];
-  const accent = accentColors[index % accentColors.length];
-
-  return (
-    <a
-      href={video.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="block rounded-xl p-4 transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98]"
-      style={{
-        background: "oklch(0.18 0.04 48)",
-        border: `1px solid ${accent}40`,
-        textDecoration: "none",
-      }}
-    >
-      <div className="flex items-start gap-3">
-        <div className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
-          style={{ background: `${accent}20`, border: `1px solid ${accent}40` }}>
-          <Play className="w-4 h-4" style={{ color: accent }} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <h4 className="font-black text-sm leading-tight" style={{ color: "oklch(0.93 0.03 75)", fontFamily: "'Playfair Display', serif" }}>
-              {video.title}
-            </h4>
-            <ExternalLink className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: accent }} />
-          </div>
-          <p className="text-xs mt-1 leading-relaxed" style={{ color: "oklch(0.62 0.05 65)" }}>{video.description}</p>
-          <div className="flex items-center gap-1.5 mt-2">
-            <span className="text-[10px] font-bold" style={{ color: accent }}>Search on YouTube →</span>
-          </div>
-        </div>
-      </div>
-    </a>
-  );
-}
-
-// ─── Drills Tab ───────────────────────────────────────────────────────────────
-function DrillsTab({ discipline }: { discipline: string }) {
-  const { data: drills, isLoading, refetch } = trpc.drills.getSuggestions.useQuery(
-    { discipline: discipline === "all" ? "barrel_racing" : discipline as Discipline },
-    { enabled: discipline !== "all" }
-  );
-
-  if (discipline === "all") {
-    return (
-      <div className="text-center py-12">
-        <Dumbbell className="w-10 h-10 mx-auto mb-2" style={{ color: "oklch(0.42 0.04 55)" }} />
-        <p className="text-sm font-medium" style={{ color: "oklch(0.62 0.05 65)" }}>Select a specific discipline</p>
-        <p className="text-xs mt-1" style={{ color: "oklch(0.42 0.04 55)" }}>Choose a discipline above to see drill suggestions and video links</p>
-      </div>
-    );
-  }
-
-  const videos = DISCIPLINE_DRILL_VIDEOS[discipline as Discipline] ?? [];
-  const disciplineLabel = DISCIPLINE_LABELS[discipline as Discipline];
-  const disciplineIcon = DISCIPLINE_ICONS[discipline as Discipline];
-
-  return (
-    <div className="space-y-5">
-      <div className="flex items-center gap-3 px-1">
-        <span className="text-2xl">{disciplineIcon}</span>
-        <div>
-          <p className="text-sm font-black" style={{ color: "oklch(0.88 0.18 80)", fontFamily: "'Playfair Display', serif" }}>
-            {disciplineLabel}
-          </p>
-          <p className="text-xs" style={{ color: "oklch(0.52 0.05 60)" }}>Training resources &amp; AI drill suggestions</p>
-        </div>
-      </div>
-
-      {videos.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 px-1">
-            <div className="w-4 h-3 rounded-sm flex items-center justify-center" style={{ background: "#ff0000" }}>
-              <span className="text-[6px] text-white font-bold leading-none">▶</span>
-            </div>
-            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "oklch(0.72 0.16 75)" }}>
-              Training Videos
-            </p>
-          </div>
-          {videos.map((video, i) => (
-            <VideoLinkCard key={i} video={video} index={i} />
-          ))}
-        </div>
-      )}
-
-      <div className="space-y-3">
-        <div className="flex items-center justify-between px-1">
-          <div className="flex items-center gap-2">
-            <Dumbbell className="w-3.5 h-3.5" style={{ color: "oklch(0.72 0.16 75)" }} />
-            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "oklch(0.72 0.16 75)" }}>
-              AI Drill Suggestions
-            </p>
-          </div>
-          <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => refetch()}>
-            Refresh
-          </Button>
-        </div>
-
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-8 gap-3">
-            <Loader2 className="w-6 h-6 animate-spin" style={{ color: "oklch(0.72 0.16 75)" }} />
-            <p className="text-xs" style={{ color: "oklch(0.52 0.05 60)" }}>Generating personalized drills…</p>
-          </div>
-        ) : !drills?.length ? (
-          <div className="text-center py-6">
-            <p className="text-xs" style={{ color: "oklch(0.52 0.05 60)" }}>No drills available</p>
-            <Button variant="outline" size="sm" className="mt-3" onClick={() => refetch()}>Try Again</Button>
-          </div>
-        ) : (
-          drills.map((drill, i) => <DrillCard key={i} drill={drill} />)
-        )}
-      </div>
-    </div>
-  );
-}
-
 // ─── Main Analytics Page ──────────────────────────────────────────────────────
 export default function Analytics() {
   const [period, setPeriod] = useState<Period>("month");
@@ -947,7 +806,7 @@ export default function Analytics() {
             style={{ fontFamily: "'Playfair Display', serif", color: "oklch(0.93 0.03 75)", textShadow: "0 0 30px oklch(0.72 0.16 75 / 50%)" }}>
             Progress
           </h1>
-          <p className="text-sm" style={{ color: "oklch(0.62 0.05 65)" }}>Charts, P&amp;L, expenses &amp; drill videos</p>
+          <p className="text-sm" style={{ color: "oklch(0.62 0.05 65)" }}>Charts, P&amp;L &amp; expenses</p>
         </div>
       </div>
 

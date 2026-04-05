@@ -52,7 +52,6 @@ import {
 } from "./db";
 import { storagePut } from "./storage";
 import { nanoid } from "nanoid";
-import { invokeLLM } from "./_core/llm";
 import { notifyOwner } from "./_core/notification";
 import { scrapeAllCanadianRodeos, getCpraEventsFromDb, getCpraEventById, getCpraEventCount } from "./canadianRodeoScraper";
 import { DISCIPLINES, DISCIPLINE_LABELS, EXPENSE_CATEGORIES, ROUND_TYPES, CARE_REMINDER_TYPES, type Discipline } from "../drizzle/schema";
@@ -428,76 +427,6 @@ const analyticsRouter = router({
     }),
 });
 
-// ─── Drills ───────────────────────────────────────────────────────────────────
-
-type DrillSuggestion = { title: string; description: string; difficulty: string; duration: string };
-const drillCache = new Map<string, { data: DrillSuggestion[]; expiresAt: number }>();
-const DRILL_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
-
-const drillsRouter = router({
-  getSuggestions: protectedProcedure
-    .input(z.object({ discipline: disciplineEnum }))
-    .query(async ({ input }) => {
-      // Return cached suggestions if fresh
-      const cached = drillCache.get(input.discipline);
-      if (cached && cached.expiresAt > Date.now()) {
-        return cached.data;
-      }
-
-      const label = DISCIPLINE_LABELS[input.discipline as Discipline];
-      const response = await invokeLLM({
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are an expert rodeo coach. Provide exactly 5 specific, actionable training drills for the given rodeo discipline. Return JSON only.",
-          },
-          {
-            role: "user",
-            content: `Give me 5 training drills for ${label}. Each drill should have a title, description (2-3 sentences), difficulty (beginner/intermediate/advanced), and duration (e.g. '15 minutes').`,
-          },
-        ],
-        response_format: {
-          type: "json_schema",
-          json_schema: {
-            name: "drills",
-            strict: true,
-            schema: {
-              type: "object",
-              properties: {
-                drills: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      title: { type: "string" },
-                      description: { type: "string" },
-                      difficulty: { type: "string", enum: ["beginner", "intermediate", "advanced"] },
-                      duration: { type: "string" },
-                    },
-                    required: ["title", "description", "difficulty", "duration"],
-                    additionalProperties: false,
-                  },
-                },
-              },
-              required: ["drills"],
-              additionalProperties: false,
-            },
-          },
-        },
-      });
-      const rawContent = response.choices[0]?.message?.content;
-      const content = typeof rawContent === "string" ? rawContent : "{}";
-      try {
-        const parsed = JSON.parse(content);
-        const drills = parsed.drills as DrillSuggestion[];
-        drillCache.set(input.discipline, { data: drills, expiresAt: Date.now() + DRILL_CACHE_TTL_MS });
-        return drills;
-      } catch {
-        return [];
-      }
-    }),
-});
 
 // ─── Notification Prefs ───────────────────────────────────────────────────────
 
@@ -964,7 +893,6 @@ export const appRouter = router({
   performances: performancesRouter,
   videos: videosRouter,
   analytics: analyticsRouter,
-  drills: drillsRouter,
   notifications: notificationsRouter,
    expenses: expensesRouter,
   horses: horsesRouter,
