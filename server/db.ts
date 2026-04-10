@@ -7,6 +7,8 @@ import {
   InsertVideo,
   InsertNotificationPref,
   InsertExpense,
+  InsertHorse,
+  InsertSeasonGoal,
   performances,
   rodeos,
   users,
@@ -14,6 +16,11 @@ import {
   notificationPrefs,
   expenses,
   horses,
+  seasonGoals,
+  horseHealthLogs, InsertHorseHealthLog,
+  horseCareReminders, InsertHorseCareReminder,
+  horseFeeding, InsertHorseFeeding,
+  horseReceipts, InsertHorseReceipt,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -39,12 +46,12 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   if (!db) return;
   const values: InsertUser = { openId: user.openId };
   const updateSet: Record<string, unknown> = {};
-  const textFields = ["name", "email", "loginMethod"] as const;
+  const textFields = ["name", "email", "loginMethod", "passwordHash"] as const;
   for (const field of textFields) {
     const value = user[field];
     if (value === undefined) continue;
     const normalized = value ?? null;
-    values[field] = normalized;
+    values[field] = normalized as any;
     updateSet[field] = normalized;
   }
   if (user.lastSignedIn !== undefined) {
@@ -68,6 +75,13 @@ export async function getUserByOpenId(openId: string) {
   if (!db) return undefined;
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
   return result[0];
+}
+
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  return result[0] ?? null;
 }
 
 // ─── Usage Counts (for free tier limits) ─────────────────────────────────────
@@ -96,11 +110,7 @@ export async function getRodeosByUser(userId: number) {
 export async function getRodeoById(id: number, userId: number) {
   const db = await getDb();
   if (!db) return undefined;
-  const result = await db
-    .select()
-    .from(rodeos)
-    .where(and(eq(rodeos.id, id), eq(rodeos.userId, userId)))
-    .limit(1);
+  const result = await db.select().from(rodeos).where(and(eq(rodeos.id, id), eq(rodeos.userId, userId))).limit(1);
   return result[0];
 }
 
@@ -108,7 +118,6 @@ export async function createRodeo(data: InsertRodeo) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
   const result = await db.insert(rodeos).values(data);
-  // MySQL/TiDB returns [ResultSetHeader, ...] — insertId is on the first element
   const header = (result as any)[0];
   const insertId: number | undefined = header?.insertId ?? header?.lastID ?? undefined;
   return { insertId };
@@ -131,16 +140,7 @@ export async function getUpcomingRodeosWithDeadlines(daysAhead: number) {
   if (!db) return [];
   const now = new Date();
   const future = new Date(now.getTime() + daysAhead * 24 * 60 * 60 * 1000);
-  return db
-    .select()
-    .from(rodeos)
-    .where(
-      and(
-        gte(rodeos.entryDeadline, now),
-        lte(rodeos.entryDeadline, future),
-        eq(rodeos.notificationSent, false)
-      )
-    );
+  return db.select().from(rodeos).where(and(gte(rodeos.entryDeadline, now), lte(rodeos.entryDeadline, future), eq(rodeos.notificationSent, false)));
 }
 
 // ─── Performances ─────────────────────────────────────────────────────────────
@@ -148,48 +148,32 @@ export async function getUpcomingRodeosWithDeadlines(daysAhead: number) {
 export async function getPerformancesByUser(userId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db
-    .select()
-    .from(performances)
-    .where(eq(performances.userId, userId))
-    .orderBy(desc(performances.runDate));
+  return db.select().from(performances).where(eq(performances.userId, userId)).orderBy(desc(performances.runDate));
 }
 
 export async function getPerformancesByRodeo(rodeoId: number, userId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db
-    .select()
-    .from(performances)
-    .where(and(eq(performances.rodeoId, rodeoId), eq(performances.userId, userId)))
-    .orderBy(desc(performances.runDate));
+  return db.select().from(performances).where(and(eq(performances.rodeoId, rodeoId), eq(performances.userId, userId))).orderBy(desc(performances.runDate));
 }
 
 export async function getPerformanceById(id: number, userId: number) {
   const db = await getDb();
   if (!db) return undefined;
-  const result = await db
-    .select()
-    .from(performances)
-    .where(and(eq(performances.id, id), eq(performances.userId, userId)))
-    .limit(1);
+  const result = await db.select().from(performances).where(and(eq(performances.id, id), eq(performances.userId, userId))).limit(1);
   return result[0];
 }
 
 export async function createPerformance(data: InsertPerformance) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const result = await db.insert(performances).values(data);
-  return result;
+  return db.insert(performances).values(data);
 }
 
 export async function updatePerformance(id: number, userId: number, data: Partial<InsertPerformance>) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  await db
-    .update(performances)
-    .set(data)
-    .where(and(eq(performances.id, id), eq(performances.userId, userId)));
+  await db.update(performances).set(data).where(and(eq(performances.id, id), eq(performances.userId, userId)));
 }
 
 export async function deletePerformance(id: number, userId: number) {
@@ -203,17 +187,13 @@ export async function deletePerformance(id: number, userId: number) {
 export async function getVideosByPerformance(performanceId: number, userId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db
-    .select()
-    .from(videos)
-    .where(and(eq(videos.performanceId, performanceId), eq(videos.userId, userId)));
+  return db.select().from(videos).where(and(eq(videos.performanceId, performanceId), eq(videos.userId, userId)));
 }
 
 export async function createVideo(data: InsertVideo) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const result = await db.insert(videos).values(data);
-  return result;
+  return db.insert(videos).values(data);
 }
 
 export async function deleteVideo(id: number, userId: number) {
@@ -227,27 +207,20 @@ export async function deleteVideo(id: number, userId: number) {
 export async function getNotificationPrefs(userId: number) {
   const db = await getDb();
   if (!db) return undefined;
-  const result = await db
-    .select()
-    .from(notificationPrefs)
-    .where(eq(notificationPrefs.userId, userId))
-    .limit(1);
+  const result = await db.select().from(notificationPrefs).where(eq(notificationPrefs.userId, userId)).limit(1);
   return result[0];
 }
 
 export async function upsertNotificationPrefs(data: InsertNotificationPref) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  await db
-    .insert(notificationPrefs)
-    .values(data)
-    .onDuplicateKeyUpdate({
-      set: {
-        enableEntryDeadline: data.enableEntryDeadline,
-        defaultDaysBefore: data.defaultDaysBefore,
-        enableEmail: data.enableEmail,
-      },
-    });
+  await db.insert(notificationPrefs).values(data).onDuplicateKeyUpdate({
+    set: {
+      enableEntryDeadline: data.enableEntryDeadline,
+      defaultDaysBefore: data.defaultDaysBefore,
+      enableEmail: data.enableEmail,
+    },
+  });
 }
 
 // ─── Expenses ─────────────────────────────────────────────────────────────────
@@ -255,21 +228,13 @@ export async function upsertNotificationPrefs(data: InsertNotificationPref) {
 export async function getExpensesByRodeo(rodeoId: number, userId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db
-    .select()
-    .from(expenses)
-    .where(and(eq(expenses.rodeoId, rodeoId), eq(expenses.userId, userId)))
-    .orderBy(desc(expenses.date));
+  return db.select().from(expenses).where(and(eq(expenses.rodeoId, rodeoId), eq(expenses.userId, userId))).orderBy(desc(expenses.date));
 }
 
 export async function getExpensesByUser(userId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db
-    .select()
-    .from(expenses)
-    .where(eq(expenses.userId, userId))
-    .orderBy(desc(expenses.date));
+  return db.select().from(expenses).where(eq(expenses.userId, userId)).orderBy(desc(expenses.date));
 }
 
 export async function createExpense(data: InsertExpense) {
@@ -291,24 +256,26 @@ export async function deleteExpense(id: number, userId: number) {
 }
 
 // ─── Horses ───────────────────────────────────────────────────────────────────
-import { InsertHorse } from "../drizzle/schema";
 
 export async function listHorses(userId: number) {
   const db = await getDb();
   if (!db) return [];
   return db.select().from(horses).where(eq(horses.userId, userId)).orderBy(horses.name);
 }
+
 export async function createHorse(data: InsertHorse) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
   const [result] = await db.insert(horses).values(data).$returningId();
   return result;
 }
+
 export async function updateHorse(id: number, userId: number, data: Partial<InsertHorse>) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
   await db.update(horses).set(data).where(and(eq(horses.id, id), eq(horses.userId, userId)));
 }
+
 export async function deleteHorse(id: number, userId: number) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
@@ -316,13 +283,11 @@ export async function deleteHorse(id: number, userId: number) {
 }
 
 // ─── Season Goals ─────────────────────────────────────────────────────────────
-import { seasonGoals, InsertSeasonGoal } from "../drizzle/schema";
 
 export async function getSeasonGoal(userId: number, year: number) {
   const db = await getDb();
   if (!db) return null;
-  const rows = await db.select().from(seasonGoals)
-    .where(and(eq(seasonGoals.userId, userId), eq(seasonGoals.year, year)));
+  const rows = await db.select().from(seasonGoals).where(and(eq(seasonGoals.userId, userId), eq(seasonGoals.year, year)));
   return rows[0] ?? null;
 }
 
@@ -331,40 +296,33 @@ export async function upsertSeasonGoal(userId: number, year: number, targetCents
   if (!db) throw new Error("DB not available");
   const existing = await getSeasonGoal(userId, year);
   if (existing) {
-    await db.update(seasonGoals).set({ targetCents })
-      .where(and(eq(seasonGoals.userId, userId), eq(seasonGoals.year, year)));
+    await db.update(seasonGoals).set({ targetCents }).where(and(eq(seasonGoals.userId, userId), eq(seasonGoals.year, year)));
   } else {
     await db.insert(seasonGoals).values({ userId, year, targetCents });
   }
 }
 
-
 // ─── Horse Health Logs ────────────────────────────────────────────────────────
-import {
-  horseHealthLogs, InsertHorseHealthLog,
-  horseCareReminders, InsertHorseCareReminder,
-  horseFeeding, InsertHorseFeeding,
-  horseReceipts, InsertHorseReceipt,
-} from "../drizzle/schema";
 
 export async function listHorseHealthLogs(userId: number, horseId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(horseHealthLogs)
-    .where(and(eq(horseHealthLogs.userId, userId), eq(horseHealthLogs.horseId, horseId)))
-    .orderBy(horseHealthLogs.logDate);
+  return db.select().from(horseHealthLogs).where(and(eq(horseHealthLogs.userId, userId), eq(horseHealthLogs.horseId, horseId))).orderBy(horseHealthLogs.logDate);
 }
+
 export async function createHorseHealthLog(data: InsertHorseHealthLog) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
   const [result] = await db.insert(horseHealthLogs).values(data).$returningId();
   return result;
 }
+
 export async function updateHorseHealthLog(id: number, userId: number, data: Partial<InsertHorseHealthLog>) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
   await db.update(horseHealthLogs).set(data).where(and(eq(horseHealthLogs.id, id), eq(horseHealthLogs.userId, userId)));
 }
+
 export async function deleteHorseHealthLog(id: number, userId: number) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
@@ -372,24 +330,26 @@ export async function deleteHorseHealthLog(id: number, userId: number) {
 }
 
 // ─── Horse Care Reminders ─────────────────────────────────────────────────────
+
 export async function listHorseCareReminders(userId: number, horseId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(horseCareReminders)
-    .where(and(eq(horseCareReminders.userId, userId), eq(horseCareReminders.horseId, horseId)))
-    .orderBy(horseCareReminders.reminderDate);
+  return db.select().from(horseCareReminders).where(and(eq(horseCareReminders.userId, userId), eq(horseCareReminders.horseId, horseId))).orderBy(horseCareReminders.reminderDate);
 }
+
 export async function createHorseCareReminder(data: InsertHorseCareReminder) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
   const [result] = await db.insert(horseCareReminders).values(data).$returningId();
   return result;
 }
+
 export async function updateHorseCareReminder(id: number, userId: number, data: Partial<InsertHorseCareReminder>) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
   await db.update(horseCareReminders).set(data).where(and(eq(horseCareReminders.id, id), eq(horseCareReminders.userId, userId)));
 }
+
 export async function deleteHorseCareReminder(id: number, userId: number) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
@@ -397,24 +357,26 @@ export async function deleteHorseCareReminder(id: number, userId: number) {
 }
 
 // ─── Horse Feeding ────────────────────────────────────────────────────────────
+
 export async function listHorseFeeding(userId: number, horseId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(horseFeeding)
-    .where(and(eq(horseFeeding.userId, userId), eq(horseFeeding.horseId, horseId)))
-    .orderBy(horseFeeding.feedName);
+  return db.select().from(horseFeeding).where(and(eq(horseFeeding.userId, userId), eq(horseFeeding.horseId, horseId))).orderBy(horseFeeding.feedName);
 }
+
 export async function createHorseFeeding(data: InsertHorseFeeding) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
   const [result] = await db.insert(horseFeeding).values(data).$returningId();
   return result;
 }
+
 export async function updateHorseFeeding(id: number, userId: number, data: Partial<InsertHorseFeeding>) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
   await db.update(horseFeeding).set(data).where(and(eq(horseFeeding.id, id), eq(horseFeeding.userId, userId)));
 }
+
 export async function deleteHorseFeeding(id: number, userId: number) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
@@ -422,35 +384,34 @@ export async function deleteHorseFeeding(id: number, userId: number) {
 }
 
 // ─── Horse Receipts ───────────────────────────────────────────────────────────
+
 export async function listHorseReceipts(userId: number, horseId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(horseReceipts)
-    .where(and(eq(horseReceipts.userId, userId), eq(horseReceipts.horseId, horseId)))
-    .orderBy(horseReceipts.receiptDate);
+  return db.select().from(horseReceipts).where(and(eq(horseReceipts.userId, userId), eq(horseReceipts.horseId, horseId))).orderBy(horseReceipts.receiptDate);
 }
+
 export async function createHorseReceipt(data: InsertHorseReceipt) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
   const [result] = await db.insert(horseReceipts).values(data).$returningId();
   return result;
 }
+
 export async function updateHorseReceipt(id: number, userId: number, data: Partial<InsertHorseReceipt>) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
   await db.update(horseReceipts).set(data).where(and(eq(horseReceipts.id, id), eq(horseReceipts.userId, userId)));
 }
+
 export async function deleteHorseReceipt(id: number, userId: number) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
   await db.delete(horseReceipts).where(and(eq(horseReceipts.id, id), eq(horseReceipts.userId, userId)));
 }
 
-// List all receipts for a user (for expense report)
 export async function listAllHorseReceiptsForUser(userId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(horseReceipts)
-    .where(eq(horseReceipts.userId, userId))
-    .orderBy(horseReceipts.receiptDate);
+  return db.select().from(horseReceipts).where(eq(horseReceipts.userId, userId)).orderBy(horseReceipts.receiptDate);
 }
