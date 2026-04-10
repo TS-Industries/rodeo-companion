@@ -9,6 +9,11 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { createVideoUploadRouter } from "../videoUpload";
 import { createReceiptUploadRouter } from "../receiptUpload";
+import bcrypt from "bcryptjs";
+import { COOKIE_NAME } from "@shared/const";
+import { getSessionCookieOptions } from "./cookies";
+import { sdk } from "./sdk";
+import * as db from "../db";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -22,53 +27,6 @@ function isPortAvailable(port: number): Promise<boolean> {
 
 async function findAvailablePort(startPort: number = 3000): Promise<number> {
   for (let port = startPort; port < startPort + 20; port++) {
-    if (await isPortAvailable(port)) {
-      return port;
-    }
+    if (await isPortAvailable(port)) return port;
   }
-  throw new Error(`No available port found starting from ${startPort}`);
-}
-
-async function startServer() {
-  const app = express();
-  const server = createServer(app);
-  // Configure body parser with larger size limit for file uploads
-  app.use(express.json({ limit: "50mb" }));
-  app.use(express.urlencoded({ limit: "50mb", extended: true }));
-  // OAuth callback under /api/oauth/callback
-  registerOAuthRoutes(app);
-
-  // Video upload endpoint
-  app.use(createVideoUploadRouter());
-
-  // Receipt upload endpoint
-  app.use(createReceiptUploadRouter());
-
-  // tRPC API
-  app.use(
-    "/api/trpc",
-    createExpressMiddleware({
-      router: appRouter,
-      createContext,
-    })
-  );
-  // development mode uses Vite, production mode uses static files
-  if (process.env.NODE_ENV === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
-
-  const preferredPort = parseInt(process.env.PORT || "3000");
-  const port = await findAvailablePort(preferredPort);
-
-  if (port !== preferredPort) {
-    console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
-  }
-
-  server.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}/`);
-  });
-}
-
-startServer().catch(console.error);
+  throw new Error(`No av
