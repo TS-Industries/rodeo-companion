@@ -17,6 +17,7 @@ import Dashboard from "./pages/Dashboard";
 import Horses from "./pages/Horses";
 import BrowseEvents from "./pages/BrowseEvents";
 import Upgrade from "./pages/Upgrade";
+import Login from "./pages/Login";
 import {
   CalendarDays,
   Trophy,
@@ -31,7 +32,6 @@ import { cn } from "./lib/utils";
 function HorseNavIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return (
     <svg className={className} style={style} viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-      {/* Horse side profile silhouette — galloping pose */}
       <path d="M52 8c-2 0-3.5 1-4.5 2.5L45 14l-3-1.5c-.8-.4-1.7-.4-2.5 0L37 14l-2-3C34 9.2 32.2 8 30 8c-3 0-5.5 1.8-6.5 4.5l-.5 1.5-4-1C16 12.2 13 14.5 12.5 17.5L11.5 22H9C7.3 22 6 23.3 6 25v2c0 1.7 1.3 3 3 3h1.5v5L8 42c-.4 1.4.4 2.8 1.8 3.2 1.4.4 2.8-.4 3.2-1.8L15 37h1.5v7c0 1.7 1.3 3 3 3s3-1.3 3-3v-7h9v7c0 1.7 1.3 3 3 3s3-1.3 3-3v-7l4 1v6c0 1.7 1.3 3 3 3s3-1.3 3-3v-7l2-2c1.2-1.2 2-2.8 2-4.5V27c0-1.5-.5-3-1.5-4L49 20l2.5-2.5c.8-.8 1.5-2 1.5-3.5V11c0-1.7-1.3-3-3-3zm-16 10c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3z"/>
     </svg>
   );
@@ -95,7 +95,6 @@ function BottomNav() {
               className="flex flex-col items-center justify-center gap-0.5 flex-1 py-2 px-0.5 text-[10px] font-semibold transition-all duration-200 relative"
               style={{ color: active ? "oklch(0.82 0.18 80)" : "oklch(0.45 0.04 60)" }}
             >
-              {/* Active glow pill background */}
               {active && (
                 <span
                   className="absolute inset-x-1 inset-y-1 rounded-xl pointer-events-none"
@@ -137,6 +136,7 @@ function BottomNav() {
 
 function AppShell() {
   const { isAuthenticated, loading } = useAuth();
+  const [location] = useLocation();
 
   if (loading) {
     return (
@@ -158,6 +158,10 @@ function AppShell() {
     );
   }
 
+  if (location === "/login") {
+    return <Login />;
+  }
+
   if (!isAuthenticated) {
     return <Home />;
   }
@@ -176,6 +180,7 @@ function AppShell() {
         <Route path="/browse-events"><ErrorBoundary fallback={<PageErrorFallback />}><BrowseEvents /></ErrorBoundary></Route>
         <Route path="/upgrade" component={Upgrade} />
         <Route path="/help" component={Help} />
+        <Route path="/login" component={Login} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>
