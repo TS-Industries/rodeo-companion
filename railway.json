@@ -11,6 +11,9 @@
             "pnpm install --no-frozen-lockfile"
           ]
         }
+      },
+      "variables": {
+        "NIXPACKS_NODE_VERSION": "20"
       }
     }
   },
