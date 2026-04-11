@@ -18,6 +18,6 @@
     }
   },
   "deploy": {
-    "startCommand": "pnpm run db:push && pnpm run start"
+    "startCommand": "pnpm run start"
   }
 }
