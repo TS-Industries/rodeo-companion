@@ -18,6 +18,7 @@ import Horses from "./pages/Horses";
 import BrowseEvents from "./pages/BrowseEvents";
 import Upgrade from "./pages/Upgrade";
 import Login from "./pages/Login";
+import Rulebooks from "./pages/Rulebooks";
 import {
   CalendarDays,
   Trophy,
@@ -25,10 +26,9 @@ import {
   MapPin,
   Settings as SettingsIcon,
   Home as HomeIcon,
+  BookOpen,
 } from "lucide-react";
-import { cn } from "./lib/utils";
 
-// Clean horse silhouette nav icon
 function HorseNavIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return (
     <svg className={className} style={style} viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -66,8 +66,8 @@ const NAV_ITEMS = [
   { path: "/schedule", label: "Schedule", icon: CalendarDays },
   { path: "/performance", label: "Runs", icon: Trophy },
   { path: "/analytics", label: "Progress", icon: BarChart3 },
-  { path: "/locations", label: "Map", icon: MapPin },
   { path: "/horses", label: "Horses", icon: HorseNavIcon },
+  { path: "/rulebooks", label: "Rules", icon: BookOpen },
   { path: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
@@ -117,7 +117,7 @@ function BottomNav() {
                 className="relative z-10 transition-all duration-200"
                 style={{
                   fontFamily: active ? "'Cinzel', serif" : "'Inter', sans-serif",
-                  fontSize: active ? "0.6rem" : "0.6rem",
+                  fontSize: "0.6rem",
                   fontWeight: active ? 700 : 500,
                   letterSpacing: active ? "0.05em" : "0",
                   textShadow: active ? "0 0 8px oklch(0.72 0.16 75 / 50%)" : "none",
@@ -177,6 +177,7 @@ function AppShell() {
         <Route path="/locations" component={Locations} />
         <Route path="/settings" component={Settings} />
         <Route path="/horses" component={Horses} />
+        <Route path="/rulebooks"><ErrorBoundary fallback={<PageErrorFallback />}><Rulebooks /></ErrorBoundary></Route>
         <Route path="/browse-events"><ErrorBoundary fallback={<PageErrorFallback />}><BrowseEvents /></ErrorBoundary></Route>
         <Route path="/upgrade" component={Upgrade} />
         <Route path="/help" component={Help} />
