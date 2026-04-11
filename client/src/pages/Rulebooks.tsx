@@ -321,16 +321,9 @@ export default function Rulebooks() {
             {assocInfo[activeAssoc].name}
           </p>
           {activeAssoc === "WRA" && (
-            
-              href="https://wrarodeo.com/rulebook/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold"
-              style={{ color: "oklch(0.72 0.16 75)" }}
-            >
-              <ExternalLink size={12} />
-              View Official WRA Rulebook
-            </a>
+            <p className="text-xs mt-2" style={{ color: "oklch(0.72 0.16 75)" }}>
+              Visit wrarodeo.com/rulebook for the full official rulebook
+            </p>
           )}
         </div>
 
