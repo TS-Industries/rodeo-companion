@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { BookOpen, Search, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
+import { BookOpen, Search, ChevronDown, ChevronUp } from "lucide-react";
 
 const LRA_SECTIONS = [
   {
